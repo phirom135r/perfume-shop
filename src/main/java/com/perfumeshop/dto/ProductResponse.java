@@ -1,34 +1,23 @@
-package com.perfumeshop.entity;
+package com.perfumeshop.dto;
 
-import jakarta.persistence.*;
+import java.math.BigDecimal;
 
-@Entity
-@Table(name = "products")
-public class Product {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+public class ProductResponse {
     private Long id;
-
     private String name;
     private String brand;
-
-    @Column(columnDefinition = "TEXT")
-    private String description;
-
-    private Double price;
-    private Double discount;
-    private Integer stock;
-
-    @Column(name = "category_id")
     private Long categoryId;
-
+    private String categoryName;
+    private String description;
+    private BigDecimal price;
+    private BigDecimal discount;
+    private Integer stock;
     private String image;
+    private Boolean active;
 
-    @Column(nullable = false)
-    private Boolean active = true; // ✅ default true
+    public ProductResponse() {}
 
-    // ===== getters/setters =====
+    // getters/setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -38,20 +27,23 @@ public class Product {
     public String getBrand() { return brand; }
     public void setBrand(String brand) { this.brand = brand; }
 
+    public Long getCategoryId() { return categoryId; }
+    public void setCategoryId(Long categoryId) { this.categoryId = categoryId; }
+
+    public String getCategoryName() { return categoryName; }
+    public void setCategoryName(String categoryName) { this.categoryName = categoryName; }
+
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
 
-    public Double getPrice() { return price; }
-    public void setPrice(Double price) { this.price = price; }
+    public BigDecimal getPrice() { return price; }
+    public void setPrice(BigDecimal price) { this.price = price; }
 
-    public Double getDiscount() { return discount; }
-    public void setDiscount(Double discount) { this.discount = discount; }
+    public BigDecimal getDiscount() { return discount; }
+    public void setDiscount(BigDecimal discount) { this.discount = discount; }
 
     public Integer getStock() { return stock; }
     public void setStock(Integer stock) { this.stock = stock; }
-
-    public Long getCategoryId() { return categoryId; }
-    public void setCategoryId(Long categoryId) { this.categoryId = categoryId; }
 
     public String getImage() { return image; }
     public void setImage(String image) { this.image = image; }

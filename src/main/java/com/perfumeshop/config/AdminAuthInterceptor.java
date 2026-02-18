@@ -3,8 +3,10 @@ package com.perfumeshop.config;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
+@Component
 public class AdminAuthInterceptor implements HandlerInterceptor {
 
     @Override
@@ -12,20 +14,22 @@ public class AdminAuthInterceptor implements HandlerInterceptor {
                              HttpServletResponse response,
                              Object handler) throws Exception {
 
-        String uri = request.getRequestURI();
+        HttpSession session = request.getSession(false);
 
-        // allow auth endpoints + static
-        if (uri.startsWith("/auth")) return true;
-        if (uri.startsWith("/css") || uri.startsWith("/js") || uri.startsWith("/images")) return true;
+        boolean loggedIn = session != null && session.getAttribute("LOGIN_USERNAME") != null;
 
-        // protect admin
-        if (uri.startsWith("/admin")) {
-            HttpSession session = request.getSession(false);
-            if (session == null || session.getAttribute("LOGIN_NAME") == null) {
-                response.sendRedirect("/auth/login");
-                return false;
-            }
+        if (!loggedIn) {
+            response.sendRedirect("/auth/login");
+            return false;
         }
+
+        // optional: allow only ADMIN role
+        Object role = session.getAttribute("LOGIN_ROLE");
+        if (role != null && !"ADMIN".equals(String.valueOf(role))) {
+            response.sendRedirect("/auth/login");
+            return false;
+        }
+
         return true;
     }
 }

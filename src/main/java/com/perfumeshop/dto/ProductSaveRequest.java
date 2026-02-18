@@ -1,10 +1,9 @@
 package com.perfumeshop.dto;
 
-import org.springframework.web.multipart.MultipartFile;
-
 import java.math.BigDecimal;
 
-public class ProductDTO {
+public class ProductSaveRequest {
+
     private Long id;
     private String name;
     private String brand;
@@ -13,9 +12,9 @@ public class ProductDTO {
     private BigDecimal price;
     private BigDecimal discount;
     private Integer stock;
+    private Boolean active;
 
-    private MultipartFile imageFile; // upload
-    private String existingImage;     // keep old
+    public ProductSaveRequest(){}
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -41,9 +40,6 @@ public class ProductDTO {
     public Integer getStock() { return stock; }
     public void setStock(Integer stock) { this.stock = stock; }
 
-    public MultipartFile getImageFile() { return imageFile; }
-    public void setImageFile(MultipartFile imageFile) { this.imageFile = imageFile; }
-
-    public String getExistingImage() { return existingImage; }
-    public void setExistingImage(String existingImage) { this.existingImage = existingImage; }
+    public Boolean getActive() { return active; }
+    public void setActive(Boolean active) { this.active = active; }
 }
