@@ -9,12 +9,6 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(new AdminAuthInterceptor())
-                .addPathPatterns("/admin/**")
-                .excludePathPatterns(
-                        "/auth/**",      // ✅ important: your login is /auth/login
-                        "/error",
-                        "/css/**", "/js/**", "/images/**",
-                        "/favicon.ico"
-                );
+                .addPathPatterns("/admin/**");
     }
 }

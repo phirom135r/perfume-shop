@@ -1,187 +1,126 @@
-let currentPage = 0;
+(function () {
+    "use strict";
 
-function fmtMoney(v){
-    return "$" + Number(v).toFixed(2);
-}
+    // ---- Quick debug: check file loaded ----
+    console.log("admin-products.js loaded ✅");
 
-function buildRow(p){
-    const img = p.image ? `<img src="${p.image}" style="height:40px" class="rounded">` : "-";
-    const badge = p.status === "ACTIVE"
-        ? `<span class="badge bg-success">active</span>`
-        : `<span class="badge bg-secondary">inactive</span>`;
-
-    return `
-    <tr>
-      <td>${p.id}</td>
-      <td>${p.name}</td>
-      <td>${p.category}</td>
-      <td>${p.stock}</td>
-      <td>${fmtMoney(p.price)}</td>
-      <td>${img}</td>
-      <td>${badge}</td>
-      <td>
-        <button class="btn btn-sm btn-primary me-1" onclick="openEdit(${encodeURIComponent(JSON.stringify(p))})">Edit</button>
-        <button class="btn btn-sm btn-danger" onclick="del(${p.id})">Delete</button>
-      </td>
-    </tr>
-  `;
-}
-
-function renderPagination(totalPages, page){
-    const ul = $("#pagination");
-    ul.empty();
-    const prevDisabled = page <= 0 ? "disabled" : "";
-    ul.append(`<li class="page-item ${prevDisabled}"><a class="page-link" href="#" onclick="gotoPage(${page-1})">Prev</a></li>`);
-
-    for(let i=0;i<totalPages;i++){
-        const active = i === page ? "active" : "";
-        ul.append(`<li class="page-item ${active}"><a class="page-link" href="#" onclick="gotoPage(${i})">${i+1}</a></li>`);
+    function byId(id) {
+        return document.getElementById(id);
     }
 
-    const nextDisabled = page >= totalPages-1 ? "disabled" : "";
-    ul.append(`<li class="page-item ${nextDisabled}"><a class="page-link" href="#" onclick="gotoPage(${page+1})">Next</a></li>`);
-}
+    // DOM refs
+    const btnAdd = byId("btnAdd");
+    const btnReload = byId("btnReload");
+    const modalEl = byId("productModal");
 
-function load(){
-    const q = $("#search").val();
-    const size = $("#size").val();
-    const categoryId = $("#categoryFilter").val();
+    // Form fields
+    const form = byId("productForm");
+    const f_id = byId("id");
+    const f_name = byId("name");
+    const f_brand = byId("brand");
+    const f_categoryId = byId("categoryId");
+    const f_price = byId("price");
+    const f_discount = byId("discount");
+    const f_stock = byId("stock");
+    const f_description = byId("description");
+    const f_image = byId("image");
+    const preview = byId("preview");
 
-    $.get("/api/products", { page: currentPage, size, q, categoryId }, function(res){
-        if(!res.success){
-            Swal.fire("Error", res.message, "error");
-            return;
+    // Table refs
+    const tbody = byId("tbody");
+
+    // ---- Validate required elements exist ----
+    if (!btnAdd) console.error("❌ #btnAdd not found");
+    if (!modalEl) console.error("❌ #productModal not found");
+    if (!form) console.error("❌ #productForm not found");
+
+    // ---- Bootstrap modal instance ----
+    let modal;
+    try {
+        modal = new bootstrap.Modal(modalEl);
+    } catch (e) {
+        console.error("❌ Bootstrap Modal not available. Did you include bootstrap.bundle.min.js ?", e);
+    }
+
+    // ===== Helpers =====
+    function resetForm() {
+        f_id.value = "";
+        f_name.value = "";
+        f_brand.value = "";
+        f_price.value = "";
+        f_discount.value = "0";
+        f_stock.value = "";
+        f_description.value = "";
+        if (f_image) f_image.value = "";
+
+        if (preview) {
+            preview.src = "";
+            preview.style.display = "none";
         }
-        const data = res.data;
-        $("#tbody").html(data.items.map(buildRow).join(""));
-        $("#pageInfo").text(`Page ${data.page+1} / ${data.totalPages}  (Total: ${data.totalItems})`);
-        renderPagination(data.totalPages, data.page);
-    });
-}
-
-function gotoPage(p){
-    if(p < 0) return;
-    currentPage = p;
-    load();
-}
-
-function resetForm(){
-    $("#id").val("");
-    $("#name").val("");
-    $("#description").val("");
-    $("#price").val("");
-    $("#costPrice").val("0");
-    $("#stock").val("0");
-    $("#status").val("ACTIVE");
-    $("#image").val("");
-    $("#preview").hide().attr("src","");
-}
-
-function openAdd(){
-    resetForm();
-    $("#modalTitle").text("Add Product");
-    new bootstrap.Modal(document.getElementById("productModal")).show();
-}
-
-function openEdit(p){
-    // p is object already (we passed JSON)
-    $("#modalTitle").text("Edit Product");
-    $("#id").val(p.id);
-    $("#name").val(p.name);
-    $("#description").val(p.description || "");
-    $("#price").val(p.price);
-    $("#costPrice").val(p.costPrice || 0);
-    $("#stock").val(p.stock);
-    $("#status").val(p.status);
-    // categoryId can't be set from API row; keep filter list or add it in API if you want
-
-    if(p.image){
-        $("#preview").show().attr("src", p.image);
-    } else {
-        $("#preview").hide();
     }
 
-    new bootstrap.Modal(document.getElementById("productModal")).show();
-}
+    // ===== Add button: open modal =====
+    if (btnAdd) {
+        btnAdd.addEventListener("click", function () {
+            console.log("btnAdd clicked ✅");
 
-function del(id){
-    Swal.fire({
-        title: "Delete this product?",
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonText: "Yes, delete"
-    }).then((r)=>{
-        if(!r.isConfirmed) return;
-        $.ajax({
-            url: "/api/products/" + id,
-            type: "DELETE",
-            success: function(res){
-                if(res.success){
-                    Swal.fire("Deleted", res.message, "success");
-                    load();
-                }else{
-                    Swal.fire("Error", res.message, "error");
-                }
-            }
+            resetForm();
+            const modalTitle = byId("modalTitle");
+            if (modalTitle) modalTitle.textContent = "Add Product";
+
+            if (modal) modal.show();
         });
-    });
-}
+    }
 
-$(function(){
-    $("#btnAdd").click(openAdd);
-    $("#btnReload").click(()=>{ currentPage=0; load(); });
-    $("#search").on("input", ()=>{ currentPage=0; load(); });
-    $("#size, #categoryFilter").change(()=>{ currentPage=0; load(); });
-
-    $("#image").change(function(){
-        const f = this.files?.[0];
-        if(!f) return;
-        const url = URL.createObjectURL(f);
-        $("#preview").show().attr("src", url);
-    });
-
-    $("#productForm").submit(function(e){
-        e.preventDefault();
-
-        const id = $("#id").val();
-        const data = {
-            categoryId: Number($("#categoryId").val()),
-            name: $("#name").val(),
-            description: $("#description").val(),
-            price: Number($("#price").val()),
-            costPrice: Number($("#costPrice").val()),
-            stock: Number($("#stock").val()),
-            status: $("#status").val()
-        };
-
-        const fd = new FormData();
-        fd.append("data", new Blob([JSON.stringify(data)], {type: "application/json"}));
-        const img = $("#image")[0].files?.[0];
-        if(img) fd.append("image", img);
-
-        const method = id ? "PUT" : "POST";
-        const url = id ? "/api/products/" + id : "/api/products";
-
-        $.ajax({
-            url,
-            method,
-            data: fd,
-            processData: false,
-            contentType: false,
-            success: function(res){
-                if(res.success){
-                    Swal.fire("Success", res.message, "success");
-                    bootstrap.Modal.getInstance(document.getElementById("productModal")).hide();
-                    load();
-                } else {
-                    Swal.fire("Error", res.message, "error");
-                }
-            },
-            error: function(xhr){
-                Swal.fire("Error", xhr.responseText || "Request failed", "error");
+    // ===== Image preview =====
+    if (f_image && preview) {
+        f_image.addEventListener("change", function () {
+            const file = f_image.files && f_image.files[0];
+            if (!file) {
+                preview.style.display = "none";
+                return;
             }
+            preview.src = URL.createObjectURL(file);
+            preview.style.display = "block";
         });
-    });
+    }
 
-    load();
-});
+    // ===== Reload button example (later you will implement AJAX load) =====
+    if (btnReload) {
+        btnReload.addEventListener("click", function () {
+            console.log("Reload clicked ✅");
+            // TODO: loadProducts()
+        });
+    }
+
+    // ===== Submit form (later hook to backend save API) =====
+    if (form) {
+        form.addEventListener("submit", function (e) {
+            e.preventDefault();
+            console.log("Submit clicked ✅");
+
+            // TODO: AJAX save
+            // For now just close:
+            if (modal) modal.hide();
+            alert("Save clicked (AJAX will be added next)");
+        });
+    }
+
+    // ===== Render demo row (optional) =====
+    if (tbody) {
+        tbody.innerHTML = `
+      <tr>
+        <td>1</td>
+        <td><span class="text-muted small">no img</span></td>
+        <td>Demo</td>
+        <td>Brand</td>
+        <td>Category</td>
+        <td>$10.00</td>
+        <td>$0.00</td>
+        <td>5</td>
+        <td><button class="btn btn-sm btn-outline-secondary">Edit</button></td>
+      </tr>
+    `;
+    }
+
+})();

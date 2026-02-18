@@ -116,8 +116,11 @@ body{
     transition:.18s ease;
 }
 .mobile-nav-link:hover{ background:rgba(148,163,184,.16); transform:translateX(2px); }
-.mobile-nav-link.active{ outline:1px solid rgba(59,130,246,.35); background:rgba(59,130,246,.10); }
-
+.mobile-nav-link.active{
+    background: rgba(59,130,246,.14);
+    border: 1px solid rgba(59,130,246,.35);
+    font-weight: 600;
+}
 .dt-desktop{ display:flex; }
 .dt-mobile{ display:none; line-height:1.1; }
 @media(max-width:576px){
