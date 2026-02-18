@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      th:replace="layout/admin-layout :: html(~{::body})">
+<body>
+<div th:with="title='Products', content=~{::section}">
+    <section>
+
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h3 class="mb-0">Product Management</h3>
+            <button class="btn btn-primary" id="btnAdd">+ Add Product</button>
+        </div>
+
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <div class="row g-2 mb-3">
+                    <div class="col-md-4">
+                        <input class="form-control" id="search" placeholder="Search...">
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-select" id="categoryFilter">
+                            <option value="">All Categories</option>
+                            <option th:each="c: ${categories}" th:value="${c.id}" th:text="${c.name}"></option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <select class="form-select" id="size">
+                            <option value="5">5</option>
+                            <option value="10" selected>10</option>
+                            <option value="25">25</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3 text-end">
+                        <button class="btn btn-outline-secondary" id="btnReload">Reload</button>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-primary">
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Category</th>
+                            <th>Stock</th>
+                            <th>Price (USD)</th>
+                            <th>Image</th>
+                            <th>Status</th>
+                            <th width="140">Action</th>
+                        </tr>
+                        </thead>
+                        <tbody id="tbody"></tbody>
+                    </table>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center">
+                    <div id="pageInfo" class="text-muted small"></div>
+                    <nav>
+                        <ul class="pagination mb-0" id="pagination"></ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal -->
+        <div class="modal fade" id="productModal" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modalTitle">Add Product</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+
+                    <form id="productForm">
+                        <div class="modal-body">
+                            <input type="hidden" id="id">
+
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Name</label>
+                                    <input class="form-control" id="name" required>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label">Category</label>
+                                    <select class="form-select" id="categoryId" required>
+                                        <option th:each="c: ${categories}" th:value="${c.id}" th:text="${c.name}"></option>
+                                    </select>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label">Price (USD)</label>
+                                    <input type="number" step="0.01" class="form-control" id="price" required>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label">Cost Price (USD)</label>
+                                    <input type="number" step="0.01" class="form-control" id="costPrice" value="0">
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label">Stock</label>
+                                    <input type="number" class="form-control" id="stock" required>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label">Status</label>
+                                    <select class="form-select" id="status">
+                                        <option value="ACTIVE">ACTIVE</option>
+                                        <option value="INACTIVE">INACTIVE</option>
+                                    </select>
+                                </div>
+
+                                <div class="col-12">
+                                    <label class="form-label">Description</label>
+                                    <textarea class="form-control" id="description" rows="3"></textarea>
+                                </div>
+
+                                <div class="col-12">
+                                    <label class="form-label">Image</label>
+                                    <input type="file" class="form-control" id="image">
+                                    <div class="mt-2">
+                                        <img id="preview" style="max-height:120px; display:none;" class="border rounded">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button class="btn btn-primary" id="btnSave">Save</button>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+        </div>
+
+        <script th:src="@{/js/admin-products.js}"></script>
+    </section>
+</div>
+</body>
+</html>
