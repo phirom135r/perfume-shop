@@ -1,0 +1,80 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/layout}">
+<head>
+    <title th:text="${mode=='create'} ? 'Create Product' : 'Edit Product'">Product</title>
+</head>
+
+<body>
+<div layout:fragment="content">
+
+    <div class="card shadow-sm p-3" style="max-width:900px;">
+        <h5 th:text="${mode=='create'} ? 'Create Product' : 'Edit Product'"></h5>
+
+        <form th:action="${mode=='create'} ? @{/admin/products/create} : @{/admin/products/edit}"
+              method="post" enctype="multipart/form-data" th:object="${form}">
+
+            <input type="hidden" th:field="*{id}"/>
+            <input type="hidden" th:field="*{existingImage}"/>
+
+            <div class="row g-3">
+                <div class="col-12 col-md-6">
+                    <label class="form-label">Name</label>
+                    <input class="form-control" th:field="*{name}" required>
+                </div>
+
+                <div class="col-12 col-md-6">
+                    <label class="form-label">Brand</label>
+                    <input class="form-control" th:field="*{brand}" required>
+                </div>
+
+                <div class="col-12 col-md-6">
+                    <label class="form-label">Category</label>
+                    <select class="form-select" th:field="*{categoryId}" required>
+                        <option value="">-- Select --</option>
+                        <option th:each="c : ${categories}"
+                                th:value="${c.id}"
+                                th:text="${c.name}">
+                        </option>
+                    </select>
+                </div>
+
+                <div class="col-6 col-md-3">
+                    <label class="form-label">Price (USD)</label>
+                    <input type="number" step="0.01" class="form-control" th:field="*{price}" required>
+                </div>
+
+                <div class="col-6 col-md-3">
+                    <label class="form-label">Discount</label>
+                    <input type="number" step="0.01" class="form-control" th:field="*{discount}">
+                </div>
+
+                <div class="col-12 col-md-3">
+                    <label class="form-label">Stock</label>
+                    <input type="number" class="form-control" th:field="*{stock}" required>
+                </div>
+
+                <div class="col-12 col-md-9">
+                    <label class="form-label">Image</label>
+                    <input type="file" class="form-control" th:field="*{imageFile}" accept="image/*">
+                    <div class="form-text">Upload jpg/png/webp</div>
+                </div>
+
+                <div class="col-12">
+                    <label class="form-label">Description</label>
+                    <textarea class="form-control" rows="3" th:field="*{description}"></textarea>
+                </div>
+            </div>
+
+            <div class="d-flex gap-2 mt-3">
+                <button class="btn btn-primary" type="submit">Save</button>
+                <a class="btn btn-light" th:href="@{/admin/products}">Back</a>
+            </div>
+
+        </form>
+    </div>
+
+</div>
+</body>
+</html>
