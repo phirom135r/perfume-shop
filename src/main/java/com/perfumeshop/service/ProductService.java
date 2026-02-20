@@ -6,7 +6,8 @@ import com.perfumeshop.repository.CategoryRepository;
 import com.perfumeshop.repository.ProductRepository;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import java.util.Optional;
 
 @Service
@@ -26,6 +27,16 @@ public class ProductService {
 
     public Page<Product> search(String kw, Long categoryId, Boolean active, Pageable pageable) {
         return productRepo.search(kw, categoryId, active, pageable);
+    }
+
+    // ✅ NEW: For POS card (Ajax)
+    public Page<Product> searchPos(String q, Pageable pageable) {
+        String kw = (q == null) ? "" : q.trim();
+        if (kw.isEmpty()) {
+            // show only active products in POS
+            return productRepo.findByActiveTrue(pageable);
+        }
+        return productRepo.findByActiveTrueAndNameContainingIgnoreCase(kw, pageable);
     }
 
     // ✅ NEW: For cart/shop usage
@@ -56,5 +67,11 @@ public class ProductService {
         p.setActive(!Boolean.TRUE.equals(p.getActive()));
         productRepo.save(p);
     }
-
+    public Page<Product> posProducts(String q, Pageable pageable) {
+        String kw = (q == null) ? "" : q.trim();
+        if (kw.isEmpty()) {
+            return productRepo.findByActiveTrue(pageable);
+        }
+        return productRepo.findByActiveTrueAndNameContainingIgnoreCase(kw, pageable);
+    }
 }

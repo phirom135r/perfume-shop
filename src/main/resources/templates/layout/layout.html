@@ -55,6 +55,10 @@
            th:classappend="${activeMenu=='products'} ? ' active' : ''">
             <i class="bi bi-box-seam"></i> Product
         </a>
+        <a th:href="@{/admin/pos}"
+           th:classappend="${activeMenu=='pos'} ? ' active' : ''">
+            <i class="bi bi-box-seam"></i> Pos
+        </a>
         <a th:href="@{/admin/orders}"
            th:classappend="${activeMenu=='orders'} ? ' active' : ''">
             <i class="bi bi-box-seam"></i> Order
@@ -97,6 +101,11 @@
                th:href="@{/admin/products}"
                th:classappend="${activeMenu=='products'} ? ' active' : ''">
                 <i class="bi bi-box-seam"></i> Product
+            </a>
+            <a class="mobile-nav-link"
+               th:href="@{/admin/pos}"
+               th:classappend="${activeMenu=='pos'} ? ' active' : ''">
+                <i class="bi bi-tags"></i> pos
             </a>
             <a class="mobile-nav-link"
                th:href="@{/admin/orders}"

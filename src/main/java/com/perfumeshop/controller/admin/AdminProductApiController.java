@@ -1,3 +1,4 @@
+//src/main/java/com/perfumeshop/controller/admin/AdminProductApiController.java
 package com.perfumeshop.controller.admin;
 
 import com.perfumeshop.dto.DataTableResponse;
@@ -10,6 +11,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.math.BigDecimal;
 import java.nio.file.*;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -101,7 +103,7 @@ public class AdminProductApiController {
             @RequestParam String name,
             @RequestParam(required = false, defaultValue = "") String brand,
             @RequestParam(required = false, defaultValue = "") String description,
-            @RequestParam Double price,
+            @RequestParam BigDecimal price,
             @RequestParam(required = false, defaultValue = "0") Double discount,
             @RequestParam Integer stock,
             @RequestParam Long categoryId,
@@ -152,4 +154,33 @@ public class AdminProductApiController {
         service.toggleActive(id);
         return ResponseEntity.ok().build();
     }
+    // ✅ POS products endpoint (cards)
+    @GetMapping("/pos")
+    public Map<String, Object> posProducts(
+            @RequestParam(defaultValue = "") String q,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "9") int size
+    ) {
+        Page<Product> p = service.posProducts(q, PageRequest.of(page, size, Sort.by("id").descending()));
+
+        List<Map<String, Object>> items = new ArrayList<>();
+        for (Product x : p.getContent()) {
+            Map<String, Object> row = new HashMap<>();
+            row.put("id", x.getId());
+            row.put("name", x.getName());
+            row.put("brand", x.getBrand());
+            row.put("price", x.getPrice());     // BigDecimal OK
+            row.put("image", x.getImage());
+            row.put("stock", x.getStock());
+            items.add(row);
+        }
+
+        Map<String, Object> res = new HashMap<>();
+        res.put("content", items);
+        res.put("page", p.getNumber());
+        res.put("totalPages", p.getTotalPages());
+        res.put("totalElements", p.getTotalElements());
+        return res;
+    }
+
 }

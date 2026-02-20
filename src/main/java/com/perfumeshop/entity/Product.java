@@ -1,6 +1,8 @@
 package com.perfumeshop.entity;
 
 import jakarta.persistence.*;
+
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -20,8 +22,8 @@ public class Product {
     @Lob
     private String description;
 
-    @Column(nullable=false)
-    private Double price;
+    @Column(nullable = false, precision = 10, scale = 2)
+    private BigDecimal price;
 
     @Column(nullable=false)
     private Double discount = 0.0;
@@ -64,8 +66,8 @@ public class Product {
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
 
-    public Double getPrice() { return price; }
-    public void setPrice(Double price) { this.price = price; }
+    public BigDecimal getPrice() { return price; }
+    public void setPrice(BigDecimal price) { this.price = price; }
 
     public Double getDiscount() { return discount; }
     public void setDiscount(Double discount) { this.discount = discount; }

@@ -30,4 +30,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
             @Param("active") Boolean active,
             Pageable pageable
     );
+   Page<Product> findByActiveTrue(Pageable pageable);
+
+    Page<Product> findByActiveTrueAndNameContainingIgnoreCase(String name, Pageable pageable);
 }
