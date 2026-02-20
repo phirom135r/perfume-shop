@@ -29,7 +29,19 @@ public class DataSeeder {
 
                 repo.save(u);
 
-                System.out.println("✅ Admin user created: admin / 123456");
+
+
+//                System.out.println("✅ Admin user created: admin / 123456");
+            }
+            if (!repo.existsByUsername("nuch")) {
+                User u1 = new User();
+                u1.setFullName("Nu Nuch");
+                u1.setUsername("nuch");
+                u1.setPasswordHash(enc.encode("654321"));
+                u1.setRole("ADMIN");
+                u1.setActive(true);
+
+                repo.save(u1);
             }
         };
     }
