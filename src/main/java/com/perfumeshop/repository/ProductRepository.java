@@ -6,28 +6,27 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.*;
 import org.springframework.data.repository.query.Param;
 
-public interface ProductRepository extends JpaRepository<Product, Long> {
+public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpecificationExecutor<Product> {
 
+    // POS products (only active products, search by name)
     @Query("""
-        select p from Product p
-        join p.category c
-        where (:categoryId is null or c.id = :categoryId)
-          and (:active is null or p.active = :active)
-          and (
-                :kw is null or :kw = '' or
-                lower(p.name) like lower(concat('%', :kw, '%')) or
-                lower(p.brand) like lower(concat('%', :kw, '%')) or
-                lower(c.name) like lower(concat('%', :kw, '%')) or
-                str(p.id) like concat('%', :kw, '%') or
-                str(p.stock) like concat('%', :kw, '%') or
-                str(p.price) like concat('%', :kw, '%') or
-                str(p.discount) like concat('%', :kw, '%')
-          )
+        SELECT p FROM Product p
+        WHERE p.active = true
+          AND (:q IS NULL OR :q = '' OR LOWER(p.name) LIKE LOWER(CONCAT('%', :q, '%')))
     """)
-    Page<Product> search(
-            @Param("kw") String kw,
-            @Param("categoryId") Long categoryId,
-            @Param("active") Boolean active,
-            Pageable pageable
-    );
+    Page<Product> posProducts(@Param("q") String q, Pageable pageable);
+
+    // keep your existing search(...) for DataTables
+    @Query("""
+        SELECT p FROM Product p
+        WHERE (:kw IS NULL OR :kw = '' OR
+               LOWER(p.name) LIKE LOWER(CONCAT('%', :kw, '%')) OR
+               LOWER(p.brand) LIKE LOWER(CONCAT('%', :kw, '%')))
+          AND (:categoryId IS NULL OR p.category.id = :categoryId)
+          AND (:active IS NULL OR p.active = :active)
+    """)
+    Page<Product> search(@Param("kw") String kw,
+                         @Param("categoryId") Long categoryId,
+                         @Param("active") Boolean active,
+                         Pageable pageable);
 }

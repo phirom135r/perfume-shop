@@ -4,7 +4,8 @@ import com.perfumeshop.entity.Category;
 import com.perfumeshop.entity.Product;
 import com.perfumeshop.repository.CategoryRepository;
 import com.perfumeshop.repository.ProductRepository;
-import org.springframework.data.domain.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -28,7 +29,13 @@ public class ProductService {
         return productRepo.search(kw, categoryId, active, pageable);
     }
 
-    // ✅ NEW: For cart/shop usage
+    // ✅ POS products for cards (admin POS)
+    public Page<Product> posProducts(String q, Pageable pageable) {
+        String kw = (q == null) ? "" : q.trim();
+        return productRepo.posProducts(kw, pageable);
+    }
+
+    // ✅ For cart/shop usage
     public Product find(Long id) {
         return productRepo.findById(id).orElse(null);
     }
@@ -56,5 +63,4 @@ public class ProductService {
         p.setActive(!Boolean.TRUE.equals(p.getActive()));
         productRepo.save(p);
     }
-
 }

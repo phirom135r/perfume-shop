@@ -14,6 +14,7 @@ public class GlobalViewAdvice {
         if (uri.startsWith("/admin/dashboard")) return "dashboard";
         if (uri.startsWith("/admin/categories")) return "categories";
         if (uri.startsWith("/admin/products")) return "products";
+        if (uri.startsWith("/admin/pos")) return "pos";
         if (uri.startsWith("/admin/orders")) return "orders";
 
         return "";

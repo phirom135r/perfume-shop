@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.math.BigDecimal;
 import java.nio.file.*;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -101,8 +102,8 @@ public class AdminProductApiController {
             @RequestParam String name,
             @RequestParam(required = false, defaultValue = "") String brand,
             @RequestParam(required = false, defaultValue = "") String description,
-            @RequestParam Double price,
-            @RequestParam(required = false, defaultValue = "0") Double discount,
+            @RequestParam BigDecimal price,
+            @RequestParam(required = false, defaultValue = "0") BigDecimal discount,
             @RequestParam Integer stock,
             @RequestParam Long categoryId,
             @RequestParam(defaultValue = "true") Boolean active,
