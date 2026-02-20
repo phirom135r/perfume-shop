@@ -1,6 +1,7 @@
 package com.perfumeshop.entity;
 
 import jakarta.persistence.*;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "products")
@@ -10,25 +11,47 @@ public class Product {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable=false, length=200)
     private String name;
+
+    @Column(length=200)
     private String brand;
 
-    @Column(columnDefinition = "TEXT")
+    @Lob
     private String description;
 
+    @Column(nullable=false)
     private Double price;
-    private Double discount;
-    private Integer stock;
 
-    @Column(name = "category_id")
-    private Long categoryId;
+    @Column(nullable=false)
+    private Double discount = 0.0;
 
-    private String image;
+    @Column(nullable=false)
+    private Integer stock = 0;
 
-    @Column(nullable = false)
-    private Boolean active = true; // ✅ default true
+    @Column(length=400)
+    private String image; // ex: /uploads/products/xxx.jpg
 
-    // ===== getters/setters =====
+    @Column(nullable=false)
+    private Boolean active = true;
+
+    @Column(name="created_at", nullable=false)
+    private LocalDateTime createdAt;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name="category_id", nullable=false)
+    private Category category;
+
+    public Product() {}
+
+    @PrePersist
+    public void prePersist() {
+        if (createdAt == null) createdAt = LocalDateTime.now();
+        if (active == null) active = true;
+        if (discount == null) discount = 0.0;
+        if (stock == null) stock = 0;
+    }
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -50,12 +73,15 @@ public class Product {
     public Integer getStock() { return stock; }
     public void setStock(Integer stock) { this.stock = stock; }
 
-    public Long getCategoryId() { return categoryId; }
-    public void setCategoryId(Long categoryId) { this.categoryId = categoryId; }
-
     public String getImage() { return image; }
     public void setImage(String image) { this.image = image; }
 
     public Boolean getActive() { return active; }
     public void setActive(Boolean active) { this.active = active; }
+
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+
+    public Category getCategory() { return category; }
+    public void setCategory(Category category) { this.category = category; }
 }

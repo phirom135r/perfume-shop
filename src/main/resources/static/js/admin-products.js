@@ -1,228 +1,243 @@
+// admin-products.js
 let modal;
-let state = {
-    page:0,
-    size:10,
-    q:"",
-    categoryId:"",
-    active:"",
-    sort:"id_desc"
-};
+let dt;
+let _previewUrl = null;
 
-document.addEventListener("DOMContentLoaded", ()=>{
+$(document).ready(function () {
 
     modal = new bootstrap.Modal(document.getElementById("productModal"));
 
-    document.getElementById("btnAdd").onclick=openAdd;
-    document.getElementById("productForm").onsubmit=saveProduct;
-    document.getElementById("image").onchange=previewImage;
+    $("#btnAdd").on("click", openAdd);
+    $("#productForm").on("submit", saveProduct);
+    $("#image").on("change", previewImage);
 
-    document.getElementById("btnSearch").onclick=()=>{
-        readFilters();
-        state.page=0;
-        loadProducts();
-    };
+    $("#btnApply").on("click", function () {
+        dt.ajax.reload();
+    });
 
-    loadProducts();
+    $("#btnReset").on("click", function () {
+        $("#filterCategory").val("");
+        $("#filterStatus").val("");
+        dt.ajax.reload();
+    });
+
+    initDataTable();
 });
 
-/* ================= LOAD ================= */
+function initDataTable() {
+    dt = new DataTable("#tblProducts", {
+        processing: true,
+        serverSide: true,
+        searching: true,
+        lengthMenu: [10, 25, 50, 100],
+        pageLength: 50,
+        ajax: {
+            url: "/admin/api/products/dt",
+            type: "GET",
+            data: function (d) {
+                d.categoryId = $("#filterCategory").val() || null;
 
-function readFilters(){
-    state.q=document.getElementById("q").value;
-    state.categoryId=document.getElementById("filterCategory").value;
-    state.active=document.getElementById("filterActive").value;
-    state.sort=document.getElementById("sort").value;
-}
+                const st = $("#filterStatus").val();
+                d.active = (st === "" ? null : st); // "true"/"false" ok
+            }
+        },
+        columns: [
+            { data: "id" },
+            { data: "name" },
+            { data: "category" },
+            { data: "brand" },
+            { data: "stock" },
+            {
+                data: "price",
+                render: function (data) {
+                    const v = Number(data || 0).toFixed(2);
+                    return "$" + v;
+                }
+            },
+            {
+                data: "image",
+                orderable: false,
+                render: function (data) {
+                    if (!data) return "-";
+                    return `<img class="thumb" src="${data}" alt="img">`;
+                }
+            },
+            {
+                data: "active",
+                render: function (data) {
+                    if (data === true) return `<span class="status-pill pill-active">active</span>`;
+                    return `<span class="status-pill pill-inactive">inactive</span>`;
+                }
+            },
+            { data: "createdAt" },
+            {
+                data: null,
+                orderable: false,
+                className: "col-action", // ✅ IMPORTANT (match your CSS)
+                render: function (row) {
+                    const safe = encodeJson(row);
 
-function buildQuery(){
-    const p=new URLSearchParams();
-
-    p.set("page",state.page);
-    p.set("size",state.size);
-    p.set("sort",state.sort);
-
-    if(state.q) p.set("q",state.q);
-    if(state.categoryId) p.set("categoryId",state.categoryId);
-    if(state.active!=="") p.set("active",state.active);
-
-    return p.toString();
-}
-
-function loadProducts(){
-
-    fetch("/admin/api/products?"+buildQuery())
-        .then(r=>r.json())
-        .then(data=>{
-
-            let html="";
-
-            data.items.forEach(p=>{
-
-                const img=p.image
-                    ? `<img src="${p.image}" style="height:46px;width:46px;border-radius:8px;object-fit:cover;">`
-                    : "-";
-
-                const badge=p.active
-                    ? `<span class="badge text-bg-success">Active</span>`
-                    : `<span class="badge text-bg-secondary">Inactive</span>`;
-
-                html+=`
-                <tr>
-                    <td>${p.id}</td>
-                    <td>${img}</td>
-                    <td>${p.name}</td>
-                    <td>${p.brand||""}</td>
-                    <td>${p.categoryName||""}</td>
-                    <td>${p.price}</td>
-                    <td>${p.discount}</td>
-                    <td>${p.stock}</td>
-                    <td>${badge}</td>
-                    <td>
-                        <button class="btn btn-warning btn-sm"
-                            onclick='openEdit(${JSON.stringify(p)})'>Edit</button>
-
-                        <button class="btn btn-danger btn-sm"
-                            onclick="deleteProduct(${p.id})">Delete</button>
-                    </td>
-                </tr>`;
-            });
-
-            document.getElementById("tbody").innerHTML=html;
-
-            renderPagination(data.page,data.totalPages);
-        });
-}
-
-/* ================= PAGINATION ================= */
-
-function renderPagination(page,total){
-
-    let html="";
-
-    for(let i=0;i<total;i++){
-        html+=`
-        <li class="page-item ${i===page?'active':''}">
-            <button class="page-link" onclick="goPage(${i})">${i+1}</button>
-        </li>`;
-    }
-
-    document.getElementById("pagination").innerHTML=html;
-}
-
-function goPage(p){
-    state.page=p;
-    loadProducts();
+                    return `
+                          <div class="action-wrap">
+                            <button type="button" class="btn btn-sm btn-primary" onclick='openEdit(${safe})'>
+                              <i class="bi bi-pencil-square"></i> Edit
+                            </button>
+                            <button type="button" class="btn btn-sm btn-danger" onclick="deleteProduct(${row.id})">
+                              <i class="bi bi-trash"></i> Delete
+                            </button>
+                          </div>
+                        `;
+                }
+            }
+        ]
+    });
 }
 
 /* ================= MODAL ================= */
 
-function openAdd(){
-
-    document.getElementById("modalTitle").innerText="Add Product";
-    document.getElementById("productForm").reset();
-    document.getElementById("id").value="";
-
-    setUploadEmpty();
-
+function openAdd() {
+    $("#modalTitle").text("Add Product");
+    $("#productForm")[0].reset();
+    $("#id").val("");
+    $("#active").val("true");
+    setUploadBoxEmpty();
     modal.show();
 }
 
-function openEdit(p){
+function openEdit(row) {
+    $("#modalTitle").text("Edit Product");
 
-    document.getElementById("modalTitle").innerText="Edit Product";
+    $("#id").val(row.id);
+    $("#name").val(row.name || "");
+    $("#brand").val(row.brand || "");
+    $("#stock").val(row.stock ?? 0);
+    $("#price").val(row.price ?? 0);
+    $("#discount").val(0); // optional if you want show discount from API, add discount to DTO+datatable
+    $("#description").val("");
+    $("#active").val(String(row.active));
 
-    document.getElementById("id").value=p.id;
-    document.getElementById("name").value=p.name;
-    document.getElementById("brand").value=p.brand;
-    document.getElementById("price").value=p.price;
-    document.getElementById("discount").value=p.discount;
-    document.getElementById("stock").value=p.stock;
-    document.getElementById("description").value=p.description;
-    document.getElementById("categoryId").value=p.categoryId;
+    // category: we only have name in table, but in form we need id
+    // easiest: you already have categoryId in your backend? then include categoryId in DTO and set here.
+    // For now, keep selected as current (no change) or let admin reselect:
+    // $("#categoryId").val(row.categoryId);
 
-    if(p.image){
-        document.getElementById("uploadPreview").innerHTML=
-            `<img src="${p.image}">`;
-    }else{
-        setUploadEmpty();
+    if (row.image) {
+        $("#uploadPreview").html(`<img src="${row.image}" alt="preview">`);
+    } else {
+        setUploadBoxEmpty();
     }
 
+    $("#image").val("");
     modal.show();
 }
 
 /* ================= SAVE ================= */
 
-function saveProduct(e){
-
+function saveProduct(e) {
     e.preventDefault();
 
-    const fd=new FormData();
+    const fd = new FormData();
 
-    if(id.value) fd.append("id",id.value);
+    const id = $("#id").val();
+    if (id) fd.append("id", id);
 
-    fd.append("name",name.value);
-    fd.append("brand",brand.value);
-    fd.append("categoryId",categoryId.value);
-    fd.append("price",price.value);
-    fd.append("discount",discount.value);
-    fd.append("stock",stock.value);
-    fd.append("description",description.value);
+    fd.append("name", $("#name").val());
+    fd.append("brand", $("#brand").val());
+    fd.append("categoryId", $("#categoryId").val());
+    fd.append("price", $("#price").val() || 0);
+    fd.append("discount", $("#discount").val() || 0);
+    fd.append("stock", $("#stock").val() || 0);
+    fd.append("description", $("#description").val() || "");
+    fd.append("active", $("#active").val());
 
-    if(image.files[0]){
-        fd.append("image",image.files[0]);
-    }
+    const file = $("#image")[0].files[0];
+    if (file) fd.append("image", file);
 
-    fetch("/admin/api/products",{method:"POST",body:fd})
-        .then(()=>{
-
+    fetch("/admin/api/products", { method: "POST", body: fd })
+        .then(async (r) => {
+            if (!r.ok) {
+                const msg = await r.text();
+                throw new Error(msg || "Save failed");
+            }
+            return r.json();
+        })
+        .then(() => {
             modal.hide();
-            Swal.fire({
-                toast:true,
-                position:"top-end",
-                icon:"success",
-                title:"Saved successfully",
-                showConfirmButton:false,
-                timer:1500
-            });
-
-            loadProducts();
-        });
+            toastSuccess("Saved successfully");
+            dt.ajax.reload(null, false);
+        })
+        .catch((err) => toastError(err.message || "Cannot save product"));
 }
 
 /* ================= DELETE ================= */
 
-function deleteProduct(id){
-
+function deleteProduct(id) {
     Swal.fire({
-        title:"Delete this product?",
-        icon:"warning",
-        showCancelButton:true
-    }).then(r=>{
+        title: "Delete this product?",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Yes, delete",
+        cancelButtonText: "Cancel"
+    }).then(res => {
+        if (!res.isConfirmed) return;
 
-        if(!r.isConfirmed) return;
-
-        fetch("/admin/api/products/"+id,{method:"DELETE"})
-            .then(()=>loadProducts());
+        fetch("/admin/api/products/" + id, { method: "DELETE" })
+            .then(r => {
+                if (!r.ok) throw new Error("Delete failed");
+                toastSuccess("Deleted successfully");
+                dt.ajax.reload(null, false);
+            })
+            .catch(() => toastError("Cannot delete product"));
     });
 }
 
-/* ================= IMAGE ================= */
+/* ================= PREVIEW ================= */
 
-function previewImage(){
+function previewImage() {
+    const file = $("#image")[0].files[0];
+    if (!file) return;
 
-    const file=image.files[0];
-    if(!file) return;
+    if (_previewUrl) URL.revokeObjectURL(_previewUrl);
+    _previewUrl = URL.createObjectURL(file);
 
-    const url=URL.createObjectURL(file);
-
-    uploadPreview.innerHTML=`<img src="${url}">`;
+    $("#uploadPreview").html(`<img src="${_previewUrl}" alt="preview">`);
 }
 
-function setUploadEmpty(){
-
-    uploadPreview.innerHTML=`
-    <div class="upload-placeholder">
+function setUploadBoxEmpty() {
+    $("#uploadPreview").html(`
+      <div class="upload-placeholder">
         <div class="plus">+</div>
         <div class="small text-muted">Upload</div>
-    </div>`;
+      </div>
+    `);
+}
+
+/* ================= TOAST ================= */
+
+function toastSuccess(msg) {
+    Swal.fire({
+        toast: true,
+        position: "top-end",
+        icon: "success",
+        title: msg,
+        showConfirmButton: false,
+        timer: 1500
+    });
+}
+
+function toastError(msg) {
+    Swal.fire({
+        toast: true,
+        position: "top-end",
+        icon: "error",
+        title: msg,
+        showConfirmButton: false,
+        timer: 2200
+    });
+}
+
+/* ================= HELPERS ================= */
+
+function encodeJson(obj) {
+    return JSON.stringify(obj).replaceAll("'", "\\'");
 }
