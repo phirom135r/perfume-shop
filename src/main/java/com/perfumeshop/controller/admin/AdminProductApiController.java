@@ -28,19 +28,58 @@ public class AdminProductApiController {
         this.service = service;
     }
 
-    // DataTables server-side endpoint
+    // =====================================================
+    // ✅ NEW: POS endpoint (FOR POS PAGE)
+    // URL: /admin/api/products/pos
+    // =====================================================
+    @GetMapping("/pos")
+    public Page<Map<String, Object>> posProducts(
+            @RequestParam(defaultValue = "") String q,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "9") int size
+    ) {
+        Pageable pageable = PageRequest.of(
+                Math.max(0, page),
+                Math.max(1, size),
+                Sort.by("id").descending()
+        );
+
+        // Only active products for POS
+        Page<Product> result = service.search(q, null, true, pageable);
+
+        return result.map(p -> {
+            Map<String, Object> m = new HashMap<>();
+            m.put("id", p.getId());
+            m.put("name", p.getName());
+            m.put("brand", p.getBrand());
+            m.put("price", p.getPrice() == null ? BigDecimal.ZERO : p.getPrice());
+            m.put("stock", p.getStock() == null ? 0 : p.getStock());
+
+            // Build image URL for browser
+            String img = p.getImage();
+            if (img == null || img.isBlank()) {
+                m.put("imageUrl", "/images/no-image.png");
+            } else if (img.startsWith("http") || img.startsWith("/")) {
+                m.put("imageUrl", img);
+            } else {
+                m.put("imageUrl", "/" + img.replace("\\", "/"));
+            }
+
+            return m;
+        });
+    }
+
+    // =====================================================
+    // DataTables endpoint (ADMIN LIST PAGE)
+    // =====================================================
     @GetMapping("/dt")
     public DataTableResponse<ProductRowDto> datatable(
             @RequestParam(defaultValue = "0") int draw,
             @RequestParam(defaultValue = "0") int start,
             @RequestParam(defaultValue = "10") int length,
-
             @RequestParam(name = "search[value]", defaultValue = "") String search,
-
             @RequestParam(name = "order[0][column]", defaultValue = "0") int orderCol,
             @RequestParam(name = "order[0][dir]", defaultValue = "asc") String orderDir,
-
-            // our extra filters
             @RequestParam(required = false) Long categoryId,
             @RequestParam(required = false) Boolean active
     ) {
@@ -53,6 +92,7 @@ public class AdminProductApiController {
 
         DateTimeFormatter fmt = DateTimeFormatter.ofPattern("MM/dd/yyyy");
         List<ProductRowDto> rows = new ArrayList<>();
+
         for (Product p : result.getContent()) {
             ProductRowDto dto = new ProductRowDto();
             dto.setId(p.getId());
@@ -70,19 +110,17 @@ public class AdminProductApiController {
         long total = service.countAll();
         long filtered = result.getTotalElements();
 
-        return new DataTableResponse<ProductRowDto>(draw, total, filtered, rows);
+        return new DataTableResponse<>(draw, total, filtered, rows);
     }
 
     private Sort buildSort(int col, String dir) {
         boolean asc = !"desc".equalsIgnoreCase(dir);
 
-        // columns in table:
-        // 0 ID, 1 Name, 2 Category, 3 Brand, 4 Qty, 5 Price, 6 Image, 7 Status, 8 Create, 9 Action
         String prop;
         switch (col) {
             case 0 -> prop = "id";
             case 1 -> prop = "name";
-            case 2 -> prop = "category.name"; // works with JPA sort sometimes; if issue, change to "category"
+            case 2 -> prop = "category.name";
             case 3 -> prop = "brand";
             case 4 -> prop = "stock";
             case 5 -> prop = "price";
@@ -90,12 +128,12 @@ public class AdminProductApiController {
             default -> prop = "id";
         }
 
-        // if "category.name" sort causes issue in your version, replace with:
-        // case 2 -> prop = "category"; (or remove sorting on category)
         return asc ? Sort.by(prop).ascending() : Sort.by(prop).descending();
     }
 
-    // Create / Update (multipart)
+    // =====================================================
+    // CREATE / UPDATE
+    // =====================================================
     @PostMapping(consumes = "multipart/form-data")
     public ResponseEntity<?> save(
             @RequestParam(required = false) Long id,

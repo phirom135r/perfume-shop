@@ -1,85 +1,46 @@
-// src/main/java/com/perfumeshop/entity/OrderItem.java
+//entity/OrderItem
 package com.perfumeshop.entity;
 
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 
 @Entity
-@Table(name="order_items")
+@Table(name = "order_items")
 public class OrderItem {
+
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name="order_id", nullable=false)
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "order_id")
     private Order order;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name="product_id", nullable=false)
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "product_id")
     private Product product;
 
-    @Column(nullable=false)
-    private Integer qty = 1;
+    private int qty;
 
-    @Column(nullable=false, precision=12, scale=2)
-    private BigDecimal price = BigDecimal.ZERO; // unit price snapshot
+    @Column(precision = 12, scale = 2)
+    private BigDecimal unitPrice = BigDecimal.ZERO;
 
-    @Column(nullable=false, precision=12, scale=2)
+    @Column(precision = 12, scale = 2)
     private BigDecimal lineTotal = BigDecimal.ZERO;
 
-    public void recalcLineTotal(){
-        if(price==null) price = BigDecimal.ZERO;
-        if(qty==null) qty = 0;
-        lineTotal = price.multiply(BigDecimal.valueOf(qty));
-    }
+    public Long getId() { return id; }
 
-    // getters/setters ...
+    public Order getOrder() { return order; }
+    public void setOrder(Order order) { this.order = order; }
 
-    public Long getId() {
-        return id;
-    }
+    public Product getProduct() { return product; }
+    public void setProduct(Product product) { this.product = product; }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    public int getQty() { return qty; }
+    public void setQty(int qty) { this.qty = qty; }
 
-    public Order getOrder() {
-        return order;
-    }
+    public BigDecimal getUnitPrice() { return unitPrice; }
+    public void setUnitPrice(BigDecimal unitPrice) { this.unitPrice = unitPrice; }
 
-    public void setOrder(Order order) {
-        this.order = order;
-    }
-
-    public Product getProduct() {
-        return product;
-    }
-
-    public void setProduct(Product product) {
-        this.product = product;
-    }
-
-    public Integer getQty() {
-        return qty;
-    }
-
-    public void setQty(Integer qty) {
-        this.qty = qty;
-    }
-
-    public BigDecimal getPrice() {
-        return price;
-    }
-
-    public void setPrice(BigDecimal price) {
-        this.price = price;
-    }
-
-    public BigDecimal getLineTotal() {
-        return lineTotal;
-    }
-
-    public void setLineTotal(BigDecimal lineTotal) {
-        this.lineTotal = lineTotal;
-    }
+    public BigDecimal getLineTotal() { return lineTotal; }
+    public void setLineTotal(BigDecimal lineTotal) { this.lineTotal = lineTotal; }
 }

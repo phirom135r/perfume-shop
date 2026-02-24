@@ -1,99 +1,91 @@
-// src/main/java/com/perfumeshop/entity/Payment.java
 package com.perfumeshop.entity;
 
 import com.perfumeshop.enums.PaymentMethod;
+import com.perfumeshop.enums.PaymentStatus;
 import jakarta.persistence.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name="payments")
+@Table(name = "payments")
 public class Payment {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // One order can have 0..1 payment (we keep it simple)
     @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name="order_id", nullable=false, unique=true)
+    @JoinColumn(name = "order_id", nullable = false, unique = true)
     private Order order;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable=false, length=20)
-    private PaymentMethod method = PaymentMethod.CASH;
+    @Column(name = "method", nullable = false, length = 10)
+    private PaymentMethod method;
 
-    @Column(nullable=false, precision=12, scale=2)
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false, length = 20)
+    private PaymentStatus status = PaymentStatus.PENDING;
+
+    @Column(nullable = false, length = 3)
+    private String currency = "USD";
+
+    @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal amount = BigDecimal.ZERO;
 
-    @Column(length=50)
-    private String status; // INIT, PAID, FAILED (string ok)
+    // KHQR fields
+    @Column(name = "khqr_string", columnDefinition = "TEXT")
+    private String khqrString;
 
-    @Column(length=2000)
-    private String khqr; // store KHQR payload (optional)
+    @Column(length = 64)
+    private String md5;
 
-    @Column(name="created_at", nullable=false)
+    @Column(name = "tx_id")
+    private Long txId;
+
+    @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
+    @Column(name = "paid_at")
+    private LocalDateTime paidAt;
+
     @PrePersist
-    public void prePersist(){
-        if(createdAt==null) createdAt = LocalDateTime.now();
-        if(status==null) status = "INIT";
+    public void prePersist() {
+        if (createdAt == null) createdAt = LocalDateTime.now();
+        if (currency == null || currency.isBlank()) currency = "USD";
     }
 
-    // getters/setters ...
+    // ===== getters/setters =====
+    public Long getId() { return id; }
 
-    public Long getId() {
-        return id;
-    }
+    public Order getOrder() { return order; }
+    public void setOrder(Order order) { this.order = order; }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+    public PaymentMethod getMethod() { return method; }
+    public void setMethod(PaymentMethod method) { this.method = method; }
 
-    public Order getOrder() {
-        return order;
-    }
+    public PaymentStatus getStatus() { return status; }
+    public void setStatus(PaymentStatus status) { this.status = status; }
 
-    public void setOrder(Order order) {
-        this.order = order;
-    }
+    public String getCurrency() { return currency; }
+    public void setCurrency(String currency) { this.currency = currency; }
 
-    public PaymentMethod getMethod() {
-        return method;
-    }
+    public BigDecimal getAmount() { return amount; }
+    public void setAmount(BigDecimal amount) { this.amount = amount; }
 
-    public void setMethod(PaymentMethod method) {
-        this.method = method;
-    }
+    public String getKhqrString() { return khqrString; }
+    public void setKhqrString(String khqrString) { this.khqrString = khqrString; }
 
-    public BigDecimal getAmount() {
-        return amount;
-    }
+    public String getMd5() { return md5; }
+    public void setMd5(String md5) { this.md5 = md5; }
 
-    public void setAmount(BigDecimal amount) {
-        this.amount = amount;
-    }
+    public Long getTxId() { return txId; }
+    public void setTxId(Long txId) { this.txId = txId; }
 
-    public String getStatus() {
-        return status;
-    }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 
-    public void setStatus(String status) {
-        this.status = status;
-    }
-
-    public String getKhqr() {
-        return khqr;
-    }
-
-    public void setKhqr(String khqr) {
-        this.khqr = khqr;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
+    public LocalDateTime getPaidAt() { return paidAt; }
+    public void setPaidAt(LocalDateTime paidAt) { this.paidAt = paidAt; }
 }

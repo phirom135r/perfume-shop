@@ -1,3 +1,4 @@
+<!--dashboard.html-->
 <!doctype html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
@@ -8,55 +9,179 @@
 </head>
 
 <body>
+<div class="container-fluid py-3" layout:fragment="content">
 
-<div layout:fragment="content">
+    <style>
+        .card-soft {
+            border: 0;
+            border-radius: 16px;
+            box-shadow: 0 6px 18px rgba(0,0,0,.06);
+        }
+        /* ✅ Border-left style (like indicator) */
+        .bl {
+            border-left: 6px solid #0d6efd; /* default primary */
+        }
+        .bl-primary { border-left-color: #0d6efd; }
+        .bl-success { border-left-color: #198754; }
+        .bl-warning { border-left-color: #ffc107; }
+        .bl-danger  { border-left-color: #dc3545; }
+        .bl-info    { border-left-color: #0dcaf0; }
 
+        .card-title-mini {
+            font-size: 12px;
+            color: #6c757d;
+        }
+
+        .range-input {
+            background: #f8fafc;
+        }
+    </style>
+
+    <div class="d-flex align-items-center mb-3">
+        <h4 class="mb-0">Dashboard</h4>
+        <div class="ms-auto text-muted small">Sales Analytics</div>
+    </div>
+
+    <!-- ✅ Range Filter -->
+    <div class="card card-soft bl bl-primary mb-3">
+        <div class="card-body">
+            <div class="row g-2 align-items-end">
+                <div class="col-12 col-md-3">
+                    <label class="form-label small text-muted">Range</label>
+                    <select id="rangeSelect" class="form-select">
+                        <option value="TODAY">Today</option>
+                        <option value="LAST_7_DAYS" selected>Last 7 days</option>
+                        <option value="THIS_MONTH">This Month</option>
+                        <option value="CUSTOM">Custom</option>
+                    </select>
+                </div>
+
+                <div class="col-6 col-md-3">
+                    <label class="form-label small text-muted">From</label>
+                    <input id="fromDate" type="date" class="form-control range-input">
+                </div>
+
+                <div class="col-6 col-md-3">
+                    <label class="form-label small text-muted">To</label>
+                    <input id="toDate" type="date" class="form-control range-input">
+                </div>
+
+                <div class="col-12 col-md-3 d-grid">
+                    <button id="btnApplyRange" class="btn btn-primary">Apply</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Cards -->
     <div class="row g-3">
         <div class="col-12 col-md-3">
-            <div class="card shadow-sm">
+            <div class="card card-soft bl bl-info">
                 <div class="card-body">
-                    <div class="text-muted small">TOTAL ORDERS</div>
-                    <div class="fs-3 fw-bold">0</div>
+                    <div class="card-title-mini">Sales (Selected Range)</div>
+                    <div class="fs-4 fw-bold">$<span id="salesAmount">0.00</span></div>
+                    <div class="text-muted small"><span id="salesOrders">0</span> orders</div>
                 </div>
             </div>
         </div>
 
         <div class="col-12 col-md-3">
-            <div class="card shadow-sm">
+            <div class="card card-soft bl bl-primary">
                 <div class="card-body">
-                    <div class="text-muted small">USD REVENUE</div>
-                    <div class="fs-3 fw-bold">$0.00</div>
+                    <div class="card-title-mini">Sales (Selected Range)</div>
+                    <div class="fs-4 fw-bold">$<span id="salesAmount2">0.00</span></div>
+                    <div class="text-muted small"><span id="salesOrders2">0</span> orders</div>
                 </div>
             </div>
         </div>
 
-        <div class="col-12 col-md-3">
-            <div class="card shadow-sm">
+        <div class="col-12 col-md-2">
+            <div class="card card-soft bl bl-warning">
                 <div class="card-body">
-                    <div class="text-muted small">TOTAL CUSTOMERS</div>
-                    <div class="fs-3 fw-bold">0</div>
+                    <div class="card-title-mini">Pending</div>
+                    <div class="fs-4 fw-bold text-warning"><span id="pendingCount">0</span></div>
                 </div>
             </div>
         </div>
 
-        <div class="col-12 col-md-3">
-            <div class="card shadow-sm">
+        <div class="col-12 col-md-2">
+            <div class="card card-soft bl bl-success">
                 <div class="card-body">
-                    <div class="text-muted small">TOTAL PRODUCTS</div>
-                    <div class="fs-3 fw-bold">0</div>
+                    <div class="card-title-mini">Paid</div>
+                    <div class="fs-4 fw-bold text-success"><span id="paidCount">0</span></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-2">
+            <div class="card card-soft bl bl-danger">
+                <div class="card-body">
+                    <div class="card-title-mini">Cancelled</div>
+                    <div class="fs-4 fw-bold text-danger"><span id="cancelledCount">0</span></div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="card shadow-sm mt-4">
+    <!-- Charts + Tables -->
+    <div class="row g-3 mt-1">
+        <div class="col-12 col-lg-8">
+            <div class="card card-soft bl bl-primary">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-2">
+                        <h6 class="mb-0" id="salesTitle">Sales (Last 7 days)</h6>
+                    </div>
+                    <canvas id="salesChart" height="110"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-lg-4">
+            <div class="card card-soft bl bl-success">
+                <div class="card-body">
+                    <h6 class="mb-2" id="topTitle">Top Products (Last 7 days)</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm align-middle">
+                            <thead class="table-light">
+                            <tr>
+                                <th>Product</th>
+                                <th class="text-center">Qty</th>
+                                <th class="text-end">Total</th>
+                            </tr>
+                            </thead>
+                            <tbody id="topProductsBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent orders -->
+    <div class="card card-soft bl bl-info mt-3">
         <div class="card-body">
-            <div class="fw-semibold mb-2">Welcome</div>
-            <div>Hi, <span th:text="${session.LOGIN_NAME}">Admin</span> 👋</div>
+            <h6 class="mb-2">Recent Orders</h6>
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead class="table-primary">
+                    <tr>
+                        <th>Invoice</th>
+                        <th>Customer</th>
+                        <th class="text-end">Total</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                        <th class="text-center">Action</th>
+                    </tr>
+                    </thead>
+                    <tbody id="recentOrdersBody"></tbody>
+                </table>
+            </div>
         </div>
     </div>
 
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script th:src="@{/js/dashboard.js}"></script>
 </div>
-
 </body>
 </html>

@@ -1,15 +1,16 @@
 package com.perfumeshop.controller.admin;
 
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
 
 @Controller
-@RequestMapping("/admin")
+@RequestMapping("/admin/dashboard")
 public class AdminDashboardController {
 
-    @GetMapping("/dashboard")
-    public String dashboard() {
+    @GetMapping
+    public String page(Model model) {
+        model.addAttribute("activeMenu", "dashboard");
         return "admin/dashboard";
     }
 }

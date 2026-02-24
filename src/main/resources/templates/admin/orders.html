@@ -1,0 +1,207 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/layout}">
+
+<head>
+    <title>Orders</title>
+</head>
+
+<body>
+<div class="container-fluid py-3" layout:fragment="content">
+
+    <div class="d-flex align-items-center mb-3">
+        <h4 class="mb-0">Order Management</h4>
+
+        <form class="ms-auto d-flex gap-2" method="get" th:action="@{/admin/orders}">
+            <input class="form-control" style="width:260px"
+                   name="q" th:value="${q}" placeholder="Search...">
+
+            <select class="form-select" style="width:180px" name="status">
+                <option value="">All Status</option>
+                <option th:each="st : ${allStatuses}"
+                        th:value="${st}"
+                        th:selected="${status} == ${st}"
+                        th:text="${st}"></option>
+            </select>
+
+            <select class="form-select" style="width:110px" name="size">
+                <option th:selected="${orders.size == 10}" value="10">10</option>
+                <option th:selected="${orders.size == 25}" value="25">25</option>
+                <option th:selected="${orders.size == 50}" value="50">50</option>
+            </select>
+
+            <button class="btn btn-primary" type="submit">Search</button>
+        </form>
+    </div>
+
+    <div class="card border-0 shadow-sm" style="border-radius:16px;">
+        <div class="card-body">
+
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead class="table-primary">
+                    <tr>
+                        <th>Order #</th>
+                        <th>Customer</th>
+                        <th>Phone</th>
+                        <th class="text-center">Items</th>
+                        <th class="text-end">Amount</th>
+                        <th class="text-center">Payment</th>
+                        <th class="text-center">Order Status</th>
+                        <th>Date</th>
+                        <th class="text-center">Actions</th>
+                    </tr>
+                    </thead>
+
+                    <tbody>
+                    <tr th:each="o : ${orders.content}">
+                        <!-- ✅ FIX: invoiceNo -> invoice -->
+                        <td class="fw-semibold" th:text="${o.invoice}">INV-000001</td>
+
+                        <td th:text="${o.customerName}">Name</td>
+                        <td th:text="${o.phone}">Phone</td>
+
+                        <td class="text-center" th:text="${#lists.size(o.items)}">0</td>
+
+                        <td class="text-end">
+                            $<span th:text="${#numbers.formatDecimal(o.total, 1, 'COMMA', 2, 'POINT')}">0.00</span>
+                        </td>
+
+                        <td class="text-center">
+                            <span class="badge rounded-pill"
+                                  th:classappend="${o.paymentMethod.name() == 'CASH'} ? ' text-bg-info' : ' text-bg-primary'"
+                                  th:text="${o.paymentMethod}">CASH</span>
+                        </td>
+
+                        <!-- ✅ Auto status: PAID => Completed -->
+                        <td class="text-center">
+                            <span class="badge rounded-pill"
+                                  th:classappend="${o.status.name() == 'PAID'} ? ' text-bg-success' : ' text-bg-warning'"
+                                  th:text="${o.status.name() == 'PAID' ? 'Completed' : 'Pending'}">
+                                Completed
+                            </span>
+                        </td>
+
+                        <td th:text="${o.createdAt != null ? #temporals.format(o.createdAt, 'dd/MM/yyyy HH:mm') : '-'}">date</td>
+
+                        <td class="text-center">
+                            <button type="button"
+                                    class="btn btn-info btn-sm btnViewOrder"
+                                    th:attr="data-id=${o.id}">
+                                <i class="bi bi-eye"></i> View
+                            </button>
+                        </td>
+                    </tr>
+
+                    <tr th:if="${orders.totalElements == 0}">
+                        <td colspan="9" class="text-center text-muted py-4">No orders found.</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <div class="d-flex justify-content-between align-items-center mt-2">
+                <div class="text-muted small">
+                    Showing <span th:text="${orders.numberOfElements}">0</span> of <span th:text="${orders.totalElements}">0</span>
+                </div>
+
+                <div class="btn-group">
+                    <a class="btn btn-outline-secondary btn-sm"
+                       th:classappend="${orders.first} ? ' disabled' : ''"
+                       th:href="@{/admin/orders(q=${q},status=${status},size=${orders.size},page=${orders.number-1})}">
+                        Previous
+                    </a>
+
+                    <span class="btn btn-primary btn-sm disabled"
+                          th:text="${orders.number + 1}">1</span>
+
+                    <a class="btn btn-outline-secondary btn-sm"
+                       th:classappend="${orders.last} ? ' disabled' : ''"
+                       th:href="@{/admin/orders(q=${q},status=${status},size=${orders.size},page=${orders.number+1})}">
+                        Next
+                    </a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ===================== Order Details Modal ===================== -->
+    <div class="modal fade" id="orderDetailModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content" style="border-radius:16px;">
+                <div class="modal-header">
+                    <h5 class="modal-title">Order Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-6">
+                            <div><b>Customer:</b> <span id="odCustomer">-</span></div>
+                            <div><b>Phone:</b> <span id="odPhone">-</span></div>
+                            <div><b>Address:</b> <span id="odAddress">-</span></div>
+                        </div>
+
+                        <div class="col-md-6 text-md-end">
+                            <div><b>Order #:</b> <span id="odInvoice">-</span></div>
+                            <div><b>Date:</b> <span id="odDate">-</span></div>
+                            <div class="mt-1">
+                                <b>Payment:</b> <span class="badge text-bg-primary" id="odPayment">-</span>
+                            </div>
+                            <div class="mt-1">
+                                <b>Status:</b> <span class="badge text-bg-success" id="odStatus">-</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h6 class="mb-2">Order Items</h6>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead class="table-light">
+                            <tr>
+                                <th>Product</th>
+                                <th class="text-center">Qty</th>
+                                <th class="text-end">Price</th>
+                                <th class="text-end">Amount</th>
+                            </tr>
+                            </thead>
+                            <tbody id="odItems"></tbody>
+                        </table>
+                    </div>
+
+                    <div class="d-flex justify-content-end">
+                        <table class="table w-auto">
+                            <tr>
+                                <td class="text-end"><b>Subtotal:</b></td>
+                                <td class="text-end">$<span id="odSubtotal">0.00</span></td>
+                            </tr>
+                            <tr>
+                                <td class="text-end"><b>Discount:</b></td>
+                                <td class="text-end text-danger">-$<span id="odDiscount">0.00</span></td>
+                            </tr>
+                            <tr class="table-primary">
+                                <td class="text-end"><b>Grand Total:</b></td>
+                                <td class="text-end"><b>$<span id="odTotal">0.00</span></b></td>
+                            </tr>
+                        </table>
+                    </div>
+
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Orders JS -->
+    <script th:src="@{/js/orders.js}"></script>
+</div>
+</body>
+</html>
