@@ -63,19 +63,18 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("btnClear")?.addEventListener("click", () => {
         cart.clear();
         renderCart();
-        // refresh products state (buttons)
         loadProducts();
     });
 
     document.getElementById("btnComplete")?.addEventListener("click", completeOrder);
 
-    // discount input -> recalc totals live
+    // extra discount input -> recalc totals live
     document.getElementById("extraDiscount")?.addEventListener("input", updateTotals);
 
     // cancel KHQR (X + button)
     document.querySelectorAll(".btnCancelKhqr").forEach((btn) => {
         btn.addEventListener("click", async () => {
-            await cancelPayment(); // tell backend: CANCELLED
+            await cancelPayment();
             stopKhqrPolling();
             stopCountdown();
             currentMd5 = null;
@@ -155,7 +154,6 @@ function startCountdown(seconds = KHQR_TTL_SECONDS) {
             stopCountdown();
             stopKhqrPolling();
 
-            // mark order cancelled on server
             await cancelPayment();
 
             const hint = document.getElementById("khqrHint");
@@ -230,33 +228,50 @@ async function loadProducts() {
             const reached = inCart ? Number(inCart.qty || 0) >= stock : false;
             const disableAdd = stock <= 0 || reached;
 
-            // ✅ Clean product card markup (matches pos.html clean styles: p-card, p-img, p-body...)
             const name = escapeHtml(p.name || "");
             const brand = escapeHtml(p.brand || "");
             const brandHtml = brand ? `<div class="p-brand">${brand}</div>` : `<div class="p-brand"></div>`;
 
+            // ✅ price + discount UI
+            const price = Number(p.price ?? 0);
+            const discount = Number(p.discount ?? 0);
+            const finalPrice = Number(p.finalPrice ?? (price - discount));
+            const showDiscount = discount > 0;
+
+            const priceHtml = showDiscount
+                ? `
+                  <div>
+                    <div class="p-price text-danger">$${money2(finalPrice)}</div>
+                    <div class="small text-muted">
+                      <del>$${money2(price)}</del>
+                     
+                    </div>
+                  </div>
+                `
+                : `<div class="p-price text-danger">$${money2(price)}</div>`;
+
             col.innerHTML = `
-        <div class="p-card h-100">
-          <img class="p-img" src="${imgSrc}" alt="">
-          <div class="p-body">
-            <div class="p-name">${name}</div>
-            ${brandHtml}
+              <div class="p-card h-100">
+                <img class="p-img" src="${imgSrc}" alt="">
+                <div class="p-body">
+                  <div class="p-name">${name}</div>
+                  ${brandHtml}
 
-            <div class="p-meta">
-              <div class="p-price text-danger">$${money2(p.price)}</div>
-              <div class="p-stock">${stock} in</div>
-            </div>
+                  <div class="p-meta">
+                    ${priceHtml}
+                    <div class="p-stock">${stock} in</div>
+                  </div>
 
-            <div class="p-actions">
-              <button class="btn btn-primary btn-add"
-                type="button"
-                data-add="${p.id}" ${disableAdd ? "disabled" : ""}>
-                ${stock <= 0 ? "Out of Stock" : reached ? "Max in Cart" : "Add to Cart"}
-              </button>
-            </div>
-          </div>
-        </div>
-      `;
+                  <div class="p-actions">
+                    <button class="btn btn-primary btn-add"
+                      type="button"
+                      data-add="${p.id}" ${disableAdd ? "disabled" : ""}>
+                      ${stock <= 0 ? "Out of Stock" : reached ? "Max in Cart" : "Add to Cart"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            `;
 
             grid.appendChild(col);
         });
@@ -268,7 +283,6 @@ async function loadProducts() {
                 const p = content.find((x) => Number(x.id) === id);
                 if (!p) return;
                 addToCart(p);
-                // update buttons state
                 loadProducts();
             });
         });
@@ -286,7 +300,6 @@ function addToCart(p) {
 
     const stock = Number(p.stock ?? 0);
 
-    // stock 0 => block
     if (stock <= 0) {
         notEnoughStock(p.name || "");
         return;
@@ -295,7 +308,6 @@ function addToCart(p) {
     const existing = cart.get(id);
 
     if (existing) {
-        // reached max
         if (Number(existing.qty || 0) >= Number(existing.stock ?? 0)) {
             notEnoughStock(existing.name);
             return;
@@ -305,7 +317,7 @@ function addToCart(p) {
         cart.set(id, {
             id,
             name: p.name || "",
-            price: Number(p.price || 0),
+            price: Number(p.finalPrice ?? p.price ?? 0), // ✅ use finalPrice in cart
             imageUrl: p.imageUrl || "",
             qty: 1,
             stock: stock,
@@ -336,25 +348,24 @@ function renderCart() {
         const atMax = Number(item.qty || 0) >= stock && stock > 0;
 
         row.innerHTML = `
-      <div class="d-flex gap-2 align-items-center">
-        <div class="flex-grow-1">
-          <div class="cart-title">${escapeHtml(item.name)}</div>
-          <div class="cart-sub">$${money2(item.price)} each ${stock ? `• Stock: ${stock}` : ""}</div>
-        </div>
+          <div class="d-flex gap-2 align-items-center">
+            <div class="flex-grow-1">
+              <div class="cart-title">${escapeHtml(item.name)}</div>
+              <div class="cart-sub">$${money2(item.price)} each ${stock ? `• Stock: ${stock}` : ""}</div>
+            </div>
 
-        <div class="d-flex align-items-center gap-1">
-          <button class="btn btn-outline-secondary qty-btn" type="button" data-dec="${item.id}">-</button>
-          <div style="min-width:28px;text-align:center;">${item.qty}</div>
-          <button class="btn btn-outline-secondary qty-btn" type="button" data-inc="${item.id}" ${atMax ? "disabled" : ""}>+</button>
-          <button class="btn btn-outline-danger qty-btn" type="button" data-del="${item.id}">×</button>
-        </div>
-      </div>
-    `;
+            <div class="d-flex align-items-center gap-1">
+              <button class="btn btn-outline-secondary qty-btn" type="button" data-dec="${item.id}">-</button>
+              <div style="min-width:28px;text-align:center;">${item.qty}</div>
+              <button class="btn btn-outline-secondary qty-btn" type="button" data-inc="${item.id}" ${atMax ? "disabled" : ""}>+</button>
+              <button class="btn btn-outline-danger qty-btn" type="button" data-del="${item.id}">×</button>
+            </div>
+          </div>
+        `;
 
         list.appendChild(row);
     }
 
-    // bind qty +
     list.querySelectorAll("[data-inc]").forEach((b) => {
         b.addEventListener("click", () => {
             const id = Number(b.getAttribute("data-inc"));
@@ -369,11 +380,10 @@ function renderCart() {
 
             it.qty += 1;
             renderCart();
-            loadProducts(); // update disabled state
+            loadProducts();
         });
     });
 
-    // bind qty -
     list.querySelectorAll("[data-dec]").forEach((b) => {
         b.addEventListener("click", () => {
             const id = Number(b.getAttribute("data-dec"));
@@ -386,7 +396,6 @@ function renderCart() {
         });
     });
 
-    // bind delete
     list.querySelectorAll("[data-del]").forEach((b) => {
         b.addEventListener("click", () => {
             const id = Number(b.getAttribute("data-del"));
@@ -463,13 +472,11 @@ async function completeOrder() {
 
         const data = await res.json();
 
-        // CASH flow
         if (data.redirectUrl) {
             window.location.href = data.redirectUrl;
             return;
         }
 
-        // KHQR flow must return: invoice, amount, md5, khqrString
         if (data.md5 && data.khqrString) {
             openKhqrModal(data);
             return;
@@ -485,7 +492,7 @@ async function completeOrder() {
 // KHQR MODAL
 // ======================================================
 function openKhqrModal(data) {
-    document.getElementById("khqrInvoice").textContent = data.invoice || "-";
+
     document.getElementById("khqrAmount").textContent = money2(data.amount);
 
     const hint = document.getElementById("khqrHint");

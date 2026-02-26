@@ -5,16 +5,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.text.DecimalFormat;
 
-/**
- * Generate invoice number like: INV-000001, INV-000002 ...
- *
- * ✅ Recommended: use database table/sequence to avoid duplicates in multi-user.
- * This implementation uses a DB table (InvoiceSequence) so it is safe.
- *
- * REQUIRE:
- * - Entity: com.perfumeshop.entity.InvoiceSequence
- * - Repository: com.perfumeshop.repository.InvoiceSequenceRepository
- */
+
 @Service
 public class InvoiceService {
 

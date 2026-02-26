@@ -29,8 +29,10 @@ public class AdminProductApiController {
     }
 
     // =====================================================
-    // ✅ NEW: POS endpoint (FOR POS PAGE)
+    // POS endpoint (FOR POS PAGE)
     // URL: /admin/api/products/pos
+    // ✅ only active products
+    // ✅ send: price + discount + finalPrice
     // =====================================================
     @GetMapping("/pos")
     public Page<Map<String, Object>> posProducts(
@@ -44,18 +46,32 @@ public class AdminProductApiController {
                 Sort.by("id").descending()
         );
 
-        // Only active products for POS
         Page<Product> result = service.search(q, null, true, pageable);
 
         return result.map(p -> {
             Map<String, Object> m = new HashMap<>();
             m.put("id", p.getId());
             m.put("name", p.getName());
-            m.put("brand", p.getBrand());
-            m.put("price", p.getPrice() == null ? BigDecimal.ZERO : p.getPrice());
+
+            // brand: return name + id for UI
+            m.put("brandId", p.getBrand() != null ? p.getBrand().getId() : null);
+            m.put("brand", p.getBrand() != null ? p.getBrand().getName() : "");
+
+            BigDecimal price = (p.getPrice() == null) ? BigDecimal.ZERO : p.getPrice();
+            BigDecimal discount = (p.getDiscount() == null) ? BigDecimal.ZERO : p.getDiscount();
+
+            // ✅ clamp discount not exceed price
+            if (discount.compareTo(price) > 0) discount = price;
+
+            BigDecimal finalPrice = price.subtract(discount);
+
+            m.put("price", price);
+            m.put("discount", discount);
+            m.put("finalPrice", finalPrice);
+
             m.put("stock", p.getStock() == null ? 0 : p.getStock());
 
-            // Build image URL for browser
+            // imageUrl for browser
             String img = p.getImage();
             if (img == null || img.isBlank()) {
                 m.put("imageUrl", "/images/no-image.png");
@@ -71,6 +87,7 @@ public class AdminProductApiController {
 
     // =====================================================
     // DataTables endpoint (ADMIN LIST PAGE)
+    // URL: /admin/api/products/dt
     // =====================================================
     @GetMapping("/dt")
     public DataTableResponse<ProductRowDto> datatable(
@@ -84,7 +101,6 @@ public class AdminProductApiController {
             @RequestParam(required = false) Boolean active
     ) {
         int page = Math.max(0, start / Math.max(1, length));
-
         Sort sort = buildSort(orderCol, orderDir);
         Pageable pageable = PageRequest.of(page, length, sort);
 
@@ -97,12 +113,20 @@ public class AdminProductApiController {
             ProductRowDto dto = new ProductRowDto();
             dto.setId(p.getId());
             dto.setName(p.getName());
-            dto.setBrand(p.getBrand());
+
+            // ✅ brand name + brandId (for edit dropdown)
+            dto.setBrand(p.getBrand() != null ? p.getBrand().getName() : "");
+            dto.setBrandId(p.getBrand() != null ? p.getBrand().getId() : null);
+
             dto.setStock(p.getStock());
             dto.setPrice(p.getPrice());
+            dto.setDiscount(p.getDiscount());
             dto.setImage(p.getImage());
             dto.setActive(p.getActive());
+
             dto.setCategory(p.getCategory() != null ? p.getCategory().getName() : "");
+            dto.setCategoryId(p.getCategory() != null ? p.getCategory().getId() : null);
+
             dto.setCreatedAt(p.getCreatedAt() != null ? p.getCreatedAt().format(fmt) : "");
             rows.add(dto);
         }
@@ -121,7 +145,7 @@ public class AdminProductApiController {
             case 0 -> prop = "id";
             case 1 -> prop = "name";
             case 2 -> prop = "category.name";
-            case 3 -> prop = "brand";
+            case 3 -> prop = "brand.name";
             case 4 -> prop = "stock";
             case 5 -> prop = "price";
             case 8 -> prop = "createdAt";
@@ -132,18 +156,19 @@ public class AdminProductApiController {
     }
 
     // =====================================================
-    // CREATE / UPDATE
+    // CREATE / UPDATE (multipart/form-data)
+    // URL: /admin/api/products
     // =====================================================
     @PostMapping(consumes = "multipart/form-data")
     public ResponseEntity<?> save(
             @RequestParam(required = false) Long id,
             @RequestParam String name,
-            @RequestParam(required = false, defaultValue = "") String brand,
             @RequestParam(required = false, defaultValue = "") String description,
             @RequestParam BigDecimal price,
             @RequestParam(required = false, defaultValue = "0") BigDecimal discount,
             @RequestParam Integer stock,
             @RequestParam Long categoryId,
+            @RequestParam Long brandId,
             @RequestParam(defaultValue = "true") Boolean active,
             @RequestParam(required = false) MultipartFile image
     ) {
@@ -151,7 +176,6 @@ public class AdminProductApiController {
             Product p = (id == null) ? new Product() : service.findOrThrow(id);
 
             p.setName(name.trim());
-            p.setBrand(brand.trim());
             p.setDescription(description.trim());
             p.setPrice(price);
             p.setDiscount(discount);
@@ -159,6 +183,7 @@ public class AdminProductApiController {
             p.setActive(active);
 
             p.setCategory(service.findCategoryOrThrow(categoryId));
+            p.setBrand(service.findBrandOrThrow(brandId));
 
             if (image != null && !image.isEmpty()) {
                 Path dir = Paths.get(uploadDir, "products").toAbsolutePath().normalize();

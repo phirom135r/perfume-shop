@@ -10,14 +10,36 @@
 <body>
 <div class="container-fluid py-3" layout:fragment="content">
 
+    <style>
+        /* ✅ dropdown like sample */
+        .order-status-select{
+            height: 34px;
+            border-radius: 10px;
+            font-weight: 600;
+            padding: 0 12px;
+            border: 1px solid #e5e7eb;
+            background: #fff;
+            min-width: 170px;
+        }
+        .order-status-select:focus{
+            box-shadow: none;
+            border-color: #cbd5e1;
+        }
+
+        /* optional: color hint like sample (soft) */
+        .os-paid { background: #ecfdf5; border-color: #bbf7d0; color: #065f46; }
+        .os-pending { background: #fffbeb; border-color: #fde68a; color: #92400e; }
+        .os-cancelled { background: #fef2f2; border-color: #fecaca; color: #991b1b; }
+
+        .order-status-select:disabled{ opacity:.7; cursor:not-allowed; }
+    </style>
+
     <div class="row align-items-center mb-3 g-2">
 
-        <!-- Title -->
         <div class="col-12 col-lg-4">
             <h4 class="mb-0">Order Management</h4>
         </div>
 
-        <!-- Filters -->
         <div class="col-12 col-lg-8">
             <form class="row g-2 justify-content-lg-end"
                   method="get" th:action="@{/admin/orders}">
@@ -82,7 +104,6 @@
 
                     <tbody>
                     <tr th:each="o : ${orders.content}">
-                        <!-- ✅ FIX: invoiceNo -> invoice -->
                         <td class="fw-semibold" th:text="${o.invoice}">INV-000001</td>
 
                         <td th:text="${o.customerName}">Name</td>
@@ -100,15 +121,15 @@
                                   th:text="${o.paymentMethod}">CASH</span>
                         </td>
 
-                        <!-- ✅ Auto status: PAID => Completed -->
+                        <!-- ✅ CHANGE HERE: Status => dropdown like sample -->
                         <td class="text-center">
-                            <span class="badge rounded-pill"
-                                  th:classappend="${o.status == 'PAID'} ? ' text-bg-success' :
-                                                  (${o.status == 'CANCELLED'} ? ' text-bg-danger' : ' text-bg-warning')"
-                                  th:text="${o.status == 'PAID'} ? 'Completed' :
-                                            (${o.status == 'CANCELLED'} ? 'Cancelled' : 'Pending')">
-                            </span>
-
+                            <select class="form-select form-select-sm order-status-select orderStatusSelect"
+                                    th:attr="data-id=${o.id}"
+                                    th:value="${o.status}">
+                                <option value="PAID" th:selected="${o.status == 'PAID'}">Completed</option>
+                                <option value="PENDING" th:selected="${o.status == 'PENDING'}">Pending</option>
+                                <option value="CANCELLED" th:selected="${o.status == 'CANCELLED'}">Cancelled</option>
+                            </select>
                         </td>
 
                         <td th:text="${o.createdAt != null ? #temporals.format(o.createdAt, 'dd/MM/yyyy HH:mm') : '-'}">date</td>
@@ -129,7 +150,6 @@
                 </table>
             </div>
 
-            <!-- Pagination -->
             <div class="d-flex justify-content-between align-items-center mt-2">
                 <div class="text-muted small">
                     Showing <span th:text="${orders.numberOfElements}">0</span> of <span th:text="${orders.totalElements}">0</span>
@@ -228,7 +248,6 @@
         </div>
     </div>
 
-    <!-- Orders JS -->
     <script th:src="@{/js/orders.js}"></script>
 </div>
 </body>
