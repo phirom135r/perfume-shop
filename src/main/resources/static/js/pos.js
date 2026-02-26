@@ -1,9 +1,11 @@
+// src/main/resources/static/js/pos.js
+
 // ===== STATE =====
 let page = 0;
 const size = 9;
 let currentQuery = "";
 
-// cart: Map(productId -> {id,name,price,imageUrl,qty})
+// cart: Map(productId -> {id,name,price,imageUrl,qty,stock})
 const cart = new Map();
 
 // ===== KHQR MODAL =====
@@ -32,8 +34,18 @@ document.addEventListener("DOMContentLoaded", () => {
     // events
     document.getElementById("btnSearch")?.addEventListener("click", () => {
         page = 0;
-        currentQuery = (document.getElementById("q").value || "").trim();
+        currentQuery = (document.getElementById("q")?.value || "").trim();
         loadProducts();
+    });
+
+    // Enter to search
+    document.getElementById("q")?.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            page = 0;
+            currentQuery = (document.getElementById("q")?.value || "").trim();
+            loadProducts();
+        }
     });
 
     document.getElementById("prevBtn")?.addEventListener("click", () => {
@@ -51,6 +63,8 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("btnClear")?.addEventListener("click", () => {
         cart.clear();
         renderCart();
+        // refresh products state (buttons)
+        loadProducts();
     });
 
     document.getElementById("btnComplete")?.addEventListener("click", completeOrder);
@@ -59,8 +73,9 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("extraDiscount")?.addEventListener("input", updateTotals);
 
     // cancel KHQR (X + button)
-    document.querySelectorAll(".btnCancelKhqr").forEach(btn => {
-        btn.addEventListener("click", () => {
+    document.querySelectorAll(".btnCancelKhqr").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+            await cancelPayment(); // tell backend: CANCELLED
             stopKhqrPolling();
             stopCountdown();
             currentMd5 = null;
@@ -103,8 +118,13 @@ function toastSuccess(title) {
         title,
         showConfirmButton: false,
         timer: 900,
-        timerProgressBar: true
+        timerProgressBar: true,
     });
+}
+
+function notEnoughStock(productName) {
+    if (!window.Swal) return;
+    Swal.fire("Not enough stock", `Not enough stock for product: ${productName}`, "warning");
 }
 
 // ======================================================
@@ -127,7 +147,7 @@ function startCountdown(seconds = KHQR_TTL_SECONDS) {
     remainingSeconds = seconds;
     renderTimeLeft();
 
-    countdownTimer = setInterval(() => {
+    countdownTimer = setInterval(async () => {
         remainingSeconds--;
         renderTimeLeft();
 
@@ -135,9 +155,12 @@ function startCountdown(seconds = KHQR_TTL_SECONDS) {
             stopCountdown();
             stopKhqrPolling();
 
+            // mark order cancelled on server
+            await cancelPayment();
+
             const hint = document.getElementById("khqrHint");
             if (hint) {
-                hint.textContent = "QR expired. Please try again.";
+                hint.textContent = "QR expired. Payment cancelled.";
                 hint.className = "text-danger mt-2 text-center";
             }
 
@@ -167,7 +190,7 @@ async function loadProducts() {
 
     try {
         const url = `/admin/api/products/pos?q=${encodeURIComponent(currentQuery)}&page=${page}&size=${size}`;
-        const res = await fetch(url, { headers: { "Accept": "application/json" } });
+        const res = await fetch(url, { headers: { Accept: "application/json" } });
 
         if (!res.ok) {
             grid.innerHTML = `<div class="text-danger">Failed to load products (HTTP ${res.status})</div>`;
@@ -178,11 +201,15 @@ async function loadProducts() {
         const content = data.content || [];
         const totalPages = Number(data.totalPages || 1);
 
-        document.getElementById("pageInfo").textContent =
-            `Page ${Number(data.number || 0) + 1} / ${totalPages}`;
+        // page info
+        const pageInfo = document.getElementById("pageInfo");
+        if (pageInfo) pageInfo.textContent = `Page ${Number(data.number || 0) + 1} / ${totalPages}`;
 
-        document.getElementById("prevBtn").disabled = (page <= 0);
-        document.getElementById("nextBtn").disabled = (page + 1 >= totalPages);
+        // pager buttons
+        const prevBtn = document.getElementById("prevBtn");
+        const nextBtn = document.getElementById("nextBtn");
+        if (prevBtn) prevBtn.disabled = page <= 0;
+        if (nextBtn) nextBtn.disabled = page + 1 >= totalPages;
 
         if (content.length === 0) {
             grid.innerHTML = `<div class="text-muted">No products found.</div>`;
@@ -191,25 +218,42 @@ async function loadProducts() {
 
         grid.innerHTML = "";
 
-        content.forEach(p => {
+        content.forEach((p) => {
             const col = document.createElement("div");
             col.className = "col-12 col-sm-6 col-md-4";
 
             const imgSrc = p.imageUrl || "/images/no-image.png";
+            const stock = Number(p.stock ?? 0);
+
+            // in cart?
+            const inCart = cart.get(Number(p.id));
+            const reached = inCart ? Number(inCart.qty || 0) >= stock : false;
+            const disableAdd = stock <= 0 || reached;
+
+            // ✅ Clean product card markup (matches pos.html clean styles: p-card, p-img, p-body...)
+            const name = escapeHtml(p.name || "");
+            const brand = escapeHtml(p.brand || "");
+            const brandHtml = brand ? `<div class="p-brand">${brand}</div>` : `<div class="p-brand"></div>`;
 
             col.innerHTML = `
-        <div class="card card-soft product-card h-100">
-          <img class="card-img-top" src="${imgSrc}" alt="">
-          <div class="card-body">
-            <div class="fw-semibold">${escapeHtml(p.name || "")}</div>
-            <div class="small text-muted">${escapeHtml(p.brand || "")}</div>
-            <div class="mt-2 d-flex justify-content-between align-items-center">
-              <div class="fw-bold text-danger">$${money2(p.price)}</div>
-              <span class="badge bg-success-subtle text-success">${(p.stock ?? 0)} in</span>
+        <div class="p-card h-100">
+          <img class="p-img" src="${imgSrc}" alt="">
+          <div class="p-body">
+            <div class="p-name">${name}</div>
+            ${brandHtml}
+
+            <div class="p-meta">
+              <div class="p-price text-danger">$${money2(p.price)}</div>
+              <div class="p-stock">${stock} in</div>
             </div>
-            <button class="btn btn-primary w-100 mt-3" type="button" data-add="${p.id}">
-              Add to Cart
-            </button>
+
+            <div class="p-actions">
+              <button class="btn btn-primary btn-add"
+                type="button"
+                data-add="${p.id}" ${disableAdd ? "disabled" : ""}>
+                ${stock <= 0 ? "Out of Stock" : reached ? "Max in Cart" : "Add to Cart"}
+              </button>
+            </div>
           </div>
         </div>
       `;
@@ -218,15 +262,16 @@ async function loadProducts() {
         });
 
         // bind add buttons
-        grid.querySelectorAll("[data-add]").forEach(btn => {
+        grid.querySelectorAll("[data-add]").forEach((btn) => {
             btn.addEventListener("click", () => {
                 const id = Number(btn.getAttribute("data-add"));
-                const p = content.find(x => Number(x.id) === id);
+                const p = content.find((x) => Number(x.id) === id);
                 if (!p) return;
                 addToCart(p);
+                // update buttons state
+                loadProducts();
             });
         });
-
     } catch (e) {
         grid.innerHTML = `<div class="text-danger">Error: ${escapeHtml(e.message || "unknown")}</div>`;
     }
@@ -239,8 +284,22 @@ function addToCart(p) {
     const id = Number(p.id);
     if (!id) return;
 
+    const stock = Number(p.stock ?? 0);
+
+    // stock 0 => block
+    if (stock <= 0) {
+        notEnoughStock(p.name || "");
+        return;
+    }
+
     const existing = cart.get(id);
+
     if (existing) {
+        // reached max
+        if (Number(existing.qty || 0) >= Number(existing.stock ?? 0)) {
+            notEnoughStock(existing.name);
+            return;
+        }
         existing.qty += 1;
     } else {
         cart.set(id, {
@@ -248,13 +307,12 @@ function addToCart(p) {
             name: p.name || "",
             price: Number(p.price || 0),
             imageUrl: p.imageUrl || "",
-            qty: 1
+            qty: 1,
+            stock: stock,
         });
     }
 
-    // ✅ toast message
     toastSuccess("Added to cart");
-
     renderCart();
 }
 
@@ -274,17 +332,20 @@ function renderCart() {
         const row = document.createElement("div");
         row.className = "cart-item";
 
+        const stock = Number(item.stock ?? 0);
+        const atMax = Number(item.qty || 0) >= stock && stock > 0;
+
         row.innerHTML = `
       <div class="d-flex gap-2 align-items-center">
         <div class="flex-grow-1">
           <div class="cart-title">${escapeHtml(item.name)}</div>
-          <div class="cart-sub">$${money2(item.price)} each</div>
+          <div class="cart-sub">$${money2(item.price)} each ${stock ? `• Stock: ${stock}` : ""}</div>
         </div>
 
         <div class="d-flex align-items-center gap-1">
           <button class="btn btn-outline-secondary qty-btn" type="button" data-dec="${item.id}">-</button>
           <div style="min-width:28px;text-align:center;">${item.qty}</div>
-          <button class="btn btn-outline-secondary qty-btn" type="button" data-inc="${item.id}">+</button>
+          <button class="btn btn-outline-secondary qty-btn" type="button" data-inc="${item.id}" ${atMax ? "disabled" : ""}>+</button>
           <button class="btn btn-outline-danger qty-btn" type="button" data-del="${item.id}">×</button>
         </div>
       </div>
@@ -293,32 +354,45 @@ function renderCart() {
         list.appendChild(row);
     }
 
-    // bind qty buttons
-    list.querySelectorAll("[data-inc]").forEach(b => {
+    // bind qty +
+    list.querySelectorAll("[data-inc]").forEach((b) => {
         b.addEventListener("click", () => {
             const id = Number(b.getAttribute("data-inc"));
             const it = cart.get(id);
             if (!it) return;
+
+            const stock = Number(it.stock ?? 0);
+            if (stock <= 0 || it.qty >= stock) {
+                notEnoughStock(it.name);
+                return;
+            }
+
             it.qty += 1;
             renderCart();
+            loadProducts(); // update disabled state
         });
     });
 
-    list.querySelectorAll("[data-dec]").forEach(b => {
+    // bind qty -
+    list.querySelectorAll("[data-dec]").forEach((b) => {
         b.addEventListener("click", () => {
             const id = Number(b.getAttribute("data-dec"));
             const it = cart.get(id);
             if (!it) return;
+
             it.qty = Math.max(1, it.qty - 1);
             renderCart();
+            loadProducts();
         });
     });
 
-    list.querySelectorAll("[data-del]").forEach(b => {
+    // bind delete
+    list.querySelectorAll("[data-del]").forEach((b) => {
         b.addEventListener("click", () => {
             const id = Number(b.getAttribute("data-del"));
             cart.delete(id);
             renderCart();
+            loadProducts();
         });
     });
 
@@ -371,14 +445,14 @@ async function completeOrder() {
         address: (document.getElementById("address")?.value || "").trim(),
         discount: Number(parseMoneyInput(document.getElementById("extraDiscount")?.value) || 0),
         paymentMethod: (document.getElementById("paymentMethod")?.value || "CASH").toUpperCase(),
-        items
+        items,
     };
 
     try {
         const res = await fetch("/admin/pos/checkout", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
+            body: JSON.stringify(payload),
         });
 
         if (!res.ok) {
@@ -425,7 +499,7 @@ function openKhqrModal(data) {
     new QRCode(box, {
         text: data.khqrString,
         width: 220,
-        height: 220
+        height: 220,
     });
 
     currentMd5 = data.md5;
@@ -434,6 +508,21 @@ function openKhqrModal(data) {
 
     startCountdown();
     startKhqrPolling();
+}
+
+// ======================================================
+// CANCEL PAYMENT (SERVER)
+// ======================================================
+async function cancelPayment() {
+    if (!currentMd5) return;
+    try {
+        await fetch(`/admin/api/payments/cancel?md5=${encodeURIComponent(currentMd5)}`, {
+            method: "POST",
+            headers: { Accept: "application/json" },
+        });
+    } catch (e) {
+        // ignore
+    }
 }
 
 // ======================================================
@@ -447,14 +536,13 @@ function startKhqrPolling() {
         try {
             const res = await fetch(`/admin/api/payments/verify?md5=${encodeURIComponent(currentMd5)}`, {
                 method: "GET",
-                headers: { "Accept": "application/json" }
+                headers: { Accept: "application/json" },
             });
 
             if (!res.ok) return;
 
             const json = await res.json();
             const st = String(json.status || "").toUpperCase();
-
             const hint = document.getElementById("khqrHint");
 
             if (st === "PAID") {
@@ -469,16 +557,40 @@ function startKhqrPolling() {
                     icon: "success",
                     confirmButtonText: "OK",
                     allowOutsideClick: false,
-                    allowEscapeKey: false
+                    allowEscapeKey: false,
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        // ✅ clear cart after success
                         cart.clear();
                         renderCart();
                         window.location.href = "/admin/orders";
                     }
                 });
+                return;
+            }
 
+            if (st === "CANCELLED") {
+                stopKhqrPolling();
+                stopCountdown();
+
+                if (hint) {
+                    hint.textContent = "Payment cancelled.";
+                    hint.className = "text-danger mt-2 text-center";
+                }
+
+                setTimeout(() => {
+                    currentMd5 = null;
+                    if (khqrModal) khqrModal.hide();
+                }, 700);
+                return;
+            }
+
+            if (st === "OUT_OF_STOCK") {
+                stopKhqrPolling();
+                stopCountdown();
+
+                if (khqrModal) khqrModal.hide();
+
+                Swal.fire("Out of stock", "Stock not enough for this order.", "error");
                 return;
             }
 

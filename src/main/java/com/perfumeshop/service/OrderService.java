@@ -1,5 +1,6 @@
 package com.perfumeshop.service;
 
+import com.perfumeshop.dto.OrderRowDto;
 import com.perfumeshop.entity.Order;
 import com.perfumeshop.enums.OrderStatus;
 import com.perfumeshop.repository.OrderRepository;
@@ -45,5 +46,9 @@ public class OrderService {
         if (order == null) return null;
         order.setStatus(OrderStatus.PAID);
         return repo.save(order);
+    }
+
+    public Page<OrderRowDto> adminSearchRows(String q, OrderStatus status, Pageable pageable) {
+        return repo.adminSearchRows(q, status, pageable);
     }
 }

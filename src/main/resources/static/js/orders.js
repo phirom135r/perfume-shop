@@ -40,8 +40,11 @@ async function openOrderDetail(id) {
         const o = await res.json();
 
         document.getElementById("odCustomer").textContent = o.customerName || "-";
-        document.getElementById("odPhone").textContent = o.phone || "-";
-        document.getElementById("odAddress").textContent = o.address || "-";
+        document.getElementById("odPhone").textContent =
+            (o.phone && String(o.phone).trim() !== "") ? o.phone : "N/A";
+
+        document.getElementById("odAddress").textContent =
+            (o.address && String(o.address).trim() !== "") ? o.address : "N/A";
 
         // ✅ FIX: invoiceNo -> invoice
         document.getElementById("odInvoice").textContent = o.invoice || "-";
@@ -53,11 +56,20 @@ async function openOrderDetail(id) {
         payEl.textContent = pay;
         payEl.className = "badge " + (pay === "CASH" ? "text-bg-info" : "text-bg-primary");
 
-        // status badge: PAID => Completed
+        // status badge: PAID / CANCELLED / others
         const st = String(o.status || "").toUpperCase();
         const stEl = document.getElementById("odStatus");
-        stEl.textContent = st === "PAID" ? "Completed" : "Pending";
-        stEl.className = "badge " + (st === "PAID" ? "text-bg-success" : "text-bg-warning");
+
+        if (st === "PAID") {
+            stEl.textContent = "Completed";
+            stEl.className = "badge text-bg-success";
+        } else if (st === "CANCELLED") {
+            stEl.textContent = "Cancelled";
+            stEl.className = "badge text-bg-danger";
+        } else {
+            stEl.textContent = "Pending";
+            stEl.className = "badge text-bg-warning";
+        }
 
         // items
         const tbody = document.getElementById("odItems");

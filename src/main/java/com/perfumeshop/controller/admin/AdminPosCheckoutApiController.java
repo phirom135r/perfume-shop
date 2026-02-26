@@ -1,3 +1,4 @@
+// src/main/java/com/perfumeshop/controller/admin/AdminPosCheckoutApiController.java
 package com.perfumeshop.controller.admin;
 
 import com.perfumeshop.dto.PosCheckoutRequest;
@@ -54,13 +55,19 @@ public class AdminPosCheckoutApiController {
             return ResponseEntity.badRequest().body("Customer name is required");
         }
 
-        PaymentMethod pm = (req.getPaymentMethod() == null || req.getPaymentMethod().isBlank())
-                ? PaymentMethod.CASH
-                : PaymentMethod.valueOf(req.getPaymentMethod().trim().toUpperCase());
+        PaymentMethod pm;
+        try {
+            pm = (req.getPaymentMethod() == null || req.getPaymentMethod().isBlank())
+                    ? PaymentMethod.CASH
+                    : PaymentMethod.valueOf(req.getPaymentMethod().trim().toUpperCase());
+        } catch (Exception e) {
+            pm = PaymentMethod.CASH;
+        }
 
         BigDecimal subtotal = BigDecimal.ZERO;
         List<OrderItem> items = new ArrayList<>();
 
+        // ✅ Build items (DO NOT deduct stock here)
         for (PosCheckoutRequest.Item it : req.getItems()) {
             if (it == null || it.getProductId() == null || it.getQty() <= 0) continue;
 
@@ -79,16 +86,10 @@ public class AdminPosCheckoutApiController {
             OrderItem oi = new OrderItem();
             oi.setProduct(p);
             oi.setQty(qty);
-            // NOTE: only set if your entity has these fields+setter
-             oi.setUnitPrice(unitPrice);
-             oi.setLineTotal(lineTotal);
+            oi.setUnitPrice(unitPrice);
+            oi.setLineTotal(lineTotal);
 
             items.add(oi);
-
-            if (p.getStock() != null) {
-                p.setStock(p.getStock() - qty);
-                productService.save(p);
-            }
         }
 
         if (items.isEmpty()) return ResponseEntity.badRequest().body("Cart is empty");
@@ -104,7 +105,7 @@ public class AdminPosCheckoutApiController {
         total = total.setScale(2, RoundingMode.HALF_UP);
 
         Order order = new Order();
-        order.setInvoice(invoiceService.nextInvoice()); // INV-000001
+        order.setInvoice(invoiceService.nextInvoice());
         order.setCustomerName(customerName);
         order.setPhone(req.getPhone());
         order.setAddress(req.getAddress());
@@ -116,13 +117,29 @@ public class AdminPosCheckoutApiController {
         for (OrderItem oi : items) oi.setOrder(order);
         order.setItems(items);
 
+        // ✅ CASH = success immediately => deduct stock now
         if (pm == PaymentMethod.CASH) {
-            order.setStatus(OrderStatus.PAID); // ✅ Completed in UI
+
+            // deduct stock
+            for (OrderItem oi : items) {
+                Product p = oi.getProduct();
+                int qty = oi.getQty();
+
+                if (p.getStock() != null) {
+                    if (p.getStock() < qty) {
+                        return ResponseEntity.badRequest().body("Not enough stock for product: " + p.getName());
+                    }
+                    p.setStock(p.getStock() - qty);
+                    productService.save(p);
+                }
+            }
+
+            order.setStatus(OrderStatus.PAID);
             order = orderService.save(order);
             return ResponseEntity.ok(new PosCheckoutResponse(order.getId(), "/admin/orders"));
         }
 
-        // KHQR
+        // ✅ KHQR = PENDING (do NOT deduct stock)
         order.setStatus(OrderStatus.PENDING);
         order = orderService.save(order);
 
@@ -132,7 +149,6 @@ public class AdminPosCheckoutApiController {
         order.setMd5(qr.md5());
         order = orderService.save(order);
 
-        // RETURN popup data (NO redirectUrl)
         return ResponseEntity.ok(
                 new PosCheckoutResponse(order.getId(), order.getInvoice(), order.getTotal(), order.getMd5(), order.getKhqrString())
         );

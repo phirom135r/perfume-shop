@@ -1,5 +1,6 @@
 package com.perfumeshop.controller.admin;
 
+import com.perfumeshop.dto.OrderRowDto;
 import com.perfumeshop.entity.Order;
 import com.perfumeshop.enums.OrderStatus;
 import com.perfumeshop.service.OrderService;
@@ -32,7 +33,7 @@ public class AdminOrderController {
                 Sort.by("id").descending()
         );
 
-        Page<Order> orders = orderService.adminSearch(q, status, pageable);
+        Page<OrderRowDto> orders = orderService.adminSearchRows(q, status, pageable);
 
         model.addAttribute("orders", orders);
         model.addAttribute("q", q);

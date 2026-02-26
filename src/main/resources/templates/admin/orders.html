@@ -10,29 +10,55 @@
 <body>
 <div class="container-fluid py-3" layout:fragment="content">
 
-    <div class="d-flex align-items-center mb-3">
-        <h4 class="mb-0">Order Management</h4>
+    <div class="row align-items-center mb-3 g-2">
 
-        <form class="ms-auto d-flex gap-2" method="get" th:action="@{/admin/orders}">
-            <input class="form-control" style="width:260px"
-                   name="q" th:value="${q}" placeholder="Search...">
+        <!-- Title -->
+        <div class="col-12 col-lg-4">
+            <h4 class="mb-0">Order Management</h4>
+        </div>
 
-            <select class="form-select" style="width:180px" name="status">
-                <option value="">All Status</option>
-                <option th:each="st : ${allStatuses}"
-                        th:value="${st}"
-                        th:selected="${status} == ${st}"
-                        th:text="${st}"></option>
-            </select>
+        <!-- Filters -->
+        <div class="col-12 col-lg-8">
+            <form class="row g-2 justify-content-lg-end"
+                  method="get" th:action="@{/admin/orders}">
 
-            <select class="form-select" style="width:110px" name="size">
-                <option th:selected="${orders.size == 10}" value="10">10</option>
-                <option th:selected="${orders.size == 25}" value="25">25</option>
-                <option th:selected="${orders.size == 50}" value="50">50</option>
-            </select>
+                <div class="col-12 col-sm-auto">
+                    <input class="form-control"
+                           name="q"
+                           th:value="${q}"
+                           placeholder="Search...">
+                </div>
 
-            <button class="btn btn-primary" type="submit">Search</button>
-        </form>
+                <div class="col-12 col-sm-auto">
+                    <select class="form-select" name="status">
+                        <option value="">All Status</option>
+                        <option th:each="st : ${allStatuses}"
+                                th:value="${st}"
+                                th:selected="${status} == ${st}"
+                                th:text="${st.name() == 'PAID'} ? 'Completed' :
+                                     (${st.name() == 'CANCELLED'} ? 'Cancelled' :
+                                     (${st.name() == 'PENDING'} ? 'Pending' : ${st}))">
+                        </option>
+                    </select>
+                </div>
+
+                <div class="col-6 col-sm-auto">
+                    <select class="form-select" name="size">
+                        <option th:selected="${orders.size == 10}" value="10">10</option>
+                        <option th:selected="${orders.size == 25}" value="25">25</option>
+                        <option th:selected="${orders.size == 50}" value="50">50</option>
+                    </select>
+                </div>
+
+                <div class="col-6 col-sm-auto">
+                    <button class="btn btn-primary w-100" type="submit">
+                        Search
+                    </button>
+                </div>
+
+            </form>
+        </div>
+
     </div>
 
     <div class="card border-0 shadow-sm" style="border-radius:16px;">
@@ -60,9 +86,9 @@
                         <td class="fw-semibold" th:text="${o.invoice}">INV-000001</td>
 
                         <td th:text="${o.customerName}">Name</td>
-                        <td th:text="${o.phone}">Phone</td>
+                        <td th:text="${#strings.isEmpty(o.phone) ? 'N/A' : o.phone}">N/A</td>
 
-                        <td class="text-center" th:text="${#lists.size(o.items)}">0</td>
+                        <td class="text-center" th:text="${o.totalQty}">0</td>
 
                         <td class="text-end">
                             $<span th:text="${#numbers.formatDecimal(o.total, 1, 'COMMA', 2, 'POINT')}">0.00</span>
@@ -70,17 +96,19 @@
 
                         <td class="text-center">
                             <span class="badge rounded-pill"
-                                  th:classappend="${o.paymentMethod.name() == 'CASH'} ? ' text-bg-info' : ' text-bg-primary'"
+                                  th:classappend="${o.paymentMethod == 'CASH'} ? ' text-bg-info' : ' text-bg-primary'"
                                   th:text="${o.paymentMethod}">CASH</span>
                         </td>
 
                         <!-- ✅ Auto status: PAID => Completed -->
                         <td class="text-center">
                             <span class="badge rounded-pill"
-                                  th:classappend="${o.status.name() == 'PAID'} ? ' text-bg-success' : ' text-bg-warning'"
-                                  th:text="${o.status.name() == 'PAID' ? 'Completed' : 'Pending'}">
-                                Completed
+                                  th:classappend="${o.status == 'PAID'} ? ' text-bg-success' :
+                                                  (${o.status == 'CANCELLED'} ? ' text-bg-danger' : ' text-bg-warning')"
+                                  th:text="${o.status == 'PAID'} ? 'Completed' :
+                                            (${o.status == 'CANCELLED'} ? 'Cancelled' : 'Pending')">
                             </span>
+
                         </td>
 
                         <td th:text="${o.createdAt != null ? #temporals.format(o.createdAt, 'dd/MM/yyyy HH:mm') : '-'}">date</td>

@@ -5,7 +5,167 @@
       layout:decorate="~{layout/layout}">
 
 <div class="container-fluid py-3" layout:fragment="content">
+
   <style>
+    /* ===== Left POS (clean UI) ===== */
+    .pos-shell{
+      border:0;
+      border-radius:18px;
+      box-shadow: 0 10px 28px rgba(0,0,0,.06);
+      background:#fff;
+    }
+
+    .pos-topbar{
+      position: sticky;
+      top: 12px;
+      z-index: 5;
+      background: rgba(255,255,255,.92);
+      backdrop-filter: blur(8px);
+      border: 1px solid #eef2f7;
+      border-radius: 14px;
+      padding: 12px;
+    }
+
+    .pos-title{
+      font-weight: 700;
+      letter-spacing: .2px;
+      margin: 0;
+      line-height: 1.1;
+    }
+
+    .pos-sub{
+      font-size: 12px;
+      color:#64748b;
+      margin-top:2px;
+    }
+
+    .pos-search{
+      min-width: 320px;
+      border-radius: 12px;
+      border: 1px solid #e5e7eb;
+      padding-left: 40px;
+      height: 42px;
+    }
+
+    .pos-search-wrap{
+      position: relative;
+      flex: 1;
+      min-width: 260px;
+    }
+
+    .pos-search-icon{
+      position:absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color:#94a3b8;
+      font-size: 16px;
+    }
+
+    .pos-btn{
+      height: 42px;
+      border-radius: 12px;
+      padding: 0 14px;
+      font-weight: 600;
+    }
+
+    .pos-grid{
+      padding-top: 10px;
+    }
+
+    /* product card */
+    .p-card{
+      border: 1px solid #eef2f7;
+      border-radius: 16px;
+      overflow: hidden;
+      transition: transform .12s ease, box-shadow .12s ease;
+      background:#fff;
+    }
+    .p-card:hover{
+      transform: translateY(-2px);
+      box-shadow: 0 10px 24px rgba(0,0,0,.08);
+    }
+
+    .p-img{
+      height: 170px;
+      object-fit: cover;
+      background: #f3f4f6;
+      width: 100%;
+      display:block;
+    }
+
+    .p-body{
+      padding: 12px 12px 14px;
+    }
+
+    .p-name{
+      font-weight: 700;
+      margin: 0;
+      line-height: 1.2;
+      font-size: 14px;
+    }
+
+    .p-brand{
+      font-size: 12px;
+      color:#64748b;
+      margin-top: 2px;
+      min-height: 16px;
+    }
+
+    .p-meta{
+      display:flex;
+      justify-content: space-between;
+      align-items:center;
+      margin-top: 10px;
+    }
+
+    .p-price{
+      font-weight: 800;
+      font-size: 16px;
+    }
+
+    .p-stock{
+      font-size: 12px;
+      border-radius: 999px;
+      padding: 4px 10px;
+      background: #ecfdf5;          /* subtle green */
+      color: #16a34a;
+      border: 1px solid #dcfce7;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .p-actions{
+      margin-top: 12px;
+      display:flex;
+      gap: 8px;
+    }
+
+    .btn-add{
+      flex:1;
+      border-radius: 12px;
+      height: 40px;
+      font-weight: 700;
+    }
+
+    .pos-footer{
+      display:flex;
+      justify-content: space-between;
+      align-items:center;
+      gap: 10px;
+      margin-top: 14px;
+      padding: 10px 0 2px;
+      border-top: 1px dashed #e5e7eb;
+    }
+
+    .pager-btn{
+      border-radius: 12px;
+      height: 38px;
+      padding: 0 12px;
+      font-weight: 700;
+    }
+
+    /* existing right styles (keep) */
     .product-card img { height: 160px; object-fit: cover; background: #f3f4f6; }
     .sticky-col { position: sticky; top: 12px; }
     .qty-btn { width: 36px; height: 36px; padding: 0; }
@@ -18,36 +178,46 @@
 
   <div class="row g-3">
 
-    <!-- LEFT: Products -->
+    <!-- ===================================================== -->
+    <!-- LEFT: POS (CLEAN UI) -->
+    <!-- ===================================================== -->
     <div class="col-12 col-lg-8">
-      <div class="card card-soft">
-        <div class="card-body">
+      <div class="pos-shell p-3">
 
-          <div class="d-flex flex-wrap gap-2 align-items-center mb-3">
-            <div>
-              <h5 class="mb-0">POS</h5>
-              <div class="small text-muted">USD only</div>
-            </div>
-
-            <div class="ms-auto d-flex gap-2 flex-wrap">
-              <input id="q" class="form-control" style="min-width:240px" placeholder="Search products..."/>
-              <button class="btn btn-primary" id="btnSearch" type="button">Search</button>
-            </div>
+        <!-- Top bar -->
+        <div class="pos-topbar d-flex flex-wrap gap-2 align-items-center">
+          <div class="me-2">
+            <h5 class="pos-title">POS</h5>
+            <div class="pos-sub">Quick sell • USD only</div>
           </div>
 
-          <div id="productsGrid" class="row g-3"></div>
-
-          <div class="d-flex justify-content-between align-items-center mt-3">
-            <button class="btn btn-outline-secondary btn-sm" id="prevBtn" type="button">Prev</button>
-            <div class="small text-muted" id="pageInfo">Page 1</div>
-            <button class="btn btn-outline-secondary btn-sm" id="nextBtn" type="button">Next</button>
+          <div class="ms-auto d-flex gap-2 align-items-center flex-wrap" style="width: 100%;">
+            <div class="pos-search-wrap">
+              <span class="pos-search-icon">🔎</span>
+              <input id="q" class="form-control pos-search" placeholder="Search products by name, brand..." />
+            </div>
+            <button class="btn btn-primary pos-btn" id="btnSearch" type="button">Search</button>
           </div>
-
         </div>
+
+        <!-- Products grid -->
+        <div id="productsGrid" class="row g-3 pos-grid mt-1"></div>
+
+        <!-- Pagination -->
+        <div class="pos-footer">
+          <button class="btn btn-outline-secondary pager-btn" id="prevBtn" type="button">← Prev</button>
+
+          <div class="small text-muted" id="pageInfo">Page 1</div>
+
+          <button class="btn btn-outline-secondary pager-btn" id="nextBtn" type="button">Next →</button>
+        </div>
+
       </div>
     </div>
 
-    <!-- RIGHT: Cart + Checkout -->
+    <!-- ===================================================== -->
+    <!-- RIGHT: Cart + Checkout (DO NOT CHANGE) -->
+    <!-- ===================================================== -->
     <div class="col-12 col-lg-4">
       <div class="card card-soft sticky-col">
         <div class="card-header bg-primary text-white d-flex align-items-center gap-2"
@@ -139,7 +309,6 @@
             <div id="khqrQrBox" style="padding:10px;border:2px solid #ef4444;border-radius:12px;"></div>
           </div>
 
-          <!-- ✅ Time left -->
           <div class="d-flex justify-content-center mt-2">
             <div class="small text-muted">
               Time left: <span id="khqrTimeLeft" class="fw-semibold">03:00</span>
@@ -161,6 +330,6 @@
 
   <!-- Your POS JS -->
   <script th:src="@{/js/pos.js}"></script>
-</div>
 
+</div>
 </html>
