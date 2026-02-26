@@ -1,85 +1,287 @@
+<!-- templates/admin/pos.html -->
 <!doctype html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout/layout}">
 
-<head>
-  <title>POS</title>
-</head>
+<div class="container-fluid py-3" layout:fragment="content">
 
-<body>
-<div layout:fragment="content" class="container-fluid py-3">
+  <style>
+    /* ===== Left POS (clean UI) ===== */
+    .pos-shell{
+      border:0;
+      border-radius:18px;
+      box-shadow: 0 10px 28px rgba(0,0,0,.06);
+      background:#fff;
+    }
+
+    .pos-topbar{
+      position: sticky;
+      top: 12px;
+      z-index: 5;
+      background: rgba(255,255,255,.92);
+      backdrop-filter: blur(8px);
+      border: 1px solid #eef2f7;
+      border-radius: 14px;
+      padding: 12px;
+    }
+
+    .pos-title{
+      font-weight: 700;
+      letter-spacing: .2px;
+      margin: 0;
+      line-height: 1.1;
+    }
+
+    .pos-sub{
+      font-size: 12px;
+      color:#64748b;
+      margin-top:2px;
+    }
+
+    .pos-search{
+      min-width: 320px;
+      border-radius: 12px;
+      border: 1px solid #e5e7eb;
+      padding-left: 40px;
+      height: 42px;
+    }
+
+    .pos-search-wrap{
+      position: relative;
+      flex: 1;
+      min-width: 260px;
+    }
+
+    .pos-search-icon{
+      position:absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color:#94a3b8;
+      font-size: 16px;
+    }
+
+    .pos-btn{
+      height: 42px;
+      border-radius: 12px;
+      padding: 0 14px;
+      font-weight: 600;
+    }
+
+    .pos-grid{
+      padding-top: 10px;
+    }
+
+    /* product card */
+    .p-card{
+      border: 1px solid #eef2f7;
+      border-radius: 16px;
+      overflow: hidden;
+      transition: transform .12s ease, box-shadow .12s ease;
+      background:#fff;
+    }
+    .p-card:hover{
+      transform: translateY(-2px);
+      box-shadow: 0 10px 24px rgba(0,0,0,.08);
+    }
+
+    .p-img{
+      height: 170px;
+      object-fit: cover;
+      background: #f3f4f6;
+      width: 100%;
+      display:block;
+    }
+
+    .p-body{
+      padding: 12px 12px 14px;
+    }
+
+    .p-name{
+      font-weight: 700;
+      margin: 0;
+      line-height: 1.2;
+      font-size: 14px;
+    }
+
+    .p-brand{
+      font-size: 12px;
+      color:#64748b;
+      margin-top: 2px;
+      min-height: 16px;
+    }
+
+    .p-meta{
+      display:flex;
+      justify-content: space-between;
+      align-items:center;
+      margin-top: 10px;
+    }
+
+    .p-price{
+      font-weight: 800;
+      font-size: 16px;
+    }
+
+    .p-stock{
+      font-size: 12px;
+      border-radius: 999px;
+      padding: 4px 10px;
+      background: #ecfdf5;          /* subtle green */
+      color: #16a34a;
+      border: 1px solid #dcfce7;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .p-actions{
+      margin-top: 12px;
+      display:flex;
+      gap: 8px;
+    }
+
+    .btn-add{
+      flex:1;
+      border-radius: 12px;
+      height: 40px;
+      font-weight: 700;
+    }
+
+    .pos-footer{
+      display:flex;
+      justify-content: space-between;
+      align-items:center;
+      gap: 10px;
+      margin-top: 14px;
+      padding: 10px 0 2px;
+      border-top: 1px dashed #e5e7eb;
+    }
+
+    .pager-btn{
+      border-radius: 12px;
+      height: 38px;
+      padding: 0 12px;
+      font-weight: 700;
+    }
+
+    /* existing right styles (keep) */
+    .product-card img { height: 160px; object-fit: cover; background: #f3f4f6; }
+    .sticky-col { position: sticky; top: 12px; }
+    .qty-btn { width: 36px; height: 36px; padding: 0; }
+    .card-soft { border: 0; box-shadow: 0 6px 18px rgba(0,0,0,.06); border-radius: 16px; }
+    .badge-soft { background: #f1f5f9; color: #0f172a; }
+    .cart-item { border: 1px solid #eef2f7; border-radius: 12px; padding: 10px; }
+    .cart-title { font-weight: 600; }
+    .cart-sub { font-size: 12px; color: #64748b; }
+  </style>
 
   <div class="row g-3">
 
-    <!-- PRODUCTS -->
-    <div class="col-lg-8">
-      <div class="card shadow-sm">
-        <div class="card-body">
+    <!-- ===================================================== -->
+    <!-- LEFT: POS (CLEAN UI) -->
+    <!-- ===================================================== -->
+    <div class="col-12 col-lg-8">
+      <div class="pos-shell p-3">
 
-          <div class="d-flex justify-content-between mb-3">
-            <h5>POS</h5>
-            <div class="d-flex gap-2">
-              <input id="q" class="form-control" placeholder="Search">
-              <button id="btnSearch" class="btn btn-primary">Search</button>
+        <!-- Top bar -->
+        <div class="pos-topbar d-flex flex-wrap gap-2 align-items-center">
+          <div class="me-2">
+            <h5 class="pos-title">POS</h5>
+            <div class="pos-sub">Quick sell • USD only</div>
+          </div>
+
+          <div class="ms-auto d-flex gap-2 align-items-center flex-wrap" style="width: 100%;">
+            <div class="pos-search-wrap">
+              <span class="pos-search-icon">🔎</span>
+              <input id="q" class="form-control pos-search" placeholder="Search products by name, brand..." />
             </div>
+            <button class="btn btn-primary pos-btn" id="btnSearch" type="button">Search</button>
           </div>
-
-          <div id="productsGrid" class="row g-3"></div>
-
-          <div class="d-flex justify-content-between mt-3">
-            <div id="pageInfo"></div>
-          </div>
-
         </div>
+
+        <!-- Products grid -->
+        <div id="productsGrid" class="row g-3 pos-grid mt-1"></div>
+
+        <!-- Pagination -->
+        <div class="pos-footer">
+          <button class="btn btn-outline-secondary pager-btn" id="prevBtn" type="button">← Prev</button>
+
+          <div class="small text-muted" id="pageInfo">Page 1</div>
+
+          <button class="btn btn-outline-secondary pager-btn" id="nextBtn" type="button">Next →</button>
+        </div>
+
       </div>
     </div>
 
-    <!-- CART -->
-    <div class="col-lg-4">
-      <div class="card shadow-sm">
-        <div class="card-header bg-primary text-white">
-          Shopping Cart
+    <!-- ===================================================== -->
+    <!-- RIGHT: Cart + Checkout (DO NOT CHANGE) -->
+    <!-- ===================================================== -->
+    <div class="col-12 col-lg-4">
+      <div class="card card-soft sticky-col">
+        <div class="card-header bg-primary text-white d-flex align-items-center gap-2"
+             style="border-top-left-radius:16px;border-top-right-radius:16px;">
+          <span class="fw-bold">Shopping Cart</span>
+          <span class="ms-auto badge badge-soft">USD ($)</span>
         </div>
 
         <div class="card-body">
 
-          <div id="cartList"></div>
-          <hr>
+          <div id="cartList" class="vstack gap-3"></div>
+          <hr/>
 
           <div class="d-flex justify-content-between">
-            <span>Subtotal</span>
-            <span>$<span id="subtotal">0.00</span></span>
+            <div class="text-muted">Subtotal</div>
+            <div class="fw-semibold">$<span id="subtotal">0.00</span></div>
           </div>
 
-          <div class="d-flex justify-content-between">
-            <span>Discount</span>
-            <span>$<span id="discountShow">0.00</span></span>
+          <div class="d-flex justify-content-between mt-2">
+            <div class="text-muted">Extra Discount</div>
+            <div class="fw-semibold text-danger">- $<span id="discountShow">0.00</span></div>
           </div>
 
-          <div class="d-flex justify-content-between fw-bold fs-5 mt-2">
-            <span>Total</span>
-            <span>$<span id="total">0.00</span></span>
+          <div class="d-flex justify-content-between mt-3 fs-5">
+            <div class="fw-bold">Total</div>
+            <div class="fw-bold text-primary">$<span id="total">0.00</span></div>
           </div>
 
-          <hr>
+          <hr/>
 
-          <input id="customerName" class="form-control mb-2" placeholder="Customer Name">
-          <input id="phone" class="form-control mb-2" placeholder="Phone">
-          <input id="address" class="form-control mb-2" placeholder="Address">
-          <input id="extraDiscount" class="form-control mb-2" value="0">
+          <div class="mb-2">
+            <label class="form-label">Customer Name <span class="text-danger">*</span></label>
+            <input id="customerName" class="form-control" placeholder="Enter customer name"/>
+          </div>
 
-          <select id="paymentMethod" class="form-select mb-3">
-            <option value="CASH">CASH</option>
-            <option value="KHQR">KHQR</option>
-          </select>
+          <div class="mb-2">
+            <label class="form-label">Phone (optional)</label>
+            <input id="phone" class="form-control" placeholder="Enter phone number"/>
+          </div>
 
-          <button id="btnComplete" class="btn btn-success w-100 mb-2">
-            Complete Order
+          <div class="mb-2">
+            <label class="form-label">Address (optional for POS)</label>
+            <input id="address" class="form-control" placeholder="Enter address"/>
+          </div>
+
+          <div class="mb-2">
+            <label class="form-label">Extra Discount ($)</label>
+            <input id="extraDiscount" class="form-control" value="0"/>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Payment Method</label>
+            <select id="paymentMethod" class="form-select">
+              <option value="CASH">CASH</option>
+              <option value="KHQR">KHQR</option>
+            </select>
+          </div>
+
+          <button id="btnComplete" class="btn btn-success w-100" type="button">
+            ✅ Complete Order
           </button>
 
-          <button id="btnClear" class="btn btn-outline-danger w-100">
-            Clear Cart
+          <button id="btnClear" class="btn btn-outline-danger w-100 mt-2" type="button">
+            🗑 Clear Cart
           </button>
 
         </div>
@@ -88,8 +290,46 @@
 
   </div>
 
+  <!-- KHQR POPUP MODAL -->
+  <div class="modal fade" id="khqrModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content" style="border-radius:16px;">
+        <div class="modal-header">
+          <h5 class="modal-title">Scan to Pay (KHQR)</h5>
+          <button type="button" class="btn-close btnCancelKhqr"></button>
+        </div>
+
+        <div class="modal-body">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <div class="small text-muted">Invoice: <span id="khqrInvoice">-</span></div>
+            <div class="fw-bold">$<span id="khqrAmount">0.00</span></div>
+          </div>
+
+          <div class="d-flex justify-content-center">
+            <div id="khqrQrBox" style="padding:10px;border:2px solid #ef4444;border-radius:12px;"></div>
+          </div>
+
+          <div class="d-flex justify-content-center mt-2">
+            <div class="small text-muted">
+              Time left: <span id="khqrTimeLeft" class="fw-semibold">03:00</span>
+            </div>
+          </div>
+
+          <div id="khqrHint" class="text-muted mt-3 text-center">Waiting for payment...</div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-danger w-100 btnCancelKhqr">Cancel Payment</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- QRCode lib (required) -->
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+
+  <!-- Your POS JS -->
   <script th:src="@{/js/pos.js}"></script>
 
 </div>
-</body>
 </html>

@@ -69,13 +69,15 @@
 			<scope>test</scope>
 		</dependency>
 
-
-
 		<!-- KHQR SDK -->
 		<dependency>
 			<groupId>kh.gov.nbc.bakong_khqr</groupId>
 			<artifactId>sdk-java</artifactId>
 			<version>1.0.0.12</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
 		</dependency>
 <!--		<dependency>-->
 <!--			<groupId>junit</groupId>-->
@@ -103,6 +105,7 @@
 					<release>${java.version}</release>
 				</configuration>
 			</plugin>
+
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
