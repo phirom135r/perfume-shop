@@ -1,0 +1,115 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/layout}">
+
+<head>
+    <title>Brands</title>
+</head>
+
+<body>
+
+<section layout:fragment="content"
+         th:with="title='Brands', activeMenu='brands'">
+
+    <style>
+        .card-soft { border: 0; border-radius: 16px; box-shadow: 0 8px 24px rgba(0,0,0,.06); }
+        .table thead th { white-space: nowrap; }
+        .status-pill{
+            display:inline-flex; align-items:center; gap:6px;
+            padding:.35rem .7rem; border-radius: 999px;
+            font-size: 12px; font-weight: 600;
+        }
+        .dot{ width:8px; height:8px; border-radius:999px; display:inline-block; }
+        .pill-active{ background:#e8fff1; color:#0f5132; }
+        .pill-active .dot{ background:#198754; }
+        .pill-inactive{ background:#ffe7e7; color:#842029; }
+        .pill-inactive .dot{ background:#dc3545; }
+        .col-id{ width:90px; }
+        .col-status{ width:150px; }
+        .col-action{ width:180px; }
+    </style>
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h3 class="mb-0">Brand Management</h3>
+            <div class="text-muted small">Manage perfume brands</div>
+        </div>
+
+        <button class="btn btn-primary" id="btnAdd" type="button">
+            <i class="bi bi-plus-circle"></i> Add Brand
+        </button>
+    </div>
+
+    <div class="card card-soft">
+        <div class="card-body">
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle table-fixed">
+                    <thead class="table-primary">
+                    <tr>
+                        <th style="width:80px;">ID</th>
+                        <th style="width:50%;">Name</th>
+                        <th style="width:15%;">Status</th>
+                        <th style="width:20%;">Action</th>
+                    </tr>
+                    </thead>
+                    <tbody id="tbody">
+                    <!-- JS render -->
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ===== Modal ===== -->
+    <div class="modal fade" id="brandModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="border-radius:16px;">
+
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalTitle">Add Brand</h5>
+                    <button class="btn-close" data-bs-dismiss="modal" type="button"></button>
+                </div>
+
+                <form id="brandForm">
+                    <div class="modal-body">
+
+                        <input type="hidden" id="id">
+
+                        <div class="mb-3">
+                            <label class="form-label">Name</label>
+                            <input class="form-control" id="name" required placeholder="Enter brand name">
+                        </div>
+
+                        <div class="mb-2">
+                            <label class="form-label">Status</label>
+                            <select class="form-select" id="active">
+                                <option value="true">Active</option>
+                                <option value="false">Inactive</option>
+                            </select>
+                        </div>
+
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary" id="btnSave">Save</button>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <!-- Brand JS -->
+    <script th:src="@{/js/brand.js}"></script>
+
+</section>
+
+</body>
+</html>

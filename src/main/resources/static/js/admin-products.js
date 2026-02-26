@@ -11,16 +11,6 @@ $(document).ready(function () {
     $("#productForm").on("submit", saveProduct);
     $("#image").on("change", previewImage);
 
-    $("#btnApply").on("click", function () {
-        dt.ajax.reload();
-    });
-
-    $("#btnReset").on("click", function () {
-        $("#filterCategory").val("");
-        $("#filterStatus").val("");
-        dt.ajax.reload();
-    });
-
     initDataTable();
 });
 
@@ -33,19 +23,13 @@ function initDataTable() {
         pageLength: 50,
         ajax: {
             url: "/admin/api/products/dt",
-            type: "GET",
-            data: function (d) {
-                d.categoryId = $("#filterCategory").val() || null;
-
-                const st = $("#filterStatus").val();
-                d.active = (st === "" ? null : st); // "true"/"false" ok
-            }
+            type: "GET"
         },
         columns: [
             { data: "id" },
             { data: "name" },
             { data: "category" },
-            { data: "brand" },
+            { data: "brand" }, // show brand name
             { data: "stock" },
             {
                 data: "price",
@@ -73,24 +57,38 @@ function initDataTable() {
             {
                 data: null,
                 orderable: false,
-                className: "col-action", // ✅ IMPORTANT (match your CSS)
+                className: "col-action",
                 render: function (row) {
                     const safe = encodeJson(row);
-
                     return `
-                          <div class="action-wrap">
-                            <button type="button" class="btn btn-sm btn-primary" onclick='openEdit(${safe})'>
-                              <i class="bi bi-pencil-square"></i> Edit
-                            </button>
-                            <button type="button" class="btn btn-sm btn-danger" onclick="deleteProduct(${row.id})">
-                              <i class="bi bi-trash"></i> Delete
-                            </button>
-                          </div>
-                        `;
+                      <div class="action-wrap">
+                        <button type="button" class="btn btn-sm btn-primary" onclick='openEdit(${safe})'>
+                          <i class="bi bi-pencil-square"></i> Edit
+                        </button>
+                        <button type="button" class="btn btn-sm btn-danger" onclick="deleteProduct(${row.id})">
+                          <i class="bi bi-trash"></i> Delete
+                        </button>
+                      </div>
+                    `;
                 }
             }
         ]
     });
+}
+
+/* ================= BRAND DROPDOWN ================= */
+
+function loadBrandDropdown(selectedId = null) {
+    fetch("/admin/api/brands/active")
+        .then(r => r.json())
+        .then(list => {
+            let html = `<option value="">-- Select Brand --</option>`;
+            list.forEach(b => {
+                const sel = (selectedId != null && Number(selectedId) === b.id) ? "selected" : "";
+                html += `<option value="${b.id}" ${sel}>${b.name}</option>`;
+            });
+            $("#brandId").html(html);
+        });
 }
 
 /* ================= MODAL ================= */
@@ -101,6 +99,8 @@ function openAdd() {
     $("#id").val("");
     $("#active").val("true");
     setUploadBoxEmpty();
+
+    loadBrandDropdown(null); // ✅ load brands
     modal.show();
 }
 
@@ -109,17 +109,16 @@ function openEdit(row) {
 
     $("#id").val(row.id);
     $("#name").val(row.name || "");
-    $("#brand").val(row.brand || "");
     $("#stock").val(row.stock ?? 0);
     $("#price").val(row.price ?? 0);
-    $("#discount").val(0); // optional if you want show discount from API, add discount to DTO+datatable
-    $("#description").val("");
+    $("#discount").val(row.discount ?? 0);
+    $("#description").val(row.description || "");
     $("#active").val(String(row.active));
 
-    // category: we only have name in table, but in form we need id
-    // easiest: you already have categoryId in your backend? then include categoryId in DTO and set here.
-    // For now, keep selected as current (no change) or let admin reselect:
-    // $("#categoryId").val(row.categoryId);
+    // categoryId + brandId must exist in DTO
+    $("#categoryId").val(row.categoryId || "");
+    loadBrandDropdown(row.brandId); // ✅
+    $("#brandId").val(row.brandId || "");
 
     if (row.image) {
         $("#uploadPreview").html(`<img src="${row.image}" alt="preview">`);
@@ -142,7 +141,7 @@ function saveProduct(e) {
     if (id) fd.append("id", id);
 
     fd.append("name", $("#name").val());
-    fd.append("brand", $("#brand").val());
+    fd.append("brandId", $("#brandId").val());          // ✅ NEW
     fd.append("categoryId", $("#categoryId").val());
     fd.append("price", $("#price").val() || 0);
     fd.append("discount", $("#discount").val() || 0);
@@ -155,10 +154,7 @@ function saveProduct(e) {
 
     fetch("/admin/api/products", { method: "POST", body: fd })
         .then(async (r) => {
-            if (!r.ok) {
-                const msg = await r.text();
-                throw new Error(msg || "Save failed");
-            }
+            if (!r.ok) throw new Error(await r.text());
             return r.json();
         })
         .then(() => {
@@ -215,25 +211,10 @@ function setUploadBoxEmpty() {
 /* ================= TOAST ================= */
 
 function toastSuccess(msg) {
-    Swal.fire({
-        toast: true,
-        position: "top-end",
-        icon: "success",
-        title: msg,
-        showConfirmButton: false,
-        timer: 1500
-    });
+    Swal.fire({ toast: true, position: "top-end", icon: "success", title: msg, showConfirmButton: false, timer: 1500 });
 }
-
 function toastError(msg) {
-    Swal.fire({
-        toast: true,
-        position: "top-end",
-        icon: "error",
-        title: msg,
-        showConfirmButton: false,
-        timer: 2200
-    });
+    Swal.fire({ toast: true, position: "top-end", icon: "error", title: msg, showConfirmButton: false, timer: 2200 });
 }
 
 /* ================= HELPERS ================= */

@@ -5,10 +5,18 @@ import java.math.BigDecimal;
 public class ProductRowDto {
     private Long id;
     private String name;
+
+    // Category
+    private Long categoryId;
     private String category;
+
+    // Brand
+    private Long brandId;
     private String brand;
+
     private Integer stock;
     private BigDecimal price;
+    private BigDecimal discount;
     private String image;
     private Boolean active;
     private String createdAt; // formatted string
@@ -21,8 +29,14 @@ public class ProductRowDto {
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
 
+    public Long getCategoryId() { return categoryId; }
+    public void setCategoryId(Long categoryId) { this.categoryId = categoryId; }
+
     public String getCategory() { return category; }
     public void setCategory(String category) { this.category = category; }
+
+    public Long getBrandId() { return brandId; }
+    public void setBrandId(Long brandId) { this.brandId = brandId; }
 
     public String getBrand() { return brand; }
     public void setBrand(String brand) { this.brand = brand; }
@@ -32,6 +46,9 @@ public class ProductRowDto {
 
     public BigDecimal getPrice() { return price; }
     public void setPrice(BigDecimal price) { this.price = price; }
+
+    public BigDecimal getDiscount() { return discount; }
+    public void setDiscount(BigDecimal discount) { this.discount = discount; }
 
     public String getImage() { return image; }
     public void setImage(String image) { this.image = image; }

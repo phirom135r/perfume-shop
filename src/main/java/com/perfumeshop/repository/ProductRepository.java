@@ -8,20 +8,23 @@ import org.springframework.data.repository.query.Param;
 
 public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpecificationExecutor<Product> {
 
-    // POS products (only active products, search by name)
+    // POS: only active products
     @Query("""
         SELECT p FROM Product p
+        LEFT JOIN p.brand b
         WHERE p.active = true
-          AND (:q IS NULL OR :q = '' OR LOWER(p.name) LIKE LOWER(CONCAT('%', :q, '%')))
+          AND (:q IS NULL OR :q = '' OR LOWER(p.name) LIKE LOWER(CONCAT('%', :q, '%'))
+               OR LOWER(COALESCE(b.name,'')) LIKE LOWER(CONCAT('%', :q, '%')))
     """)
     Page<Product> posProducts(@Param("q") String q, Pageable pageable);
 
-    // keep your existing search(...) for DataTables
+    // DataTables search
     @Query("""
         SELECT p FROM Product p
+        LEFT JOIN p.brand b
         WHERE (:kw IS NULL OR :kw = '' OR
                LOWER(p.name) LIKE LOWER(CONCAT('%', :kw, '%')) OR
-               LOWER(p.brand) LIKE LOWER(CONCAT('%', :kw, '%')))
+               LOWER(COALESCE(b.name,'')) LIKE LOWER(CONCAT('%', :kw, '%')))
           AND (:categoryId IS NULL OR p.category.id = :categoryId)
           AND (:active IS NULL OR p.active = :active)
     """)

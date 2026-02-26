@@ -49,6 +49,11 @@
             <i class="bi bi-speedometer2"></i> Dashboard
         </a>
 
+        <a th:href="@{/admin/brands}"
+           th:classappend="${activeMenu=='brands'} ? ' active' : ''">
+            <i class="bi bi-tags"></i> Brand
+        </a>
+
         <a th:href="@{/admin/categories}"
            th:classappend="${activeMenu=='categories'} ? ' active' : ''">
             <i class="bi bi-tags"></i> Category
@@ -93,6 +98,12 @@
                th:href="@{/admin/dashboard}"
                th:classappend="${activeMenu=='dashboard'} ? ' active' : ''">
                 <i class="bi bi-speedometer2"></i> Dashboard
+            </a>
+
+            <a class="mobile-nav-link"
+               th:href="@{/admin/brands}"
+               th:classappend="${activeMenu=='brands'} ? ' active' : ''">
+                <i class="bi bi-tags"></i> Brand
             </a>
 
             <a class="mobile-nav-link"

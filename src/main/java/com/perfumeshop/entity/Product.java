@@ -14,9 +14,6 @@ public class Product {
     @Column(nullable=false, length=200)
     private String name;
 
-    @Column(length=200)
-    private String brand;
-
     @Lob
     private String description;
 
@@ -37,6 +34,10 @@ public class Product {
 
     @Column(name="created_at", nullable=false)
     private LocalDateTime createdAt;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "brand_id")
+    private Brand brand;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name="category_id", nullable=false)
@@ -67,14 +68,6 @@ public class Product {
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    public String getBrand() {
-        return brand;
-    }
-
-    public void setBrand(String brand) {
-        this.brand = brand;
     }
 
     public String getDescription() {
@@ -127,6 +120,14 @@ public class Product {
 
     public LocalDateTime getCreatedAt() {
         return createdAt;
+    }
+
+    public Brand getBrand() {
+        return brand;
+    }
+
+    public void setBrand(Brand brand) {
+        this.brand = brand;
     }
 
     public void setCreatedAt(LocalDateTime createdAt) {

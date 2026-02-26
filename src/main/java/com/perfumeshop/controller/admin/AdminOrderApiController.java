@@ -1,8 +1,9 @@
-//AdminOrderApiController
+// src/main/java/com/perfumeshop/controller/admin/AdminOrderApiController.java
 package com.perfumeshop.controller.admin;
 
 import com.perfumeshop.entity.Order;
 import com.perfumeshop.entity.OrderItem;
+import com.perfumeshop.enums.OrderStatus;
 import com.perfumeshop.service.OrderService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,7 +23,7 @@ public class AdminOrderApiController {
     }
 
     /**
-     * Order details for modal (Order Details page)
+     * Order details for modal
      * GET /admin/api/orders/{id}
      */
     @GetMapping("/{id}")
@@ -69,7 +70,7 @@ public class AdminOrderApiController {
         data.put("address", o.getAddress());
         data.put("paymentMethod", o.getPaymentMethod() != null ? o.getPaymentMethod().name() : "");
         data.put("status", o.getStatus() != null ? o.getStatus().name() : "");
-        data.put("createdAt", createdAt); // ✅ send as String for JS
+        data.put("createdAt", createdAt); // send as String for JS
 
         data.put("subtotal", o.getSubtotal());
         data.put("discount", o.getDiscount());
@@ -77,5 +78,38 @@ public class AdminOrderApiController {
         data.put("items", items);
 
         return ResponseEntity.ok(data);
+    }
+
+    /**
+     * ✅ Update order status from select option
+     * PATCH /admin/api/orders/{id}/status
+     * body: {"status":"PAID"} | {"status":"CANCELLED"} | {"status":"PENDING"}
+     */
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<?> updateStatus(@PathVariable Long id,
+                                          @RequestBody Map<String, String> body) {
+
+        String st = body == null ? "" : body.getOrDefault("status", "");
+        st = st == null ? "" : st.trim().toUpperCase();
+
+        if (st.isBlank()) {
+            return ResponseEntity.badRequest().body("status is required");
+        }
+
+        OrderStatus newStatus;
+        try {
+            newStatus = OrderStatus.valueOf(st);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Invalid status: " + st);
+        }
+
+        Order o = orderService.findByIdOrThrow(id);   // ✅ use your method
+        o.setStatus(newStatus);
+        orderService.save(o);
+
+        return ResponseEntity.ok(Map.of(
+                "ok", true,
+                "status", newStatus.name()
+        ));
     }
 }

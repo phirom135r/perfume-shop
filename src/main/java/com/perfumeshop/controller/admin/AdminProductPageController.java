@@ -17,7 +17,8 @@ public class AdminProductPageController {
 
     @GetMapping
     public String page(Model model) {
-        model.addAttribute("categories", categoryRepo.findAll());
+        // ✅ only active categories for dropdown/filter
+        model.addAttribute("categories", categoryRepo.findByActiveTrueOrderByNameAsc());
         return "admin/products/index";
     }
 }

@@ -78,15 +78,28 @@ public class AdminPosCheckoutApiController {
                 return ResponseEntity.badRequest().body("Not enough stock for product: " + p.getName());
             }
 
-            BigDecimal unitPrice = (p.getPrice() == null) ? BigDecimal.ZERO : p.getPrice();
-            BigDecimal lineTotal = unitPrice.multiply(BigDecimal.valueOf(qty));
+            // ✅ price - discount (discount is $ per item)
+            BigDecimal price = nvl(p.getPrice());
+            BigDecimal disc = nvl(p.getDiscount());
+
+            // clamp discount: 0..price
+            if (disc.compareTo(BigDecimal.ZERO) < 0) disc = BigDecimal.ZERO;
+            if (disc.compareTo(price) > 0) disc = price;
+
+            BigDecimal finalUnitPrice = price.subtract(disc);
+            if (finalUnitPrice.compareTo(BigDecimal.ZERO) < 0) finalUnitPrice = BigDecimal.ZERO;
+
+            BigDecimal lineTotal = finalUnitPrice.multiply(BigDecimal.valueOf(qty));
 
             subtotal = subtotal.add(lineTotal);
 
             OrderItem oi = new OrderItem();
             oi.setProduct(p);
             oi.setQty(qty);
-            oi.setUnitPrice(unitPrice);
+
+            // ✅ IMPORTANT:
+            // store the FINAL unit price (after discount) so invoice detail matches POS cart
+            oi.setUnitPrice(finalUnitPrice);
             oi.setLineTotal(lineTotal);
 
             items.add(oi);
@@ -94,6 +107,7 @@ public class AdminPosCheckoutApiController {
 
         if (items.isEmpty()) return ResponseEntity.badRequest().body("Cart is empty");
 
+        // ✅ extra discount from POS input (order-level)
         BigDecimal discount = BigDecimal.valueOf(req.getDiscount());
         if (discount.compareTo(BigDecimal.ZERO) < 0) discount = BigDecimal.ZERO;
         if (discount.compareTo(subtotal) > 0) discount = subtotal;
@@ -120,7 +134,6 @@ public class AdminPosCheckoutApiController {
         // ✅ CASH = success immediately => deduct stock now
         if (pm == PaymentMethod.CASH) {
 
-            // deduct stock
             for (OrderItem oi : items) {
                 Product p = oi.getProduct();
                 int qty = oi.getQty();
@@ -152,5 +165,9 @@ public class AdminPosCheckoutApiController {
         return ResponseEntity.ok(
                 new PosCheckoutResponse(order.getId(), order.getInvoice(), order.getTotal(), order.getMd5(), order.getKhqrString())
         );
+    }
+
+    private BigDecimal nvl(BigDecimal v) {
+        return v == null ? BigDecimal.ZERO : v;
     }
 }

@@ -1,4 +1,3 @@
-<!-- templates/admin/pos.html -->
 <!doctype html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
@@ -7,7 +6,6 @@
 <div class="container-fluid py-3" layout:fragment="content">
 
   <style>
-    /* ===== Left POS (clean UI) ===== */
     .pos-shell{
       border:0;
       border-radius:18px;
@@ -73,7 +71,6 @@
       padding-top: 10px;
     }
 
-    /* product card */
     .p-card{
       border: 1px solid #eef2f7;
       border-radius: 16px;
@@ -123,12 +120,13 @@
       font-weight: 800;
       font-size: 16px;
     }
+    .p-price del { opacity: .75; }
 
     .p-stock{
       font-size: 12px;
       border-radius: 999px;
       padding: 4px 10px;
-      background: #ecfdf5;          /* subtle green */
+      background: #ecfdf5;
       color: #16a34a;
       border: 1px solid #dcfce7;
       font-weight: 700;
@@ -178,17 +176,14 @@
 
   <div class="row g-3">
 
-    <!-- ===================================================== -->
-    <!-- LEFT: POS (CLEAN UI) -->
-    <!-- ===================================================== -->
+    <!-- LEFT -->
     <div class="col-12 col-lg-8">
       <div class="pos-shell p-3">
 
-        <!-- Top bar -->
         <div class="pos-topbar d-flex flex-wrap gap-2 align-items-center">
           <div class="me-2">
             <h5 class="pos-title">POS</h5>
-            <div class="pos-sub">Quick sell • USD only</div>
+
           </div>
 
           <div class="ms-auto d-flex gap-2 align-items-center flex-wrap" style="width: 100%;">
@@ -200,30 +195,24 @@
           </div>
         </div>
 
-        <!-- Products grid -->
         <div id="productsGrid" class="row g-3 pos-grid mt-1"></div>
 
-        <!-- Pagination -->
         <div class="pos-footer">
           <button class="btn btn-outline-secondary pager-btn" id="prevBtn" type="button">← Prev</button>
-
           <div class="small text-muted" id="pageInfo">Page 1</div>
-
           <button class="btn btn-outline-secondary pager-btn" id="nextBtn" type="button">Next →</button>
         </div>
 
       </div>
     </div>
 
-    <!-- ===================================================== -->
-    <!-- RIGHT: Cart + Checkout (DO NOT CHANGE) -->
-    <!-- ===================================================== -->
+    <!-- RIGHT: Cart + Checkout -->
     <div class="col-12 col-lg-4">
       <div class="card card-soft sticky-col">
         <div class="card-header bg-primary text-white d-flex align-items-center gap-2"
              style="border-top-left-radius:16px;border-top-right-radius:16px;">
           <span class="fw-bold">Shopping Cart</span>
-          <span class="ms-auto badge badge-soft">USD ($)</span>
+
         </div>
 
         <div class="card-body">
@@ -254,12 +243,12 @@
           </div>
 
           <div class="mb-2">
-            <label class="form-label">Phone (optional)</label>
+            <label class="form-label">Phone</label>
             <input id="phone" class="form-control" placeholder="Enter phone number"/>
           </div>
 
           <div class="mb-2">
-            <label class="form-label">Address (optional for POS)</label>
+            <label class="form-label">Address</label>
             <input id="address" class="form-control" placeholder="Enter address"/>
           </div>
 
@@ -290,7 +279,7 @@
 
   </div>
 
-  <!-- KHQR POPUP MODAL -->
+  <!-- KHQR MODAL -->
   <div class="modal fade" id="khqrModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content" style="border-radius:16px;">
@@ -300,8 +289,8 @@
         </div>
 
         <div class="modal-body">
-          <div class="d-flex justify-content-between align-items-center mb-2">
-            <div class="small text-muted">Invoice: <span id="khqrInvoice">-</span></div>
+          <div class=" text-center mb-2">
+
             <div class="fw-bold">$<span id="khqrAmount">0.00</span></div>
           </div>
 
@@ -325,10 +314,7 @@
     </div>
   </div>
 
-  <!-- QRCode lib (required) -->
   <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
-
-  <!-- Your POS JS -->
   <script th:src="@{/js/pos.js}"></script>
 
 </div>

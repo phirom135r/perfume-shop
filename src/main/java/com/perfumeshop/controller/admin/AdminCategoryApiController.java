@@ -14,9 +14,16 @@ public class AdminCategoryApiController {
     @Autowired
     private CategoryService service;
 
+    // ✅ list all (admin table)
     @GetMapping
     public List<Category> list() {
         return service.list();
+    }
+
+    // ✅ list active only (for product dropdown)
+    @GetMapping("/active")
+    public List<Category> listActive() {
+        return service.listActive();
     }
 
     @GetMapping("/{id}")
@@ -26,6 +33,8 @@ public class AdminCategoryApiController {
 
     @PostMapping
     public Category save(@RequestBody Category c) {
+        // ✅ important: if active is null, default true
+        if (c.getActive() == null) c.setActive(true);
         return service.save(c);
     }
 

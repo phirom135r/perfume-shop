@@ -13,9 +13,14 @@ public class CategoryService {
     @Autowired
     private CategoryRepository repository;
 
-    // ===== List =====
+    // ===== List All =====
     public List<Category> list() {
         return repository.findAll();
+    }
+
+    // ✅ List Active Only (for dropdown)
+    public List<Category> listActive() {
+        return repository.findByActiveTrueOrderByNameAsc();
     }
 
     // ===== Find =====
