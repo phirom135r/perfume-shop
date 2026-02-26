@@ -51,26 +51,32 @@
 
         <a th:href="@{/admin/brands}"
            th:classappend="${activeMenu=='brands'} ? ' active' : ''">
-            <i class="bi bi-tags"></i> Brand
+            <i class="bi bi-award"></i> Brand
         </a>
 
         <a th:href="@{/admin/categories}"
            th:classappend="${activeMenu=='categories'} ? ' active' : ''">
-            <i class="bi bi-tags"></i> Category
+            <i class="bi bi-grid"></i> Category
         </a>
 
         <a th:href="@{/admin/products}"
            th:classappend="${activeMenu=='products'} ? ' active' : ''">
             <i class="bi bi-box-seam"></i> Product
         </a>
+
         <a th:href="@{/admin/pos}"
            th:classappend="${activeMenu=='pos'} ? ' active' : ''">
-            <i class="bi bi-box-seam"></i> POS
+            <i class="bi bi-cart-check"></i> POS
         </a>
 
         <a th:href="@{/admin/orders}"
            th:classappend="${activeMenu=='orders'} ? ' active' : ''">
-            <i class="bi bi-box-seam"></i> Order
+            <i class="bi bi-receipt"></i> Order
+        </a>
+
+        <a th:href="@{/admin/stock}"
+           th:classappend="${activeMenu=='stock'} ? ' active' : ''">
+            <i class="bi bi-boxes"></i> Stock
         </a>
 
         <a th:href="@{/auth/logout}">
@@ -103,13 +109,13 @@
             <a class="mobile-nav-link"
                th:href="@{/admin/brands}"
                th:classappend="${activeMenu=='brands'} ? ' active' : ''">
-                <i class="bi bi-tags"></i> Brand
+                <i class="bi bi-award"></i> Brand
             </a>
 
             <a class="mobile-nav-link"
                th:href="@{/admin/categories}"
                th:classappend="${activeMenu=='categories'} ? ' active' : ''">
-                <i class="bi bi-tags"></i> Category
+                <i class="bi bi-grid"></i> Category
             </a>
 
             <a class="mobile-nav-link"
@@ -120,13 +126,19 @@
             <a class="mobile-nav-link"
                th:href="@{/admin/pos}"
                th:classappend="${activeMenu=='pos'} ? ' active' : ''">
-                <i class="bi bi-tags"></i> POS
+                <i class="bi bi-cart-check"></i> POS
             </a>
 
             <a class="mobile-nav-link"
                th:href="@{/admin/orders}"
                th:classappend="${activeMenu=='orders'} ? ' active' : ''">
-                <i class="bi bi-tags"></i> Orders
+                <i class="bi bi-receipt"></i> Orders
+            </a>
+
+            <a class="mobile-nav-link"
+               th:href="@{/admin/stock}"
+               th:classappend="${activeMenu=='stock'} ? ' active' : ''">
+                <i class="bi bi-boxes"></i> Stock
             </a>
 
             <hr class="my-2">

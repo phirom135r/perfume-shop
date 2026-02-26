@@ -4,6 +4,7 @@ import com.perfumeshop.entity.Order;
 import com.perfumeshop.enums.OrderStatus;
 import com.perfumeshop.repository.OrderItemRepository;
 import com.perfumeshop.repository.OrderRepository;
+import com.perfumeshop.repository.ProductRepository;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
@@ -17,10 +18,14 @@ public class DashboardService {
 
     private final OrderRepository orderRepo;
     private final OrderItemRepository orderItemRepo;
+    private final ProductRepository productRepo; // ✅ ADD
 
-    public DashboardService(OrderRepository orderRepo, OrderItemRepository orderItemRepo) {
+    public DashboardService(OrderRepository orderRepo,
+                            OrderItemRepository orderItemRepo,
+                            ProductRepository productRepo) { // ✅ ADD
         this.orderRepo = orderRepo;
         this.orderItemRepo = orderItemRepo;
+        this.productRepo = productRepo;
     }
 
     // ================= RANGE HELPER =================
@@ -65,7 +70,6 @@ public class DashboardService {
     }
 
     private String buildLabel(Range rg) {
-        // show range like 02/18/2026 - 02/24/2026
         DateTimeFormatter f = DateTimeFormatter.ofPattern("MM/dd/yyyy");
         LocalDate from = rg.start.toLocalDate();
         LocalDate toInclusive = rg.end.minusDays(1).toLocalDate();
@@ -80,21 +84,35 @@ public class DashboardService {
         BigDecimal sales = orderRepo.sumTotalBetween(OrderStatus.PAID, rg.start, rg.end);
         long orders = orderRepo.countPaidBetween(OrderStatus.PAID, rg.start, rg.end);
 
-        // ✅ FIX: status counts filtered by range
         long pending = orderRepo.countByStatusBetween(OrderStatus.PENDING, rg.start, rg.end);
         long paid = orderRepo.countByStatusBetween(OrderStatus.PAID, rg.start, rg.end);
         long cancelled = orderRepo.countByStatusBetween(OrderStatus.CANCELLED, rg.start, rg.end);
 
-        // ✅ FIX: recent orders filtered by range
         List<Order> recent = orderRepo.findRecentBetween(rg.start, rg.end, PageRequest.of(0, 8));
+
+        // ✅ Inventory KPIs (from ProductRepository)
+        int threshold = 5; // you can change later or make it config
+        long totalProducts = productRepo.countAllProducts();
+        long totalStockUnits = productRepo.sumAllStock();
+        long lowStockCount = productRepo.countLowStock(threshold);
+        long outOfStockCount = productRepo.countOutOfStock();
 
         Map<String, Object> res = new LinkedHashMap<>();
         res.put("rangeLabel", buildLabel(rg));
+
         res.put("sales", sales);
         res.put("orders", orders);
+
         res.put("pendingCount", pending);
         res.put("paidCount", paid);
         res.put("cancelledCount", cancelled);
+
+        // ✅ send to JS (IDs in your dashboard.js)
+        res.put("totalProducts", totalProducts);
+        res.put("totalStockUnits", totalStockUnits);
+        res.put("lowStockThreshold", threshold);
+        res.put("lowStockCount", lowStockCount);
+        res.put("outOfStockCount", outOfStockCount);
 
         List<Map<String, Object>> recentDto = new ArrayList<>();
         for (Order o : recent) {
@@ -112,9 +130,8 @@ public class DashboardService {
         return res;
     }
 
-    // ================= SALES CHART =================
+    // sales(...) and topProducts(...) keep your old code
     public List<Map<String, Object>> sales(String range, String from, String to) {
-
         Range rg = resolveRange(range, from, to);
 
         List<Object[]> rows = orderRepo.dailyRevenue(OrderStatus.PAID, rg.start, rg.end);
@@ -143,9 +160,7 @@ public class DashboardService {
         return out;
     }
 
-    // ================= TOP PRODUCTS =================
     public List<Map<String, Object>> topProducts(String range, String from, String to) {
-
         Range rg = resolveRange(range, from, to);
 
         List<Object[]> rows = orderItemRepo.topProducts(OrderStatus.PAID, rg.start, rg.end);

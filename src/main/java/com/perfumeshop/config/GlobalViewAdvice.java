@@ -12,10 +12,12 @@ public class GlobalViewAdvice {
         String uri = request.getRequestURI(); // ok in Java layer
 
         if (uri.startsWith("/admin/dashboard")) return "dashboard";
+        if (uri.startsWith("/admin/brands")) return "brands";
         if (uri.startsWith("/admin/categories")) return "categories";
         if (uri.startsWith("/admin/products")) return "products";
         if (uri.startsWith("/admin/pos")) return "pos";
         if (uri.startsWith("/admin/orders")) return "orders";
+        if (uri.startsWith("/admin/stock")) return "stock";
 
         return "";
     }

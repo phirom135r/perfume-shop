@@ -1,4 +1,3 @@
-<!--dashboard.html-->
 <!doctype html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
@@ -17,10 +16,7 @@
             border-radius: 16px;
             box-shadow: 0 6px 18px rgba(0,0,0,.06);
         }
-        /* ✅ Border-left style (like indicator) */
-        .bl {
-            border-left: 6px solid #0d6efd; /* default primary */
-        }
+        .bl { border-left: 6px solid #0d6efd; }
         .bl-primary { border-left-color: #0d6efd; }
         .bl-success { border-left-color: #198754; }
         .bl-warning { border-left-color: #ffc107; }
@@ -31,10 +27,7 @@
             font-size: 12px;
             color: #6c757d;
         }
-
-        .range-input {
-            background: #f8fafc;
-        }
+        .range-input { background: #f8fafc; }
     </style>
 
     <div class="d-flex align-items-center mb-3">
@@ -42,7 +35,7 @@
         <div class="ms-auto text-muted small">Sales Analytics</div>
     </div>
 
-    <!-- ✅ Range Filter -->
+    <!-- Range Filter -->
     <div class="card card-soft bl bl-primary mb-3">
         <div class="card-body">
             <div class="row g-2 align-items-end">
@@ -75,6 +68,7 @@
 
     <!-- Cards -->
     <div class="row g-3">
+        <!-- Sales -->
         <div class="col-12 col-md-3">
             <div class="card card-soft bl bl-info">
                 <div class="card-body">
@@ -85,17 +79,43 @@
             </div>
         </div>
 
+
+
+        <!-- ✅ Inventory: Total Products -->
         <div class="col-12 col-md-3">
             <div class="card card-soft bl bl-primary">
                 <div class="card-body">
-                    <div class="card-title-mini">Sales (Selected Range)</div>
-                    <div class="fs-4 fw-bold">$<span id="salesAmount2">0.00</span></div>
-                    <div class="text-muted small"><span id="salesOrders2">0</span> orders</div>
+                    <div class="card-title-mini">Total Products</div>
+                    <div class="fs-4 fw-bold"><span id="totalProducts">0</span></div>
+                    <div class="text-muted small">All SKUs</div>
                 </div>
             </div>
         </div>
 
-        <div class="col-12 col-md-2">
+        <!-- ✅ Inventory: Total Stock Units -->
+        <div class="col-12 col-md-3">
+            <div class="card card-soft bl bl-success">
+                <div class="card-body">
+                    <div class="card-title-mini">Total Stock Units</div>
+                    <div class="fs-4 fw-bold"><span id="totalStockUnits">0</span></div>
+                    <div class="text-muted small">Sum of all stock</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ✅ Inventory: Low Stock -->
+        <div class="col-12 col-md-3">
+            <div class="card card-soft bl bl-warning">
+                <div class="card-body">
+                    <div class="card-title-mini">Low Stock (≤ <span id="lowStockThreshold">5</span>)</div>
+                    <div class="fs-4 fw-bold text-warning"><span id="lowStockCount">0</span></div>
+                    <div class="text-muted small">Need restock</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pending -->
+        <div class="col-12 col-md-3">
             <div class="card card-soft bl bl-warning">
                 <div class="card-body">
                     <div class="card-title-mini">Pending</div>
@@ -104,7 +124,8 @@
             </div>
         </div>
 
-        <div class="col-12 col-md-2">
+        <!-- Paid -->
+        <div class="col-12 col-md-3">
             <div class="card card-soft bl bl-success">
                 <div class="card-body">
                     <div class="card-title-mini">Paid</div>
@@ -113,11 +134,22 @@
             </div>
         </div>
 
-        <div class="col-12 col-md-2">
+        <!-- Cancelled -->
+        <div class="col-12 col-md-3">
             <div class="card card-soft bl bl-danger">
                 <div class="card-body">
                     <div class="card-title-mini">Cancelled</div>
                     <div class="fs-4 fw-bold text-danger"><span id="cancelledCount">0</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ✅ Out of stock -->
+        <div class="col-12 col-md-3">
+            <div class="card card-soft bl bl-danger">
+                <div class="card-body">
+                    <div class="card-title-mini">Out of Stock</div>
+                    <div class="fs-4 fw-bold text-danger"><span id="outOfStockCount">0</span></div>
                 </div>
             </div>
         </div>
@@ -167,10 +199,10 @@
                     <tr>
                         <th>Invoice</th>
                         <th>Customer</th>
-                        <th class="text-end">Total</th>
+                        <th >Total</th>
                         <th>Status</th>
                         <th>Date</th>
-                        <th class="text-center">Action</th>
+
                     </tr>
                     </thead>
                     <tbody id="recentOrdersBody"></tbody>

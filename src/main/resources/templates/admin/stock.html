@@ -1,0 +1,100 @@
+<!doctype html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/layout}">
+<head>
+    <title>Stock</title>
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+    <link rel="stylesheet" href="https://cdn.datatables.net/2.0.8/css/dataTables.bootstrap5.min.css"/>
+    <script src="https://cdn.datatables.net/2.0.8/js/dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/2.0.8/js/dataTables.bootstrap5.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        #tblStock thead th { background:#3b5bdb; color:#fff; }
+        .badge-act{ font-weight:700; border-radius:999px; padding:.25rem .6rem; }
+        .b-in{ background:#ecfdf5; color:#16a34a; border:1px solid #dcfce7; }
+        .b-out{ background:#fef2f2; color:#ef4444; border:1px solid #fee2e2; }
+        .b-adj{ background:#f1f5f9; color:#0f172a; border:1px solid #e2e8f0; }
+    </style>
+</head>
+
+<body>
+<section layout:fragment="content" th:with="title='Stock', activeMenu='stock'">
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3 class="mb-0">Stock Management</h3>
+        <button class="btn btn-primary" id="btnAdd">
+            <i class="bi bi-plus-circle"></i> New Movement
+        </button>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body table-responsive">
+            <table id="tblStock" class="table table-hover align-middle w-100">
+                <thead>
+                <tr>
+                    <th style="width:80px">ID</th>
+                    <th>Product</th>
+                    <th style="width:120px" class="text-center">Action</th>
+                    <th style="width:90px" class="text-center">Qty</th>
+                    <th style="width:100px" class="text-center">Before</th>
+                    <th style="width:100px" class="text-center">After</th>
+                    <th>Note</th>
+                    <th style="width:170px">Created</th>
+                </tr>
+                </thead>
+            </table>
+        </div>
+    </div>
+
+
+    <!-- MODAL -->
+    <div class="modal fade" id="stockModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+
+                <div class="modal-header">
+                    <h5 class="modal-title">Stock Movement</h5>
+                    <button class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <form id="stockForm">
+                    <div class="modal-body">
+
+                        <label class="form-label">Product</label>
+                        <select class="form-select" id="productId" required></select>
+
+                        <label class="form-label mt-3">Action</label>
+                        <select class="form-select" id="action" required>
+                            <option value="IN">IN (Add)</option>
+                            <option value="OUT">OUT (Remove)</option>
+                            <option value="ADJUST">ADJUST (Set New Stock)</option>
+                        </select>
+
+                        <label class="form-label mt-3" id="qtyLabel">Qty</label>
+                        <input class="form-control" id="qty" type="number" min="0" required>
+
+                        <label class="form-label mt-3">Note</label>
+                        <textarea class="form-control" id="note" rows="2" placeholder="Optional..."></textarea>
+
+                        <div class="small text-muted mt-2" id="hint"></div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button class="btn btn-primary" type="submit">Save</button>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+
+    <script th:src="@{/js/stock.js}"></script>
+</section>
+</body>
+</html>

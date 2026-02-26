@@ -1,6 +1,8 @@
 package com.perfumeshop.repository;
 
 import com.perfumeshop.entity.Product;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.*;
@@ -32,4 +34,16 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
                          @Param("categoryId") Long categoryId,
                          @Param("active") Boolean active,
                          Pageable pageable);
+
+    @Query("SELECT COALESCE(SUM(p.stock),0) FROM Product p")
+    long sumAllStock();
+
+    @Query("SELECT COUNT(p) FROM Product p")
+    long countAllProducts();
+
+    @Query("SELECT COUNT(p) FROM Product p WHERE COALESCE(p.stock,0) = 0")
+    long countOutOfStock();
+
+    @Query("SELECT COUNT(p) FROM Product p WHERE COALESCE(p.stock,0) > 0 AND COALESCE(p.stock,0) <= :threshold")
+    long countLowStock(int threshold);
 }
