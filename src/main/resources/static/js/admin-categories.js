@@ -26,11 +26,17 @@ function loadData() {
           <tr>
             <td>${c.id}</td>
             <td>${escapeHtml(c.name)}</td>
-            <td>
-              <span class="badge ${isActive ? "text-bg-success" : "text-bg-secondary"}">
-                ${isActive ? "Active" : "Inactive"}
-              </span>
+           <td>
+              ${isActive
+                                ? `<span class="status-pill pill-active">
+                     <span class="dot"></span>Active
+                   </span>`
+                                : `<span class="status-pill pill-inactive">
+                     <span class="dot"></span>Inactive
+                   </span>`
+                            }
             </td>
+            
             <td>
               <button class="btn btn-sm btn-info me-1"
                       data-id="${c.id}"
