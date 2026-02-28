@@ -6,6 +6,24 @@
 <head>
   <title>Categories</title>
 
+  <style>
+    .card-soft { border: 0; border-radius: 16px; box-shadow: 0 8px 24px rgba(0,0,0,.06); }
+    .table thead th { white-space: nowrap; }
+    .status-pill{
+      display:inline-flex; align-items:center; gap:6px;
+      padding:.35rem .7rem; border-radius: 999px;
+      font-size: 12px; font-weight: 600;
+    }
+    .dot{ width:8px; height:8px; border-radius:999px; display:inline-block; }
+    .pill-active{ background:#e8fff1; color:#0f5132; }
+    .pill-active .dot{ background:#198754; }
+    .pill-inactive{ background:#ffe7e7; color:#842029; }
+    .pill-inactive .dot{ background:#dc3545; }
+    .col-id{ width:90px; }
+    .col-status{ width:150px; }
+    .col-action{ width:180px; }
+  </style>
+
 </head>
 
 <body>
