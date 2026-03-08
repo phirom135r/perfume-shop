@@ -8,11 +8,11 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/admin/api/brands")
-public class AdminBrandApiController {
+public class BrandApiController {
 
     private final BrandService service;
 
-    public AdminBrandApiController(BrandService service) {
+    public BrandApiController(BrandService service) {
         this.service = service;
     }
 

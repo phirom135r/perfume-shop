@@ -7,11 +7,11 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/admin/api/dashboard")
-public class AdminDashboardApiController {
+public class DashboardApiController {
 
     private final DashboardService dashboardService;
 
-    public AdminDashboardApiController(DashboardService dashboardService) {
+    public DashboardApiController(DashboardService dashboardService) {
         this.dashboardService = dashboardService;
     }
 

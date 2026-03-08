@@ -14,11 +14,11 @@ import java.util.*;
 
 @RestController
 @RequestMapping("/admin/api/orders")
-public class AdminOrderApiController {
+public class OrderApiController {
 
     private final OrderService orderService;
 
-    public AdminOrderApiController(OrderService orderService) {
+    public OrderApiController(OrderService orderService) {
         this.orderService = orderService;
     }
 
@@ -112,4 +112,5 @@ public class AdminOrderApiController {
                 "status", newStatus.name()
         ));
     }
+
 }
