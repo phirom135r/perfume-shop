@@ -1,10 +1,15 @@
-// src/main/java/com/perfumeshop/controller/admin/AdminOrderApiController.java
 package com.perfumeshop.controller.admin;
 
+import com.perfumeshop.dto.DataTableResponse;
+import com.perfumeshop.dto.OrderRowDto;
 import com.perfumeshop.entity.Order;
 import com.perfumeshop.entity.OrderItem;
 import com.perfumeshop.enums.OrderStatus;
 import com.perfumeshop.service.OrderService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,13 +28,57 @@ public class OrderApiController {
     }
 
     /**
+     * ✅ DataTable list
+     * GET /admin/api/orders/dt
+     */
+    @GetMapping("/dt")
+    public DataTableResponse<OrderRowDto> datatable(
+            @RequestParam(defaultValue = "0") int draw,
+            @RequestParam(defaultValue = "0") int start,
+            @RequestParam(defaultValue = "10") int length,
+            @RequestParam(name = "search[value]", defaultValue = "") String search,
+            @RequestParam(name = "order[0][column]", defaultValue = "7") int orderCol,
+            @RequestParam(name = "order[0][dir]", defaultValue = "desc") String orderDir
+    ) {
+        int page = Math.max(0, start / Math.max(1, length));
+
+        Sort sort = buildSort(orderCol, orderDir);
+        Pageable pageable = PageRequest.of(page, length, sort);
+
+        Page<OrderRowDto> result = orderService.adminSearchRows(search, null, pageable);
+
+        long total = result.getTotalElements();
+        long filtered = result.getTotalElements();
+
+        return new DataTableResponse<>(draw, total, filtered, result.getContent());
+    }
+
+    private Sort buildSort(int col, String dir) {
+        boolean asc = !"desc".equalsIgnoreCase(dir);
+
+        String prop;
+        switch (col) {
+            case 0 -> prop = "invoice";
+            case 1 -> prop = "customerName";
+            case 2 -> prop = "phone";
+//            case 3 -> prop = "totalQty";   // ⭐ ADD THIS
+            case 4 -> prop = "total";
+            case 5 -> prop = "paymentMethod";
+            case 6 -> prop = "status";
+            case 7 -> prop = "createdAt";
+            default -> prop = "createdAt";
+        }
+
+        return asc ? Sort.by(prop).ascending() : Sort.by(prop).descending();
+    }
+
+    /**
      * Order details for modal
      * GET /admin/api/orders/{id}
      */
     @GetMapping("/{id}")
     public ResponseEntity<?> detail(@PathVariable Long id) {
 
-        // IMPORTANT: must load items + product (use EntityGraph in repository)
         Order o = orderService.findWithItemsOrThrow(id);
 
         List<Map<String, Object>> items = new ArrayList<>();
@@ -70,8 +119,7 @@ public class OrderApiController {
         data.put("address", o.getAddress());
         data.put("paymentMethod", o.getPaymentMethod() != null ? o.getPaymentMethod().name() : "");
         data.put("status", o.getStatus() != null ? o.getStatus().name() : "");
-        data.put("createdAt", createdAt); // send as String for JS
-
+        data.put("createdAt", createdAt);
         data.put("subtotal", o.getSubtotal());
         data.put("discount", o.getDiscount());
         data.put("total", o.getTotal());
@@ -83,7 +131,6 @@ public class OrderApiController {
     /**
      * ✅ Update order status from select option
      * PATCH /admin/api/orders/{id}/status
-     * body: {"status":"PAID"} | {"status":"CANCELLED"} | {"status":"PENDING"}
      */
     @PatchMapping("/{id}/status")
     public ResponseEntity<?> updateStatus(@PathVariable Long id,
@@ -103,7 +150,7 @@ public class OrderApiController {
             return ResponseEntity.badRequest().body("Invalid status: " + st);
         }
 
-        Order o = orderService.findByIdOrThrow(id);   // ✅ use your method
+        Order o = orderService.findByIdOrThrow(id);
         o.setStatus(newStatus);
         orderService.save(o);
 
@@ -112,5 +159,4 @@ public class OrderApiController {
                 "status", newStatus.name()
         ));
     }
-
 }
