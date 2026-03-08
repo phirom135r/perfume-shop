@@ -17,23 +17,17 @@ import java.util.*;
 
 @RestController
 @RequestMapping("/admin/api/products")
-public class AdminProductApiController {
+public class ProductApiController {
 
     private final ProductService service;
 
     @Value("${app.upload.dir:uploads}")
     private String uploadDir;
 
-    public AdminProductApiController(ProductService service) {
+    public ProductApiController(ProductService service) {
         this.service = service;
     }
 
-    // =====================================================
-    // POS endpoint (FOR POS PAGE)
-    // URL: /admin/api/products/pos
-    // ✅ only active products
-    // ✅ send: price + discount + finalPrice
-    // =====================================================
     @GetMapping("/pos")
     public Page<Map<String, Object>> posProducts(
             @RequestParam(defaultValue = "") String q,

@@ -1,4 +1,4 @@
-// admin-products.js
+//products.js
 let modal;
 let dt;
 let _previewUrl = null;
@@ -20,7 +20,7 @@ function initDataTable() {
         serverSide: true,
         searching: true,
         lengthMenu: [10, 25, 50, 100],
-        pageLength: 50,
+
         ajax: {
             url: "/admin/api/products/dt",
             type: "GET"
@@ -29,7 +29,7 @@ function initDataTable() {
             { data: "id" },
             { data: "name" },
             { data: "category" },
-            { data: "brand" }, // show brand name
+            { data: "brand" },
             { data: "stock" },
             {
                 data: "price",
@@ -141,7 +141,7 @@ function saveProduct(e) {
     if (id) fd.append("id", id);
 
     fd.append("name", $("#name").val());
-    fd.append("brandId", $("#brandId").val());          // ✅ NEW
+    fd.append("brandId", $("#brandId").val());
     fd.append("categoryId", $("#categoryId").val());
     fd.append("price", $("#price").val() || 0);
     fd.append("discount", $("#discount").val() || 0);

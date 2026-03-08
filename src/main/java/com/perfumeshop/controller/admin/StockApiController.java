@@ -16,12 +16,12 @@ import java.util.*;
 
 @RestController
 @RequestMapping("/admin/api/stock")
-public class AdminStockApiController {
+public class StockApiController {
 
     private final InventoryService inventoryService;
     private final ProductService productService;
 
-    public AdminStockApiController(InventoryService inventoryService, ProductService productService) {
+    public StockApiController(InventoryService inventoryService, ProductService productService) {
         this.inventoryService = inventoryService;
         this.productService = productService;
     }

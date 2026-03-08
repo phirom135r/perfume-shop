@@ -16,15 +16,15 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/admin/api/payments")
-public class AdminPaymentVerifyApiController {
+public class PaymentVerifyApiController {
 
     private final PaymentVerifyService paymentVerifyService;
     private final OrderService orderService;
     private final ProductService productService;
 
-    public AdminPaymentVerifyApiController(PaymentVerifyService paymentVerifyService,
-                                           OrderService orderService,
-                                           ProductService productService) {
+    public PaymentVerifyApiController(PaymentVerifyService paymentVerifyService,
+                                      OrderService orderService,
+                                      ProductService productService) {
         this.paymentVerifyService = paymentVerifyService;
         this.orderService = orderService;
         this.productService = productService;

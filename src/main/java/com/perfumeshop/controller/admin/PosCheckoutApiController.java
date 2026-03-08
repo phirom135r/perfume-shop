@@ -23,14 +23,14 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/admin/pos")
-public class AdminPosCheckoutApiController {
+public class PosCheckoutApiController {
 
     private final OrderService orderService;
     private final ProductService productService;
     private final BakongQrService bakongQrService;
     private final InvoiceService invoiceService;
 
-    public AdminPosCheckoutApiController(
+    public PosCheckoutApiController(
             OrderService orderService,
             ProductService productService,
             BakongQrService bakongQrService,
