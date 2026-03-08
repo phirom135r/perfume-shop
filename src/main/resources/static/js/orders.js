@@ -1,5 +1,5 @@
-// src/main/resources/static/js/orders.js
 let orderModal;
+let dt;
 
 document.addEventListener("DOMContentLoaded", () => {
     const modalEl = document.getElementById("orderDetailModal");
@@ -7,21 +7,111 @@ document.addEventListener("DOMContentLoaded", () => {
         orderModal = new bootstrap.Modal(modalEl);
     }
 
-    // view
+    initOrderTable();
+});
+
+function initOrderTable() {
+    dt = new DataTable("#tblOrders", {
+        processing: true,
+        serverSide: true,
+        searching: true,
+        lengthMenu: [10, 25, 50, 100],
+        pageLength: 10,
+        ajax: {
+            url: "/admin/api/orders/dt",
+            type: "GET"
+        },
+        order: [[7, "desc"]],
+        columns: [
+            { data: "invoice" },
+            { data: "customerName" },
+            {
+                data: "phone",
+                render: function (data) {
+                    return (data && String(data).trim() !== "") ? escapeHtml(data) : "N/A";
+                }
+            },
+            {
+                data: "totalQty",
+                className: "text-center"
+            },
+            {
+                data: "total",
+                className: "text-end",
+                render: function (data) {
+                    return "$" + money2(data);
+                }
+            },
+            {
+                data: "paymentMethod",
+                className: "text-center",
+                render: function (data) {
+                    const pay = String(data || "").toUpperCase();
+                    if (pay === "CASH") {
+                        return `<span class="pay-pill pay-cash">CASH</span>`;
+                    }
+                    return `<span class="pay-pill pay-khqr">KHQR</span>`;
+                }
+            },
+            {
+                data: "status",
+                className: "text-center",
+                orderable: false,
+                render: function (data, type, row) {
+                    const st = String(data || "").toUpperCase();
+
+                    return `
+                        <select class="form-select form-select-sm order-status-select ${statusClass(st)}"
+                                data-id="${row.id}"
+                                data-old="${st}">
+                            <option value="PAID" ${st === "PAID" ? "selected" : ""}>Completed</option>
+                            <option value="PENDING" ${st === "PENDING" ? "selected" : ""}>Pending</option>
+                            <option value="CANCELLED" ${st === "CANCELLED" ? "selected" : ""}>Cancelled</option>
+                        </select>
+                    `;
+                }
+            },
+            {
+                data: "createdAt",
+                render: function (data) {
+                    return fmtDate(data);
+                }
+            },
+            {
+                data: null,
+                className: "text-center",
+                orderable: false,
+                render: function (row) {
+                    return `
+                        <button type="button"
+                                class="btn btn-info btn-sm btn-view btnViewOrder"
+                                data-id="${row.id}">
+                            <i class="bi bi-eye"></i> View
+                        </button>
+                    `;
+                }
+            }
+        ],
+        drawCallback: function () {
+            bindViewButtons();
+            bindStatusSelects();
+        }
+    });
+}
+
+function bindViewButtons() {
     document.querySelectorAll(".btnViewOrder").forEach((btn) => {
-        btn.addEventListener("click", async () => {
+        btn.onclick = async () => {
             const id = btn.getAttribute("data-id");
             if (!id) return;
             await openOrderDetail(id);
-        });
+        };
     });
+}
 
-    // status select
+function bindStatusSelects() {
     document.querySelectorAll(".orderStatusSelect").forEach((sel) => {
-        sel.setAttribute("data-old", sel.value);
-        applyStatusColor(sel, sel.value);
-
-        sel.addEventListener("change", async () => {
+        sel.onchange = async () => {
             const id = sel.getAttribute("data-id");
             if (!id) return;
 
@@ -34,7 +124,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 icon: "question",
                 showCancelButton: true,
                 confirmButtonText: "Yes",
-                cancelButtonText: "No",
+                cancelButtonText: "No"
             });
 
             if (!ok.isConfirmed) {
@@ -48,8 +138,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 const res = await fetch(`/admin/api/orders/${encodeURIComponent(id)}/status`, {
                     method: "PATCH",
-                    headers: { "Content-Type": "application/json", Accept: "application/json" },
-                    body: JSON.stringify({ status: newStatus }),
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Accept": "application/json"
+                    },
+                    body: JSON.stringify({ status: newStatus })
                 });
 
                 if (!res.ok) {
@@ -66,7 +159,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     icon: "success",
                     title: "Updated",
                     showConfirmButton: false,
-                    timer: 900,
+                    timer: 1000
                 });
             } catch (e) {
                 sel.value = oldStatus;
@@ -75,25 +168,29 @@ document.addEventListener("DOMContentLoaded", () => {
             } finally {
                 sel.disabled = false;
             }
-        });
+        };
+
+        applyStatusColor(sel, sel.value);
     });
-});
+}
+
+function statusClass(st) {
+    st = String(st || "").toUpperCase();
+    if (st === "PAID") return "os-paid";
+    if (st === "CANCELLED") return "os-cancelled";
+    return "os-pending";
+}
+
+function applyStatusColor(sel, st) {
+    sel.classList.remove("os-paid", "os-pending", "os-cancelled");
+    sel.classList.add(statusClass(st));
+}
 
 function humanStatus(st) {
     st = String(st || "").toUpperCase();
     if (st === "PAID") return "Completed";
     if (st === "CANCELLED") return "Cancelled";
     return "Pending";
-}
-
-/* ✅ apply soft color for dropdown like sample */
-function applyStatusColor(sel, st) {
-    sel.classList.remove("os-paid", "os-pending", "os-cancelled");
-    st = String(st || "").toUpperCase();
-
-    if (st === "PAID") sel.classList.add("os-paid");
-    else if (st === "CANCELLED") sel.classList.add("os-cancelled");
-    else sel.classList.add("os-pending");
 }
 
 function money2(n) {
@@ -109,7 +206,7 @@ function fmtDate(v) {
 async function openOrderDetail(id) {
     try {
         const res = await fetch(`/admin/api/orders/${encodeURIComponent(id)}`, {
-            headers: { Accept: "application/json" },
+            headers: { Accept: "application/json" }
         });
 
         if (!res.ok) {
@@ -122,10 +219,8 @@ async function openOrderDetail(id) {
         document.getElementById("odCustomer").textContent = o.customerName || "-";
         document.getElementById("odPhone").textContent =
             (o.phone && String(o.phone).trim() !== "") ? o.phone : "N/A";
-
         document.getElementById("odAddress").textContent =
             (o.address && String(o.address).trim() !== "") ? o.address : "N/A";
-
         document.getElementById("odInvoice").textContent = o.invoice || "-";
         document.getElementById("odDate").textContent = fmtDate(o.createdAt);
 
@@ -138,7 +233,9 @@ async function openOrderDetail(id) {
         const stEl = document.getElementById("odStatus");
         stEl.textContent = humanStatus(st);
         stEl.className =
-            "badge " + (st === "PAID" ? "text-bg-success" : (st === "CANCELLED" ? "text-bg-danger" : "text-bg-warning"));
+            "badge " + (st === "PAID"
+                ? "text-bg-success"
+                : (st === "CANCELLED" ? "text-bg-danger" : "text-bg-warning"));
 
         const tbody = document.getElementById("odItems");
         tbody.innerHTML = "";
@@ -150,11 +247,11 @@ async function openOrderDetail(id) {
             items.forEach((it) => {
                 const tr = document.createElement("tr");
                 tr.innerHTML = `
-          <td>${escapeHtml(it.product || "-")}</td>
-          <td class="text-center">${Number(it.qty || 0)}</td>
-          <td class="text-end">$${money2(it.price)}</td>
-          <td class="text-end">$${money2(it.amount)}</td>
-        `;
+                    <td>${escapeHtml(it.product || "-")}</td>
+                    <td class="text-center">${Number(it.qty || 0)}</td>
+                    <td class="text-end">$${money2(it.price)}</td>
+                    <td class="text-end">$${money2(it.amount)}</td>
+                `;
                 tbody.appendChild(tr);
             });
         }

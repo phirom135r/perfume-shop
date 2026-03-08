@@ -5,174 +5,108 @@
 
 <head>
     <title>Orders</title>
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+    <!-- DataTables + Bootstrap 5 -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/2.0.8/css/dataTables.bootstrap5.min.css"/>
+    <script src="https://cdn.datatables.net/2.0.8/js/dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/2.0.8/js/dataTables.bootstrap5.min.js"></script>
+
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        #tblOrders thead th{
+            background-color:#3b5bdb;
+            color:#fff;
+            border-bottom:none;
+            white-space:nowrap;
+        }
+
+        #tblOrders{
+            width:100% !important;
+        }
+
+        #tblOrders td, #tblOrders th{
+            vertical-align:middle;
+        }
+
+        .pay-pill{
+            display:inline-block;
+            padding:.25rem .7rem;
+            border-radius:999px;
+            font-size:.78rem;
+            font-weight:700;
+            color:#fff;
+            line-height:1;
+        }
+        .pay-cash{ background:#06b6d4; }
+        .pay-khqr{ background:#2563eb; }
+
+        .order-status-select{
+            height:36px;
+            min-width:170px;
+            border-radius:12px;
+            font-weight:600;
+            border:1px solid #e5e7eb;
+            box-shadow:none !important;
+        }
+        .order-status-select:focus{
+            border-color:#cbd5e1;
+        }
+
+        .os-paid{
+            background:#ecfdf5 !important;
+            border-color:#bbf7d0 !important;
+            color:#065f46 !important;
+        }
+        .os-pending{
+            background:#fffbeb !important;
+            border-color:#fde68a !important;
+            color:#92400e !important;
+        }
+        .os-cancelled{
+            background:#fef2f2 !important;
+            border-color:#fecaca !important;
+            color:#991b1b !important;
+        }
+
+        .btn-view{
+            white-space:nowrap;
+        }
+
+        .order-detail-label{
+            font-weight:700;
+        }
+    </style>
 </head>
 
 <body>
 <div class="container-fluid py-3" layout:fragment="content">
 
-    <style>
-        /* ✅ dropdown like sample */
-        .order-status-select{
-            height: 34px;
-            border-radius: 10px;
-            font-weight: 600;
-            padding: 0 12px;
-            border: 1px solid #e5e7eb;
-            background: #fff;
-            min-width: 170px;
-        }
-        .order-status-select:focus{
-            box-shadow: none;
-            border-color: #cbd5e1;
-        }
-
-        /* optional: color hint like sample (soft) */
-        .os-paid { background: #ecfdf5; border-color: #bbf7d0; color: #065f46; }
-        .os-pending { background: #fffbeb; border-color: #fde68a; color: #92400e; }
-        .os-cancelled { background: #fef2f2; border-color: #fecaca; color: #991b1b; }
-
-        .order-status-select:disabled{ opacity:.7; cursor:not-allowed; }
-    </style>
-
-    <div class="row align-items-center mb-3 g-2">
-
-        <div class="col-12 col-lg-4">
-            <h4 class="mb-0">Order Management</h4>
-        </div>
-
-        <div class="col-12 col-lg-8">
-            <form class="row g-2 justify-content-lg-end"
-                  method="get" th:action="@{/admin/orders}">
-
-                <div class="col-12 col-sm-auto">
-                    <input class="form-control"
-                           name="q"
-                           th:value="${q}"
-                           placeholder="Search...">
-                </div>
-
-                <div class="col-12 col-sm-auto">
-                    <select class="form-select" name="status">
-                        <option value="">All Status</option>
-                        <option th:each="st : ${allStatuses}"
-                                th:value="${st}"
-                                th:selected="${status} == ${st}"
-                                th:text="${st.name() == 'PAID'} ? 'Completed' :
-                                     (${st.name() == 'CANCELLED'} ? 'Cancelled' :
-                                     (${st.name() == 'PENDING'} ? 'Pending' : ${st}))">
-                        </option>
-                    </select>
-                </div>
-
-                <div class="col-6 col-sm-auto">
-                    <select class="form-select" name="size">
-                        <option th:selected="${orders.size == 10}" value="10">10</option>
-                        <option th:selected="${orders.size == 25}" value="25">25</option>
-                        <option th:selected="${orders.size == 50}" value="50">50</option>
-                    </select>
-                </div>
-
-                <div class="col-6 col-sm-auto">
-                    <button class="btn btn-primary w-100" type="submit">
-                        Search
-                    </button>
-                </div>
-
-            </form>
-        </div>
-
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3 class="mb-0">Order Management</h3>
     </div>
 
-    <div class="card border-0 shadow-sm" style="border-radius:16px;">
-        <div class="card-body">
-
-            <div class="table-responsive">
-                <table class="table align-middle">
-                    <thead class="table-primary">
-                    <tr>
-                        <th>Order #</th>
-                        <th>Customer</th>
-                        <th>Phone</th>
-                        <th class="text-center">Items</th>
-                        <th class="text-end">Amount</th>
-                        <th class="text-center">Payment</th>
-                        <th class="text-center">Order Status</th>
-                        <th>Date</th>
-                        <th class="text-center">Actions</th>
-                    </tr>
-                    </thead>
-
-                    <tbody>
-                    <tr th:each="o : ${orders.content}">
-                        <td class="fw-semibold" th:text="${o.invoice}">INV-000001</td>
-
-                        <td th:text="${o.customerName}">Name</td>
-                        <td th:text="${#strings.isEmpty(o.phone) ? 'N/A' : o.phone}">N/A</td>
-
-                        <td class="text-center" th:text="${o.totalQty}">0</td>
-
-                        <td class="text-end">
-                            $<span th:text="${#numbers.formatDecimal(o.total, 1, 'COMMA', 2, 'POINT')}">0.00</span>
-                        </td>
-
-                        <td class="text-center">
-                            <span class="badge rounded-pill"
-                                  th:classappend="${o.paymentMethod == 'CASH'} ? ' text-bg-info' : ' text-bg-primary'"
-                                  th:text="${o.paymentMethod}">CASH</span>
-                        </td>
-
-                        <!-- ✅ CHANGE HERE: Status => dropdown like sample -->
-                        <td class="text-center">
-                            <select class="form-select form-select-sm order-status-select orderStatusSelect"
-                                    th:attr="data-id=${o.id}"
-                                    th:value="${o.status}">
-                                <option value="PAID" th:selected="${o.status == 'PAID'}">Completed</option>
-                                <option value="PENDING" th:selected="${o.status == 'PENDING'}">Pending</option>
-                                <option value="CANCELLED" th:selected="${o.status == 'CANCELLED'}">Cancelled</option>
-                            </select>
-                        </td>
-
-                        <td th:text="${o.createdAt != null ? #temporals.format(o.createdAt, 'dd/MM/yyyy HH:mm') : '-'}">date</td>
-
-                        <td class="text-center">
-                            <button type="button"
-                                    class="btn btn-info btn-sm btnViewOrder"
-                                    th:attr="data-id=${o.id}">
-                                <i class="bi bi-eye"></i> View
-                            </button>
-                        </td>
-                    </tr>
-
-                    <tr th:if="${orders.totalElements == 0}">
-                        <td colspan="9" class="text-center text-muted py-4">No orders found.</td>
-                    </tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <div class="d-flex justify-content-between align-items-center mt-2">
-                <div class="text-muted small">
-                    Showing <span th:text="${orders.numberOfElements}">0</span> of <span th:text="${orders.totalElements}">0</span>
-                </div>
-
-                <div class="btn-group">
-                    <a class="btn btn-outline-secondary btn-sm"
-                       th:classappend="${orders.first} ? ' disabled' : ''"
-                       th:href="@{/admin/orders(q=${q},status=${status},size=${orders.size},page=${orders.number-1})}">
-                        Previous
-                    </a>
-
-                    <span class="btn btn-primary btn-sm disabled"
-                          th:text="${orders.number + 1}">1</span>
-
-                    <a class="btn btn-outline-secondary btn-sm"
-                       th:classappend="${orders.last} ? ' disabled' : ''"
-                       th:href="@{/admin/orders(q=${q},status=${status},size=${orders.size},page=${orders.number+1})}">
-                        Next
-                    </a>
-                </div>
-            </div>
-
+    <div class="card shadow-sm">
+        <div class="card-body table-responsive">
+            <table id="tblOrders" class="table table-hover align-middle w-100">
+                <thead>
+                <tr>
+                    <th>Order #</th>
+                    <th>Customer</th>
+                    <th>Phone</th>
+                    <th>Items</th>
+                    <th>Amount</th>
+                    <th>Payment</th>
+                    <th>Order Status</th>
+                    <th>Date</th>
+                    <th>Actions</th>
+                </tr>
+                </thead>
+            </table>
         </div>
     </div>
 
@@ -187,21 +121,23 @@
 
                 <div class="modal-body">
 
-                    <div class="row g-2 mb-3">
+                    <div class="row g-3 mb-3">
                         <div class="col-md-6">
-                            <div><b>Customer:</b> <span id="odCustomer">-</span></div>
-                            <div><b>Phone:</b> <span id="odPhone">-</span></div>
-                            <div><b>Address:</b> <span id="odAddress">-</span></div>
+                            <div><span class="order-detail-label">Customer:</span> <span id="odCustomer">-</span></div>
+                            <div><span class="order-detail-label">Phone:</span> <span id="odPhone">-</span></div>
+                            <div><span class="order-detail-label">Address:</span> <span id="odAddress">-</span></div>
                         </div>
 
                         <div class="col-md-6 text-md-end">
-                            <div><b>Order #:</b> <span id="odInvoice">-</span></div>
-                            <div><b>Date:</b> <span id="odDate">-</span></div>
+                            <div><span class="order-detail-label">Order #:</span> <span id="odInvoice">-</span></div>
+                            <div><span class="order-detail-label">Date:</span> <span id="odDate">-</span></div>
                             <div class="mt-1">
-                                <b>Payment:</b> <span class="badge text-bg-primary" id="odPayment">-</span>
+                                <span class="order-detail-label">Payment:</span>
+                                <span class="badge text-bg-primary" id="odPayment">-</span>
                             </div>
                             <div class="mt-1">
-                                <b>Status:</b> <span class="badge text-bg-success" id="odStatus">-</span>
+                                <span class="order-detail-label">Status:</span>
+                                <span class="badge text-bg-success" id="odStatus">-</span>
                             </div>
                         </div>
                     </div>
