@@ -14,6 +14,9 @@ public class Product {
     @Column(nullable=false, length=200)
     private String name;
 
+    @Column(nullable = false, length = 20)
+    private String size = "";
+
     @Lob
     private String description;
 
@@ -50,6 +53,7 @@ public class Product {
         if(price==null) price = BigDecimal.ZERO;
         if(discount==null) discount = BigDecimal.ZERO;
         if(stock==null) stock = 0;
+        if(size==null) size = "";
     }
 
     // getters/setters ...
@@ -68,6 +72,14 @@ public class Product {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getSize() {
+        return size;
+    }
+
+    public void setSize(String size) {
+        this.size = size;
     }
 
     public String getDescription() {

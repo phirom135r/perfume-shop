@@ -28,6 +28,7 @@ function initDataTable() {
         columns: [
             { data: "id" },
             { data: "name" },
+            { data: "size" },
             { data: "category" },
             { data: "brand" },
             { data: "stock" },
@@ -98,6 +99,7 @@ function openAdd() {
     $("#productForm")[0].reset();
     $("#id").val("");
     $("#active").val("true");
+    $("#size").val("");
     setUploadBoxEmpty();
 
     loadBrandDropdown(null); // ✅ load brands
@@ -109,6 +111,7 @@ function openEdit(row) {
 
     $("#id").val(row.id);
     $("#name").val(row.name || "");
+    $("#size").val(row.size || "");
     $("#stock").val(row.stock ?? 0);
     $("#price").val(row.price ?? 0);
     $("#discount").val(row.discount ?? 0);
@@ -141,6 +144,7 @@ function saveProduct(e) {
     if (id) fd.append("id", id);
 
     fd.append("name", $("#name").val());
+    fd.append("size", $("#size").val());
     fd.append("brandId", $("#brandId").val());
     fd.append("categoryId", $("#categoryId").val());
     fd.append("price", $("#price").val() || 0);

@@ -22,24 +22,26 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
 
     // DataTables search
     @Query("""
-            SELECT p FROM Product p
-            LEFT JOIN p.brand b
-            LEFT JOIN p.category c
-            WHERE (:kw IS NULL OR :kw = '' OR
-                   CAST(p.id as string) LIKE CONCAT('%', :kw, '%') OR
-                   LOWER(p.name) LIKE LOWER(CONCAT('%', :kw, '%')) OR
-                   LOWER(COALESCE(b.name,'')) LIKE LOWER(CONCAT('%', :kw, '%')) OR
-                   LOWER(COALESCE(c.name,'')) LIKE LOWER(CONCAT('%', :kw, '%')) OR
-                   CAST(p.price as string) LIKE CONCAT('%', :kw, '%') OR
-                   CAST(p.stock as string) LIKE CONCAT('%', :kw, '%')
-            )
-            AND (:categoryId IS NULL OR p.category.id = :categoryId)
-            AND (:active IS NULL OR p.active = :active)
-            """)
+        SELECT p FROM Product p
+        LEFT JOIN p.brand b
+        LEFT JOIN p.category c
+        WHERE (:kw IS NULL OR :kw = '' OR
+               CAST(p.id as string) LIKE CONCAT('%', :kw, '%') OR
+               LOWER(p.name) LIKE LOWER(CONCAT('%', :kw, '%')) OR
+               LOWER(COALESCE(p.size,'')) LIKE LOWER(CONCAT('%', :kw, '%')) OR
+               LOWER(COALESCE(b.name,'')) LIKE LOWER(CONCAT('%', :kw, '%')) OR
+               LOWER(COALESCE(c.name,'')) LIKE LOWER(CONCAT('%', :kw, '%')) OR
+               CAST(p.price as string) LIKE CONCAT('%', :kw, '%') OR
+               CAST(p.stock as string) LIKE CONCAT('%', :kw, '%')
+        )
+        AND (:categoryId IS NULL OR p.category.id = :categoryId)
+        AND (:active IS NULL OR p.active = :active)
+        """)
     Page<Product> search(@Param("kw") String kw,
                          @Param("categoryId") Long categoryId,
                          @Param("active") Boolean active,
                          Pageable pageable);
+
     @Query("SELECT COALESCE(SUM(p.stock),0) FROM Product p")
     long sumAllStock();
 

@@ -32,7 +32,7 @@ function initOrderTable() {
                 }
             },
             {
-                data: "totalQty",
+                data: "totalItems",
                 className: "text-center"
             },
             {

@@ -41,34 +41,29 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     // ADMIN SEARCH ROWS (for DataTable)
     // =====================================================
     @Query("""
-            select new com.perfumeshop.dto.OrderRowDto(
-                o.id,
-                o.invoice,
-                o.customerName,
-                o.phone,
-                o.total,
-                cast(o.paymentMethod as string),
-                cast(o.status as string),
-                o.createdAt,
-                coalesce(sum(oi.qty), 0)
-            )
-            from Order o
-            left join o.items oi
-            where (
-                :q is null or :q = '' or
-                lower(o.invoice) like lower(concat('%', :q, '%')) or
-                lower(o.customerName) like lower(concat('%', :q, '%')) or
-                lower(coalesce(o.phone, '')) like lower(concat('%', :q, '%'))
-            )
-            and (:status is null or o.status = :status)
-            group by o.id, o.invoice, o.customerName, o.phone,
-                     o.total, o.paymentMethod, o.status, o.createdAt
-            """)
-
+        select new com.perfumeshop.dto.OrderRowDto(
+            o.id,
+            o.invoice,
+            o.customerName,
+            o.phone,
+            o.total,
+            cast(o.paymentMethod as string),
+            cast(o.status as string),
+            o.createdAt,
+            o.totalItems
+        )
+        from Order o
+        where (
+            :q is null or :q = '' or
+            lower(o.invoice) like lower(concat('%', :q, '%')) or
+            lower(o.customerName) like lower(concat('%', :q, '%')) or
+            lower(coalesce(o.phone, '')) like lower(concat('%', :q, '%'))
+        )
+        and (:status is null or o.status = :status)
+    """)
     Page<OrderRowDto> adminSearchRows(@Param("q") String q,
                                       @Param("status") OrderStatus status,
                                       Pageable pageable);
-
     // =====================================================
     // ORDER DETAIL WITH ITEMS + PRODUCT
     // =====================================================
