@@ -2,7 +2,6 @@ package com.perfumeshop.service;
 
 import com.perfumeshop.entity.Category;
 import com.perfumeshop.repository.CategoryRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -10,31 +9,53 @@ import java.util.List;
 @Service
 public class CategoryService {
 
-    @Autowired
-    private CategoryRepository repository;
+    private final CategoryRepository repository;
 
-    // ===== List All =====
+    public CategoryService(CategoryRepository repository) {
+        this.repository = repository;
+    }
+
+    // =============================
+    // LIST ALL (Admin)
+    // =============================
     public List<Category> list() {
         return repository.findAll();
     }
 
-    // ✅ List Active Only (for dropdown)
+    // =============================
+    // LIST ACTIVE ONLY (Shop dropdown)
+    // =============================
     public List<Category> listActive() {
         return repository.findByActiveTrueOrderByNameAsc();
     }
 
-    // ===== Find =====
+    // =============================
+    // FIND BY ID
+    // =============================
     public Category find(Long id) {
         return repository.findById(id).orElse(null);
     }
 
-    // ===== Save =====
+    // =============================
+    // FIND OR THROW
+    // =============================
+    public Category findOrThrow(Long id) {
+        return repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Category not found: " + id));
+    }
+
+    // =============================
+    // SAVE (CREATE / UPDATE)
+    // =============================
     public Category save(Category c) {
         return repository.save(c);
     }
 
-    // ===== Delete =====
+    // =============================
+    // DELETE
+    // =============================
     public void delete(Long id) {
         repository.deleteById(id);
     }
+
 }

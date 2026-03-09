@@ -9,23 +9,53 @@ import java.util.List;
 @Service
 public class BrandService {
 
-    private final BrandRepository repo;
+    private final BrandRepository repository;
 
-    public BrandService(BrandRepository repo) {
-        this.repo = repo;
+    public BrandService(BrandRepository repository) {
+        this.repository = repository;
     }
 
-    public List<Brand> list() { return repo.findAll(); }
+    // =============================
+    // LIST ALL (Admin)
+    // =============================
+    public List<Brand> list() {
+        return repository.findAll();
+    }
 
-    public List<Brand> listActive() { return repo.findByActiveTrueOrderByNameAsc(); }
+    // =============================
+    // LIST ACTIVE ONLY (Shop dropdown)
+    // =============================
+    public List<Brand> listActive() {
+        return repository.findByActiveTrueOrderByNameAsc();
+    }
 
-    public Brand find(Long id) { return repo.findById(id).orElse(null); }
+    // =============================
+    // FIND BY ID
+    // =============================
+    public Brand find(Long id) {
+        return repository.findById(id).orElse(null);
+    }
 
+    // =============================
+    // FIND OR THROW
+    // =============================
     public Brand findOrThrow(Long id) {
-        return repo.findById(id).orElseThrow(() -> new RuntimeException("Brand not found: " + id));
+        return repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Brand not found: " + id));
     }
 
-    public Brand save(Brand b) { return repo.save(b); }
+    // =============================
+    // SAVE (CREATE / UPDATE)
+    // =============================
+    public Brand save(Brand b) {
+        return repository.save(b);
+    }
 
-    public void delete(Long id) { repo.deleteById(id); }
+    // =============================
+    // DELETE
+    // =============================
+    public void delete(Long id) {
+        repository.deleteById(id);
+    }
+
 }

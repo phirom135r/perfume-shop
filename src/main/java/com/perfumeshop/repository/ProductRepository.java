@@ -53,4 +53,18 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
 
     @Query("SELECT COUNT(p) FROM Product p WHERE COALESCE(p.stock,0) > 0 AND COALESCE(p.stock,0) <= :threshold")
     long countLowStock(int threshold);
+
+    @Query("""
+        SELECT p FROM Product p
+        LEFT JOIN p.brand b
+        LEFT JOIN p.category c
+        WHERE p.active = true
+          AND (:q IS NULL OR :q = '' OR LOWER(p.name) LIKE LOWER(CONCAT('%', :q, '%')))
+          AND (:categoryId IS NULL OR c.id = :categoryId)
+          AND (:brandId IS NULL OR b.id = :brandId)
+    """)
+    Page<Product> shopSearch(@Param("q") String q,
+                             @Param("categoryId") Long categoryId,
+                             @Param("brandId") Long brandId,
+                             Pageable pageable);
 }
