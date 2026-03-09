@@ -2,10 +2,13 @@ package com.perfumeshop.controller.shop;
 
 import com.perfumeshop.service.ShopCartService;
 import jakarta.servlet.http.HttpSession;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.RoundingMode;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -31,13 +34,27 @@ public class ShopCartController {
     @ResponseBody
     public Map<String, Object> addToCart(@RequestParam Long productId,
                                          @RequestParam(defaultValue = "1") int qty,
-                                         HttpSession session) {
+                                         HttpSession session,
+                                         Authentication authentication) {
         Map<String, Object> res = new LinkedHashMap<>();
+
+        boolean customerLoggedIn =
+                authentication != null &&
+                        authentication.isAuthenticated() &&
+                        !(authentication instanceof AnonymousAuthenticationToken);
+
+        if (!customerLoggedIn) {
+            res.put("ok", false);
+            res.put("loginRequired", true);
+            res.put("message", "Please login first");
+            return res;
+        }
+
         try {
             cartService.addToCart(productId, qty, session);
             res.put("ok", true);
             res.put("cartCount", cartService.getCartCount(session));
-            res.put("subtotal", "$" + cartService.getSubtotal(session).setScale(2));
+            res.put("subtotal", money(cartService.getSubtotal(session)));
             res.put("message", "Added to cart");
         } catch (Exception e) {
             res.put("ok", false);
@@ -50,8 +67,22 @@ public class ShopCartController {
     @ResponseBody
     public Map<String, Object> updateQty(@RequestParam Long productId,
                                          @RequestParam int qty,
-                                         HttpSession session) {
+                                         HttpSession session,
+                                         Authentication authentication) {
         Map<String, Object> res = new LinkedHashMap<>();
+
+        boolean customerLoggedIn =
+                authentication != null &&
+                        authentication.isAuthenticated() &&
+                        !(authentication instanceof AnonymousAuthenticationToken);
+
+        if (!customerLoggedIn) {
+            res.put("ok", false);
+            res.put("loginRequired", true);
+            res.put("message", "Please login first");
+            return res;
+        }
+
         try {
             cartService.updateQty(productId, qty, session);
 
@@ -62,9 +93,11 @@ public class ShopCartController {
 
             res.put("ok", true);
             res.put("cartCount", cartService.getCartCount(session));
-            res.put("subtotal", "$" + cartService.getSubtotal(session).setScale(2));
+            res.put("subtotal", money(cartService.getSubtotal(session)));
             res.put("qty", item != null ? item.getQty() : 0);
-            res.put("lineTotal", item != null ? item.getLineTotal().setScale(2).toString() : "0.00");
+            res.put("lineTotal", item != null
+                    ? item.getLineTotal().setScale(2, RoundingMode.HALF_UP).toString()
+                    : "0.00");
         } catch (Exception e) {
             res.put("ok", false);
             res.put("message", e.getMessage());
@@ -75,13 +108,27 @@ public class ShopCartController {
     @PostMapping("/remove")
     @ResponseBody
     public Map<String, Object> removeItem(@RequestParam Long productId,
-                                          HttpSession session) {
+                                          HttpSession session,
+                                          Authentication authentication) {
         Map<String, Object> res = new LinkedHashMap<>();
+
+        boolean customerLoggedIn =
+                authentication != null &&
+                        authentication.isAuthenticated() &&
+                        !(authentication instanceof AnonymousAuthenticationToken);
+
+        if (!customerLoggedIn) {
+            res.put("ok", false);
+            res.put("loginRequired", true);
+            res.put("message", "Please login first");
+            return res;
+        }
+
         try {
             cartService.removeItem(productId, session);
             res.put("ok", true);
             res.put("cartCount", cartService.getCartCount(session));
-            res.put("subtotal", "$" + cartService.getSubtotal(session).setScale(2));
+            res.put("subtotal", money(cartService.getSubtotal(session)));
         } catch (Exception e) {
             res.put("ok", false);
             res.put("message", e.getMessage());
@@ -91,8 +138,22 @@ public class ShopCartController {
 
     @PostMapping("/clear")
     @ResponseBody
-    public Map<String, Object> clearCart(HttpSession session) {
+    public Map<String, Object> clearCart(HttpSession session,
+                                         Authentication authentication) {
         Map<String, Object> res = new LinkedHashMap<>();
+
+        boolean customerLoggedIn =
+                authentication != null &&
+                        authentication.isAuthenticated() &&
+                        !(authentication instanceof AnonymousAuthenticationToken);
+
+        if (!customerLoggedIn) {
+            res.put("ok", false);
+            res.put("loginRequired", true);
+            res.put("message", "Please login first");
+            return res;
+        }
+
         try {
             cartService.clear(session);
             res.put("ok", true);
@@ -103,5 +164,10 @@ public class ShopCartController {
             res.put("message", e.getMessage());
         }
         return res;
+    }
+
+    private String money(java.math.BigDecimal value) {
+        if (value == null) return "$0.00";
+        return "$" + value.setScale(2, RoundingMode.HALF_UP);
     }
 }
