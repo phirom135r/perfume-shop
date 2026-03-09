@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Cart - Perfume Shop</title>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-color: #faf7f2;
+      color: #3e3e3e;
+    }
+
+    h1, h2, h3, h4, h5, h6, .navbar-brand {
+      font-family: 'Playfair Display', serif;
+    }
+
+    .navbar-brand {
+      color: #8b6e4b !important;
+      font-weight: 700;
+    }
+
+    .btn-gold {
+      background-color: #c6a47e;
+      border: none;
+      color: #fff;
+    }
+
+    .btn-gold:hover {
+      background-color: #b38b5f;
+      color: #fff;
+    }
+
+    .cart-card,
+    .summary-box,
+    .empty-box {
+      border: none;
+      border-radius: 22px;
+      background: #fff;
+      box-shadow: 0 10px 28px rgba(0,0,0,.06);
+    }
+
+    .cart-row {
+      transition: all .25s ease;
+    }
+
+    .cart-row.removing {
+      opacity: 0;
+      transform: translateX(30px);
+    }
+
+    .cart-img {
+      width: 92px;
+      height: 92px;
+      object-fit: cover;
+      border-radius: 16px;
+      background: #f3f4f6;
+      border: 1px solid #eee;
+    }
+
+    .qty-box {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 999px;
+      padding: 4px 8px;
+    }
+
+    .qty-btn {
+      width: 32px;
+      height: 32px;
+      border: none;
+      border-radius: 50%;
+      background: #f3f4f6;
+      font-weight: 700;
+    }
+
+    .qty-btn:hover {
+      background: #e5e7eb;
+    }
+
+    .qty-input {
+      width: 48px;
+      text-align: center;
+      border: none;
+      outline: none;
+      background: transparent;
+      font-weight: 600;
+    }
+
+    .summary-line {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .empty-box {
+      padding: 60px 20px;
+      text-align: center;
+    }
+
+    .empty-icon {
+      font-size: 56px;
+      color: #c6a47e;
+    }
+
+    .text-price {
+      color: #b38b5f;
+      font-weight: 700;
+    }
+
+    .cart-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: end;
+      flex-wrap: wrap;
+    }
+
+    @media (max-width: 768px) {
+      .cart-img {
+        width: 76px;
+        height: 76px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg bg-white py-3 shadow-sm">
+  <div class="container">
+    <a class="navbar-brand fs-3" th:href="@{/perfume-shop}">
+      Fragrance Haven
+    </a>
+
+    <div class="ms-auto d-flex align-items-center gap-2">
+      <a th:href="@{/perfume-shop}" class="btn btn-outline-secondary rounded-pill">Continue Shopping</a>
+
+      <a th:href="@{/perfume-shop/cart}" class="btn btn-light position-relative rounded-circle p-2">
+        <i class="bi bi-cart3 fs-5"></i>
+        <span id="cartCountBadge"
+              class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-warning text-dark"
+              style="font-size:.7rem;"
+              th:text="${cartCount}">0</span>
+      </a>
+    </div>
+  </div>
+</nav>
+
+<div class="container my-5">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+    <h2 class="mb-0">Your Cart</h2>
+    <div class="text-muted">Review your items before checkout</div>
+  </div>
+
+  <div id="emptyCartState"
+       class="empty-box"
+       th:style="${#lists.isEmpty(items)} ? '' : 'display:none;'">
+    <div class="empty-icon mb-3">
+      <i class="bi bi-bag-heart"></i>
+    </div>
+    <h4>Your cart is empty</h4>
+    <p class="text-muted mb-4">Looks like you haven’t added any perfumes yet.</p>
+    <a th:href="@{/perfume-shop}" class="btn btn-gold rounded-pill px-4">Shop Now</a>
+  </div>
+
+  <div class="row g-4" id="cartContentWrapper"
+       th:style="${#lists.isEmpty(items)} ? 'display:none;' : ''">
+    <div class="col-lg-8">
+      <div class="cart-card p-4">
+        <div id="cartItemsWrap">
+          <div class="border-bottom py-3 cart-row"
+               th:each="item : ${items}"
+               th:attr="data-id=${item.productId}">
+            <div class="row align-items-center g-3">
+              <div class="col-md-2 col-4">
+                <img th:src="${item.image != null and !#strings.isEmpty(item.image) ? item.image : '/images/no-image.png'}"
+                     class="cart-img"
+                     alt="product">
+              </div>
+
+              <div class="col-md-4 col-8">
+                <h6 class="mb-1" th:text="${item.name}">Product Name</h6>
+                <div class="text-muted small mb-1" th:text="${item.size}">100ml</div>
+                <div class="fw-semibold text-price">
+                  $<span th:text="${#numbers.formatDecimal(item.unitPrice,1,'COMMA',2,'POINT')}">0.00</span>
+                </div>
+              </div>
+
+              <div class="col-md-3 col-6">
+                <div class="qty-box">
+                  <button type="button"
+                          class="qty-btn btn-qty-dec"
+                          th:attr="data-id=${item.productId}">-</button>
+
+                  <input type="number"
+                         class="qty-input"
+                         min="1"
+                         th:max="${item.stock}"
+                         th:value="${item.qty}"
+                         th:attr="data-id=${item.productId}">
+
+                  <button type="button"
+                          class="qty-btn btn-qty-inc"
+                          th:attr="data-id=${item.productId}">+</button>
+                </div>
+                <div class="small text-muted mt-2">
+                  Stock: <span th:text="${item.stock}">0</span>
+                </div>
+              </div>
+
+              <div class="col-md-2 col-3 text-md-end">
+                <div class="fw-bold">
+                  $<span class="line-total"
+                         th:text="${#numbers.formatDecimal(item.lineTotal,1,'COMMA',2,'POINT')}">0.00</span>
+                </div>
+              </div>
+
+              <div class="col-md-1 col-3 text-end">
+                <button type="button"
+                        class="btn btn-sm btn-outline-danger remove-item-btn"
+                        th:attr="data-id=${item.productId}">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="cart-actions mt-4">
+          <button type="button" class="btn btn-outline-danger" id="clearCartBtn">
+            Clear Cart
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="summary-box p-4">
+        <h5 class="mb-3">Order Summary</h5>
+
+        <div class="summary-line">
+          <span>Items</span>
+          <strong id="summaryItemCount" th:text="${cartCount}">0</strong>
+        </div>
+
+        <div class="summary-line">
+          <span>Subtotal</span>
+          <strong id="subtotalAmount"
+                  th:text="'$' + ${#numbers.formatDecimal(subtotal,1,'COMMA',2,'POINT')}">$0.00</strong>
+        </div>
+
+        <hr>
+
+        <button class="btn btn-gold w-100" type="button" disabled>
+          Checkout (next step)
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script th:src="@{/js/shop/cart.js}"></script>
+
+</body>
+</html>
