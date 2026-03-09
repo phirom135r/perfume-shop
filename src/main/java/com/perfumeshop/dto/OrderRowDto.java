@@ -14,7 +14,7 @@ public class OrderRowDto {
     private String status;
     private LocalDateTime createdAt;
 
-    private Long totalQty;   // ✅ SUM(qty)
+    private Integer totalItems;
 
     public OrderRowDto(Long id,
                        String invoice,
@@ -24,7 +24,8 @@ public class OrderRowDto {
                        String paymentMethod,
                        String status,
                        LocalDateTime createdAt,
-                       Long totalQty) {
+                       Integer totalItems) {
+
         this.id = id;
         this.invoice = invoice;
         this.customerName = customerName;
@@ -33,7 +34,7 @@ public class OrderRowDto {
         this.paymentMethod = paymentMethod;
         this.status = status;
         this.createdAt = createdAt;
-        this.totalQty = totalQty;
+        this.totalItems = totalItems;
     }
 
     public Long getId() { return id; }
@@ -44,5 +45,5 @@ public class OrderRowDto {
     public String getPaymentMethod() { return paymentMethod; }
     public String getStatus() { return status; }
     public LocalDateTime getCreatedAt() { return createdAt; }
-    public Long getTotalQty() { return totalQty; }
+    public Integer getTotalItems() { return totalItems; }
 }

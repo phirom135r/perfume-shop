@@ -61,7 +61,7 @@ public class OrderApiController {
             case 0 -> prop = "invoice";
             case 1 -> prop = "customerName";
             case 2 -> prop = "phone";
-//            case 3 -> prop = "totalQty";   // ⭐ ADD THIS
+            case 3 -> prop = "totalItems";
             case 4 -> prop = "total";
             case 5 -> prop = "paymentMethod";
             case 6 -> prop = "status";

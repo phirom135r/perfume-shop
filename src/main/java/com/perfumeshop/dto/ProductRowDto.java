@@ -5,6 +5,7 @@ import java.math.BigDecimal;
 public class ProductRowDto {
     private Long id;
     private String name;
+    private String size;
 
     // Category
     private Long categoryId;
@@ -28,6 +29,9 @@ public class ProductRowDto {
 
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
+
+    public String getSize() { return size; }
+    public void setSize(String size) { this.size = size; }
 
     public Long getCategoryId() { return categoryId; }
     public void setCategoryId(Long categoryId) { this.categoryId = categoryId; }

@@ -1,4 +1,3 @@
-// src/main/java/com/perfumeshop/controller/admin/AdminPosCheckoutApiController.java
 package com.perfumeshop.controller.admin;
 
 import com.perfumeshop.dto.PosCheckoutRequest;
@@ -67,7 +66,7 @@ public class PosCheckoutApiController {
         BigDecimal subtotal = BigDecimal.ZERO;
         List<OrderItem> items = new ArrayList<>();
 
-        // ✅ Build items (DO NOT deduct stock here)
+        // Build items
         for (PosCheckoutRequest.Item it : req.getItems()) {
             if (it == null || it.getProductId() == null || it.getQty() <= 0) continue;
 
@@ -78,11 +77,9 @@ public class PosCheckoutApiController {
                 return ResponseEntity.badRequest().body("Not enough stock for product: " + p.getName());
             }
 
-            // ✅ price - discount (discount is $ per item)
             BigDecimal price = nvl(p.getPrice());
             BigDecimal disc = nvl(p.getDiscount());
 
-            // clamp discount: 0..price
             if (disc.compareTo(BigDecimal.ZERO) < 0) disc = BigDecimal.ZERO;
             if (disc.compareTo(price) > 0) disc = price;
 
@@ -90,15 +87,11 @@ public class PosCheckoutApiController {
             if (finalUnitPrice.compareTo(BigDecimal.ZERO) < 0) finalUnitPrice = BigDecimal.ZERO;
 
             BigDecimal lineTotal = finalUnitPrice.multiply(BigDecimal.valueOf(qty));
-
             subtotal = subtotal.add(lineTotal);
 
             OrderItem oi = new OrderItem();
             oi.setProduct(p);
             oi.setQty(qty);
-
-            // ✅ IMPORTANT:
-            // store the FINAL unit price (after discount) so invoice detail matches POS cart
             oi.setUnitPrice(finalUnitPrice);
             oi.setLineTotal(lineTotal);
 
@@ -107,7 +100,6 @@ public class PosCheckoutApiController {
 
         if (items.isEmpty()) return ResponseEntity.badRequest().body("Cart is empty");
 
-        // ✅ extra discount from POS input (order-level)
         BigDecimal discount = BigDecimal.valueOf(req.getDiscount());
         if (discount.compareTo(BigDecimal.ZERO) < 0) discount = BigDecimal.ZERO;
         if (discount.compareTo(subtotal) > 0) discount = subtotal;
@@ -131,9 +123,14 @@ public class PosCheckoutApiController {
         for (OrderItem oi : items) oi.setOrder(order);
         order.setItems(items);
 
-        // ✅ CASH = success immediately => deduct stock now
-        if (pm == PaymentMethod.CASH) {
+        // ✅ NEW
+        int totalItems = items.stream()
+                .mapToInt(OrderItem::getQty)
+                .sum();
+        order.setTotalItems(totalItems);
 
+        // CASH
+        if (pm == PaymentMethod.CASH) {
             for (OrderItem oi : items) {
                 Product p = oi.getProduct();
                 int qty = oi.getQty();
@@ -152,7 +149,7 @@ public class PosCheckoutApiController {
             return ResponseEntity.ok(new PosCheckoutResponse(order.getId(), "/admin/orders"));
         }
 
-        // ✅ KHQR = PENDING (do NOT deduct stock)
+        // KHQR
         order.setStatus(OrderStatus.PENDING);
         order = orderService.save(order);
 

@@ -1,11 +1,9 @@
-//entity/Order
 package com.perfumeshop.entity;
 
 import com.perfumeshop.enums.OrderStatus;
 import com.perfumeshop.enums.PaymentMethod;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
-
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -16,7 +14,8 @@ import java.util.List;
 @Table(name = "orders")
 public class Order {
 
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(unique = true)
@@ -32,6 +31,10 @@ public class Order {
     @Enumerated(EnumType.STRING)
     private OrderStatus status;
 
+    // ⭐ NEW FIELD
+    @Column(nullable = false)
+    private Integer totalItems = 0;
+
     @Column(precision = 12, scale = 2)
     private BigDecimal subtotal = BigDecimal.ZERO;
 
@@ -45,10 +48,6 @@ public class Order {
     @Column(updatable = false)
     private LocalDateTime createdAt;
 
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
     @Lob
     @Column(columnDefinition = "LONGTEXT")
     private String khqrString;
@@ -57,6 +56,7 @@ public class Order {
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> items = new ArrayList<>();
+
 
     public Long getId() { return id; }
 
@@ -78,6 +78,9 @@ public class Order {
     public OrderStatus getStatus() { return status; }
     public void setStatus(OrderStatus status) { this.status = status; }
 
+    public Integer getTotalItems() { return totalItems; }
+    public void setTotalItems(Integer totalItems) { this.totalItems = totalItems; }
+
     public BigDecimal getSubtotal() { return subtotal; }
     public void setSubtotal(BigDecimal subtotal) { this.subtotal = subtotal; }
 
@@ -86,6 +89,8 @@ public class Order {
 
     public BigDecimal getTotal() { return total; }
     public void setTotal(BigDecimal total) { this.total = total; }
+
+    public LocalDateTime getCreatedAt() { return createdAt; }
 
     public String getKhqrString() { return khqrString; }
     public void setKhqrString(String khqrString) { this.khqrString = khqrString; }

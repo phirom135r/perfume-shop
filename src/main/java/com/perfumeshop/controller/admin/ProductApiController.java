@@ -46,6 +46,7 @@ public class ProductApiController {
             Map<String, Object> m = new HashMap<>();
             m.put("id", p.getId());
             m.put("name", p.getName());
+            m.put("size", p.getSize() == null ? "" : p.getSize());
 
             // brand: return name + id for UI
             m.put("brandId", p.getBrand() != null ? p.getBrand().getId() : null);
@@ -107,6 +108,7 @@ public class ProductApiController {
             ProductRowDto dto = new ProductRowDto();
             dto.setId(p.getId());
             dto.setName(p.getName());
+            dto.setSize(p.getSize());
 
             // ✅ brand name + brandId (for edit dropdown)
             dto.setBrand(p.getBrand() != null ? p.getBrand().getName() : "");
@@ -138,11 +140,12 @@ public class ProductApiController {
         switch (col) {
             case 0 -> prop = "id";
             case 1 -> prop = "name";
-            case 2 -> prop = "category.name";
-            case 3 -> prop = "brand.name";
-            case 4 -> prop = "stock";
-            case 5 -> prop = "price";
-            case 8 -> prop = "createdAt";
+            case 2 -> prop = "size";
+            case 3 -> prop = "category.name";
+            case 4 -> prop = "brand.name";
+            case 5 -> prop = "stock";
+            case 6 -> prop = "price";
+            case 9 -> prop = "createdAt";
             default -> prop = "id";
         }
 
@@ -157,6 +160,7 @@ public class ProductApiController {
     public ResponseEntity<?> save(
             @RequestParam(required = false) Long id,
             @RequestParam String name,
+            @RequestParam String size,
             @RequestParam(required = false, defaultValue = "") String description,
             @RequestParam BigDecimal price,
             @RequestParam(required = false, defaultValue = "0") BigDecimal discount,
@@ -170,6 +174,7 @@ public class ProductApiController {
             Product p = (id == null) ? new Product() : service.findOrThrow(id);
 
             p.setName(name.trim());
+            p.setSize(size.trim());
             p.setDescription(description.trim());
             p.setPrice(price);
             p.setDiscount(discount);
