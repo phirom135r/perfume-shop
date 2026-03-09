@@ -1,12 +1,21 @@
 (function () {
-
     const cartCountBadge = document.getElementById("cartCountBadge");
-    const summaryItemCount = document.getElementById("summaryItemCount");
-    const subtotalAmount = document.getElementById("subtotalAmount");
+    const summaryCartCount = document.getElementById("summaryCartCount");
+    const summarySubtotal = document.getElementById("summarySubtotal");
     const cartItemsWrap = document.getElementById("cartItemsWrap");
-    const clearCartBtn = document.getElementById("clearCartBtn");
-    const emptyCartState = document.getElementById("emptyCartState");
-    const cartContentWrapper = document.getElementById("cartContentWrapper");
+
+    function csrfHeaders() {
+        const headers = {
+            "Content-Type": "application/x-www-form-urlencoded",
+            "Accept": "application/json"
+        };
+
+        if (window.shopCartConfig && window.shopCartConfig.csrfHeader && window.shopCartConfig.csrfToken) {
+            headers[window.shopCartConfig.csrfHeader] = window.shopCartConfig.csrfToken;
+        }
+
+        return headers;
+    }
 
     function toastSuccess(title) {
         Swal.fire({
@@ -15,7 +24,7 @@
             icon: "success",
             title,
             showConfirmButton: false,
-            timer: 1300,
+            timer: 1200,
             timerProgressBar: true
         });
     }
@@ -32,41 +41,60 @@
         });
     }
 
-    function updateSummary(cartCount, subtotal) {
+    function syncSummary(cartCount, subtotal) {
         if (cartCountBadge) cartCountBadge.textContent = cartCount ?? 0;
-        if (summaryItemCount) summaryItemCount.textContent = cartCount ?? 0;
-        if (subtotalAmount) subtotalAmount.textContent = subtotal ?? "$0.00";
+        if (summaryCartCount) summaryCartCount.textContent = cartCount ?? 0;
+        if (summarySubtotal) summarySubtotal.textContent = subtotal ?? "$0.00";
     }
 
-    function toggleEmptyState() {
-        const hasItems = cartItemsWrap && cartItemsWrap.querySelector(".cart-row");
+    function renderEmptyState() {
+        if (!cartItemsWrap) return;
 
-        if (!hasItems) {
-            if (emptyCartState) emptyCartState.style.display = "";
-            if (cartContentWrapper) cartContentWrapper.style.display = "none";
-        } else {
-            if (emptyCartState) emptyCartState.style.display = "none";
-            if (cartContentWrapper) cartContentWrapper.style.display = "";
-        }
+        cartItemsWrap.innerHTML = `
+            <div class="empty-state" id="emptyCartState">
+                <i class="bi bi-cart-x"></i>
+                <h5 class="mb-2">Your cart is empty</h5>
+                <p class="mb-3">Add some perfumes and come back here.</p>
+                <a href="/perfume-shop" class="btn btn-gold rounded-pill px-4">Shop Now</a>
+            </div>
+        `;
     }
 
-    async function postFormUrlEncoded(url, data) {
+    async function postForm(url, data) {
         const body = new URLSearchParams();
-        Object.keys(data).forEach(k => body.append(k, data[k]));
+        Object.keys(data).forEach(key => body.append(key, data[key]));
 
         const res = await fetch(url, {
             method: "POST",
-            headers: {
-                "Content-Type": "application/x-www-form-urlencoded",
-                "Accept": "application/json"
-            },
+            headers: csrfHeaders(),
             body: body.toString()
         });
 
         return await res.json();
     }
 
-    async function removeItem(productId, rowEl) {
+    async function updateQty(productId, qty) {
+        try {
+            const json = await postForm("/perfume-shop/cart/update", { productId, qty });
+
+            if (!json.ok) {
+                toastError(json.message || "Cannot update cart");
+                return;
+            }
+
+            const qtyInput = document.querySelector(`.qty-input[data-id="${productId}"]`);
+            const lineTotal = document.getElementById(`line-total-${productId}`);
+
+            if (qtyInput) qtyInput.value = json.qty ?? qty;
+            if (lineTotal) lineTotal.textContent = `$${json.lineTotal ?? "0.00"}`;
+
+            syncSummary(json.cartCount, json.subtotal);
+        } catch (e) {
+            toastError("Cannot update cart");
+        }
+    }
+
+    async function removeItem(productId) {
         const ok = await Swal.fire({
             title: "Remove this item?",
             text: "This product will be removed from your cart.",
@@ -79,22 +107,23 @@
         if (!ok.isConfirmed) return;
 
         try {
-            const json = await postFormUrlEncoded("/perfume-shop/cart/remove", { productId });
+            const json = await postForm("/perfume-shop/cart/remove", { productId });
 
             if (!json.ok) {
                 toastError(json.message || "Cannot remove item");
                 return;
             }
 
-            if (rowEl) {
-                rowEl.classList.add("removing");
-                setTimeout(() => {
-                    rowEl.remove();
-                    toggleEmptyState();
-                }, 250);
+            const row = document.getElementById(`cart-row-${productId}`);
+            if (row) row.remove();
+
+            syncSummary(json.cartCount, json.subtotal);
+
+            const remainingRows = document.querySelectorAll(".cart-row");
+            if (remainingRows.length === 0) {
+                renderEmptyState();
             }
 
-            updateSummary(json.cartCount, json.subtotal);
             toastSuccess("Item removed");
         } catch (e) {
             toastError("Cannot remove item");
@@ -103,114 +132,87 @@
 
     async function clearCart() {
         const ok = await Swal.fire({
-            title: "Clear all cart items?",
-            text: "All products in your cart will be removed.",
+            title: "Clear cart?",
+            text: "All items will be removed from your cart.",
             icon: "warning",
             showCancelButton: true,
-            confirmButtonText: "Yes, clear cart",
+            confirmButtonText: "Yes, clear",
             cancelButtonText: "Cancel"
         });
 
         if (!ok.isConfirmed) return;
 
         try {
-            const res = await fetch("/perfume-shop/cart/clear", {
-                method: "POST",
-                headers: { "Accept": "application/json" }
-            });
-
-            const json = await res.json();
+            const json = await postForm("/perfume-shop/cart/clear", {});
 
             if (!json.ok) {
                 toastError(json.message || "Cannot clear cart");
                 return;
             }
 
-            if (cartItemsWrap) cartItemsWrap.innerHTML = "";
-            updateSummary(0, "$0.00");
-            toggleEmptyState();
+            syncSummary(0, "$0.00");
+            renderEmptyState();
             toastSuccess("Cart cleared");
         } catch (e) {
             toastError("Cannot clear cart");
         }
     }
 
-    async function updateQty(productId, qty, rowEl, inputEl) {
-        try {
-            const json = await postFormUrlEncoded("/perfume-shop/cart/update", { productId, qty });
+    document.addEventListener("click", function (e) {
+        const incBtn = e.target.closest(".btn-inc");
+        const decBtn = e.target.closest(".btn-dec");
+        const removeBtn = e.target.closest(".btn-remove");
+        const clearBtn = e.target.closest("#btnClearCart");
 
-            if (!json.ok) {
-                toastError(json.message || "Cannot update quantity");
+        if (incBtn) {
+            const productId = incBtn.dataset.id;
+            const stock = Number(incBtn.dataset.stock || 0);
+            const qtyInput = document.querySelector(`.qty-input[data-id="${productId}"]`);
+            const currentQty = Number(qtyInput?.value || 1);
+
+            if (stock > 0 && currentQty >= stock) {
+                toastError("Stock limit reached");
                 return;
             }
 
-            if (inputEl && json.qty != null) {
-                inputEl.value = json.qty;
-            }
-
-            if (rowEl && json.lineTotal != null) {
-                const lineTotalEl = rowEl.querySelector(".line-total");
-                if (lineTotalEl) lineTotalEl.textContent = json.lineTotal;
-            }
-
-            updateSummary(json.cartCount, json.subtotal);
-            toastSuccess("Cart updated");
-        } catch (e) {
-            toastError("Cannot update quantity");
-        }
-    }
-
-    document.addEventListener("click", function (e) {
-        const removeBtn = e.target.closest(".remove-item-btn");
-        if (removeBtn) {
-            const productId = removeBtn.dataset.id;
-            const rowEl = removeBtn.closest(".cart-row");
-            removeItem(productId, rowEl);
-            return;
+            updateQty(productId, currentQty + 1);
         }
 
-        const decBtn = e.target.closest(".btn-qty-dec");
         if (decBtn) {
             const productId = decBtn.dataset.id;
-            const rowEl = decBtn.closest(".cart-row");
-            const inputEl = rowEl.querySelector(".qty-input");
-            let qty = Number(inputEl.value || 1);
-            qty = Math.max(1, qty - 1);
-            updateQty(productId, qty, rowEl, inputEl);
-            return;
+            const qtyInput = document.querySelector(`.qty-input[data-id="${productId}"]`);
+            const currentQty = Number(qtyInput?.value || 1);
+
+            if (currentQty <= 1) {
+                removeItem(productId);
+                return;
+            }
+
+            updateQty(productId, currentQty - 1);
         }
 
-        const incBtn = e.target.closest(".btn-qty-inc");
-        if (incBtn) {
-            const productId = incBtn.dataset.id;
-            const rowEl = incBtn.closest(".cart-row");
-            const inputEl = rowEl.querySelector(".qty-input");
-            const max = Number(inputEl.getAttribute("max") || 999999);
-            let qty = Number(inputEl.value || 1);
-            qty = Math.min(max, qty + 1);
-            updateQty(productId, qty, rowEl, inputEl);
+        if (removeBtn) {
+            const productId = removeBtn.dataset.id;
+            removeItem(productId);
+        }
+
+        if (clearBtn) {
+            clearCart();
         }
     });
 
     document.addEventListener("change", function (e) {
-        const inputEl = e.target.closest(".qty-input");
-        if (!inputEl) return;
+        const qtyInput = e.target.closest(".qty-input");
+        if (!qtyInput) return;
 
-        const productId = inputEl.dataset.id;
-        const rowEl = inputEl.closest(".cart-row");
-        const max = Number(inputEl.getAttribute("max") || 999999);
+        const productId = qtyInput.dataset.id;
+        const stock = Number(qtyInput.dataset.stock || 0);
+        let qty = Number(qtyInput.value || 1);
 
-        let qty = Number(inputEl.value || 1);
-        if (!Number.isFinite(qty) || qty < 1) qty = 1;
-        if (qty > max) qty = max;
+        if (qty < 1) qty = 1;
+        if (stock > 0 && qty > stock) qty = stock;
 
-        updateQty(productId, qty, rowEl, inputEl);
+        qtyInput.value = qty;
+        updateQty(productId, qty);
     });
-
-    if (clearCartBtn) {
-        clearCartBtn.addEventListener("click", clearCart);
-    }
-
-    toggleEmptyState();
-
 })();

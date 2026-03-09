@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Login - Perfume Shop</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+    body{
+      font-family:'Poppins',sans-serif;
+      background: linear-gradient(135deg, #f8f2ea, #f3e4d2);
+      min-height:100vh;
+    }
+    .auth-wrap{
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:24px;
+    }
+    .auth-card{
+      width:100%;
+      max-width:960px;
+      background:#fff;
+      border-radius:28px;
+      overflow:hidden;
+      box-shadow:0 20px 50px rgba(0,0,0,.08);
+    }
+    .auth-left{
+      background: linear-gradient(135deg, #c6a47e, #8b6e4b);
+      color:#fff;
+      padding:48px;
+      min-height:100%;
+    }
+    .auth-left h2{
+      font-family:'Playfair Display',serif;
+      font-size:40px;
+      font-weight:700;
+    }
+    .auth-right{
+      padding:42px 36px;
+    }
+    .brand-title{
+      font-family:'Playfair Display',serif;
+      font-weight:700;
+      color:#8b6e4b;
+    }
+    .btn-gold{
+      background:#c6a47e;
+      border:none;
+      color:#fff;
+      font-weight:600;
+      border-radius:14px;
+      height:48px;
+    }
+    .btn-gold:hover{
+      background:#b38b5f;
+      color:#fff;
+    }
+    .form-control{
+      border-radius:14px;
+      height:46px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="auth-wrap">
+  <div class="auth-card row g-0">
+    <div class="col-lg-5 d-none d-lg-block">
+      <div class="auth-left h-100">
+        <h2>Welcome Back</h2>
+        <p class="mt-3 mb-0">
+          Login to continue your fragrance journey with Fragrance Haven.
+        </p>
+      </div>
+    </div>
+
+    <div class="col-lg-7">
+      <div class="auth-right">
+        <div class="mb-4">
+          <h3 class="brand-title mb-1">Fragrance Haven</h3>
+          <div class="text-muted">Sign in to your account</div>
+        </div>
+
+        <div th:if="${error}" class="alert alert-danger">
+          Invalid email or password.
+        </div>
+
+        <div th:if="${logout}" class="alert alert-success">
+          You have logged out successfully.
+        </div>
+
+        <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
+
+        <form th:action="@{/perfume-shop/auth/login}" method="post">
+          <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+
+          <div class="mb-3">
+            <label class="form-label">Email</label>
+            <input type="email" name="email" class="form-control" placeholder="Enter email" required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Password</label>
+            <input type="password" name="password" class="form-control" placeholder="Enter password" required>
+          </div>
+
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="rememberMe">
+              <label class="form-check-label" for="rememberMe">Remember me</label>
+            </div>
+
+            <a href="#" class="text-decoration-none">Forgot password?</a>
+          </div>
+
+          <button type="submit" class="btn btn-gold w-100">Login</button>
+        </form>
+
+        <div class="text-center mt-4">
+          Don’t have an account?
+          <a th:href="@{/perfume-shop/auth/register}" class="text-decoration-none">Register</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

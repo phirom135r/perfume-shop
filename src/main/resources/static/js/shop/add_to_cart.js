@@ -11,101 +11,132 @@
 
     const bsModal = modal ? new bootstrap.Modal(modal) : null;
 
+    const guestAuthModalEl = document.getElementById("guestAuthModal");
+    const guestAuthModal = guestAuthModalEl ? new bootstrap.Modal(guestAuthModalEl) : null;
+
+    const customerLoggedIn = !!(window.shopAuth && window.shopAuth.customerLoggedIn);
+    let autoPopupShown = false;
+
     function toastSuccess(title) {
-    Swal.fire({
-    toast: true,
-    position: "top-end",
-    icon: "success",
-    title,
-    showConfirmButton: false,
-    timer: 1300,
-    timerProgressBar: true
-});
-}
+        Swal.fire({
+            toast: true,
+            position: "top-end",
+            icon: "success",
+            title,
+            showConfirmButton: false,
+            timer: 1300,
+            timerProgressBar: true
+        });
+    }
 
     function toastError(title) {
-    Swal.fire({
-    toast: true,
-    position: "top-end",
-    icon: "error",
-    title,
-    showConfirmButton: false,
-    timer: 1800,
-    timerProgressBar: true
-});
-}
+        Swal.fire({
+            toast: true,
+            position: "top-end",
+            icon: "error",
+            title,
+            showConfirmButton: false,
+            timer: 1800,
+            timerProgressBar: true
+        });
+    }
+
+    function showLoginRequiredModal() {
+        if (guestAuthModal) {
+            guestAuthModal.show();
+        }
+    }
 
     async function addToCart(productId, productName) {
-    try {
-    const body = new URLSearchParams();
-    body.append("productId", productId);
-    body.append("qty", "1");
+        try {
+            const body = new URLSearchParams();
+            body.append("productId", productId);
+            body.append("qty", "1");
 
-    const res = await fetch("/perfume-shop/cart/add", {
-    method: "POST",
-    headers: {
-    "Content-Type": "application/x-www-form-urlencoded",
-    "Accept": "application/json"
-},
-    body: body.toString()
-});
+            const headers = {
+                "Content-Type": "application/x-www-form-urlencoded",
+                "Accept": "application/json"
+            };
 
-    const json = await res.json();
+            if (window.shopAuth && window.shopAuth.csrfHeader && window.shopAuth.csrfToken) {
+                headers[window.shopAuth.csrfHeader] = window.shopAuth.csrfToken;
+            }
 
-    if (!json.ok) {
-    toastError(json.message || "Cannot add to cart");
-    return;
-}
+            const res = await fetch("/perfume-shop/cart/add", {
+                method: "POST",
+                headers,
+                body: body.toString()
+            });
 
-    if (cartCountBadge) {
-    cartCountBadge.textContent = json.cartCount ?? 0;
-}
+            const json = await res.json();
 
-    toastSuccess(productName + " added to cart");
-} catch (e) {
-    toastError("Cannot add to cart");
-}
-}
+            if (!json.ok) {
+                if (json.loginRequired) {
+                    showLoginRequiredModal();   // ✅ show popup login/register
+                    return;
+                }
+
+                toastError(json.message || "Cannot add to cart");
+                return;
+            }
+
+            if (cartCountBadge) {
+                cartCountBadge.textContent = json.cartCount ?? 0;
+            }
+
+            toastSuccess(productName + " added to cart");
+        } catch (e) {
+            toastError("Cannot add to cart");
+        }
+    }
 
     document.querySelectorAll(".view-detail").forEach(btn => {
-    btn.addEventListener("click", function (e) {
-    e.preventDefault();
+        btn.addEventListener("click", function (e) {
+            e.preventDefault();
 
-    const name = this.dataset.name || "";
-    const price = this.dataset.price || "0.00";
-    const description = this.dataset.description || "";
-    const image = this.dataset.image || "";
-    const notes = this.dataset.notes || "";
-    const size = this.dataset.size || "";
-    const productId = this.dataset.id || "";
+            const name = this.dataset.name || "";
+            const price = this.dataset.price || "0.00";
+            const description = this.dataset.description || "";
+            const image = this.dataset.image || "";
+            const notes = this.dataset.notes || "";
+            const size = this.dataset.size || "";
+            const productId = this.dataset.id || "";
 
-    if (modalImage) {
-    modalImage.src = image;
-    modalImage.alt = name;
-}
-    if (modalName) modalName.textContent = name;
-    if (modalSize) modalSize.textContent = size;
-    if (modalPrice) modalPrice.textContent = `$${price}`;
-    if (modalDescription) modalDescription.textContent = description;
-    if (modalNotes) modalNotes.textContent = notes;
+            if (modalImage) {
+                modalImage.src = image;
+                modalImage.alt = name;
+            }
+            if (modalName) modalName.textContent = name;
+            if (modalSize) modalSize.textContent = size;
+            if (modalPrice) modalPrice.textContent = `$${price}`;
+            if (modalDescription) modalDescription.textContent = description;
+            if (modalNotes) modalNotes.textContent = notes;
 
-    if (modalAddToCart) {
-    modalAddToCart.onclick = function () {
-    addToCart(productId, name);
-};
-}
+            if (modalAddToCart) {
+                modalAddToCart.onclick = function () {
+                    addToCart(productId, name);
+                };
+            }
 
-    if (bsModal) bsModal.show();
-});
-});
+            if (bsModal) bsModal.show();
+        });
+    });
 
     document.querySelectorAll(".btn-add-cart").forEach(btn => {
-    btn.addEventListener("click", function (e) {
-    e.preventDefault();
-    const productId = this.dataset.id;
-    const name = this.dataset.name || "Product";
-    addToCart(productId, name);
-});
-});
-})();
+        btn.addEventListener("click", function (e) {
+            e.preventDefault();
+            const productId = this.dataset.id;
+            const name = this.dataset.name || "Product";
+            addToCart(productId, name);
+        });
+    });
 
+    if (!customerLoggedIn) {
+        setTimeout(() => {
+            if (!autoPopupShown) {
+                autoPopupShown = true;
+                showLoginRequiredModal();
+            }
+        }, 10000);
+    }
+})();
