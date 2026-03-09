@@ -51,4 +51,12 @@ public class OrderService {
     public Page<OrderRowDto> adminSearchRows(String q, OrderStatus status, Pageable pageable) {
         return repo.adminSearchRows(q, status, pageable);
     }
+    public java.util.List<Order> findMyOrders(String email) {
+        return repo.findByCustomerEmailOrderByCreatedAtDesc(email);
+    }
+
+    public Order findMyOrderDetailOrThrow(Long id, String email) {
+        return repo.findDetailByIdAndCustomerEmail(id, email)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+    }
 }
