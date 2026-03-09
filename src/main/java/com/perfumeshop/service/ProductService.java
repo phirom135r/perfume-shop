@@ -80,6 +80,11 @@ public class ProductService {
     public void delete(Long id) {
         productRepo.deleteById(id);
     }
+    public Page<Product> shopSearch(String q, Long categoryId, Long brandId, Pageable pageable) {
+        String kw = q == null ? "" : q.trim();
+        return productRepo.shopSearch(kw, categoryId, brandId, pageable);
+    }
+
 
     public void toggleActive(Long id) {
         Product p = findOrThrow(id);

@@ -143,4 +143,22 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     List<Object[]> dailyRevenue(@Param("paid") OrderStatus paid,
                                 @Param("start") LocalDateTime start,
                                 @Param("end") LocalDateTime end);
+
+    @Query("""
+    select o
+    from Order o
+    where o.customer.email = :email
+    order by o.createdAt desc
+""")
+    List<Order> findByCustomerEmailOrderByCreatedAtDesc(@Param("email") String email);
+
+    @Query("""
+    select o
+    from Order o
+    left join fetch o.items oi
+    left join fetch oi.product
+    where o.id = :id and o.customer.email = :email
+""")
+    Optional<Order> findDetailByIdAndCustomerEmail(@Param("id") Long id,
+                                                   @Param("email") String email);
 }

@@ -57,7 +57,8 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/perfume-shop/cart",
                                 "/perfume-shop/checkout/**",
-                                "/perfume-shop/my-orders/**"
+                                "/perfume-shop/my-orders/**",
+                                "/perfume-shop/account/**"
                         ).hasRole("CUSTOMER")
 
                         // update/remove/clear should be customer only

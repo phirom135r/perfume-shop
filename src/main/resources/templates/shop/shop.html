@@ -1,17 +1,16 @@
 <!DOCTYPE html>
 <html lang="en"
       xmlns:th="http://www.thymeleaf.org">
-
 <head>
     <meta charset="UTF-8">
-    <title>Home - Perfume Shop</title>
+    <title>Shop - Perfume Shop</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <link
-            href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Poppins:wght@300;400;500;600&display=swap"
-            rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <style>
         body {
@@ -89,35 +88,6 @@
             z-index: 5;
         }
 
-        .carousel-item {
-            height: 450px;
-            background: linear-gradient(145deg, #cfb9a1, #a48b73);
-            color: white;
-            border-radius: 1.5rem;
-            overflow: hidden;
-        }
-
-        .carousel-item img {
-            object-fit: cover;
-            height: 100%;
-            width: 100%;
-            opacity: 0.65;
-        }
-
-        .carousel-caption {
-            background: rgba(0, 0, 0, 0.2);
-            backdrop-filter: blur(3px);
-            border-radius: 2rem;
-            padding: 1.5rem 2.5rem;
-            bottom: 20%;
-        }
-
-        .carousel-caption h3 {
-            font-size: 2.5rem;
-            font-weight: 700;
-            text-shadow: 2px 2px 8px #2e2e2e;
-        }
-
         .footer {
             background-color: #e7d9cc;
             color: #4d3e2e;
@@ -158,37 +128,81 @@
             font-weight: 700;
         }
 
-        .guest-auth-icon {
-            width: 72px;
-            height: 72px;
-            margin: 0 auto;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: #fff8eb;
-            color: #c6a47e;
-            font-size: 30px;
+        .filter-card {
+            border: none;
+            border-radius: 1.25rem;
+            background: #fff;
+            box-shadow: 0 8px 24px rgba(0,0,0,.05);
+        }
+
+        .filter-card .form-control,
+        .filter-card .form-select {
+            min-height: 46px;
+            border-radius: 14px;
+        }
+
+        .section-banner {
+            background: linear-gradient(145deg, #cfb9a1, #a48b73);
+            color: #fff;
+            border-radius: 1.5rem;
+            padding: 40px 32px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .section-banner h2 {
+            font-size: 2.3rem;
+            font-weight: 700;
+        }
+
+        .section-banner p {
+            margin-bottom: 0;
+            opacity: .95;
+        }
+
+        .page-link {
+            color: #8b6e4b;
+            border-radius: 999px !important;
+            margin: 0 4px;
+            border: 1px solid #e5d8c8;
+        }
+
+        .page-link:hover {
+            color: #fff;
+            background-color: #c6a47e;
+            border-color: #c6a47e;
+        }
+
+        .page-item.active .page-link {
+            background-color: #c6a47e;
+            border-color: #c6a47e;
+            color: #fff;
+        }
+
+        .page-item.disabled .page-link {
+            color: #999;
+            background-color: #fff;
+            border-color: #eee;
         }
 
         .dropdown-email {
             max-width: 240px;
             white-space: normal;
-            word-break: break-word;
+            font-size: 14px;
+            color: #666;
         }
 
         @media (max-width: 768px) {
-            .carousel-item {
-                height: 300px;
+            .section-banner {
+                padding: 28px 20px;
             }
 
-            .carousel-caption h3 {
-                font-size: 1.6rem;
+            .section-banner h2 {
+                font-size: 1.7rem;
             }
         }
     </style>
 </head>
-
 <body>
 
 <nav class="navbar navbar-expand-lg bg-white py-3 shadow-sm">
@@ -203,14 +217,18 @@
 
         <div class="collapse navbar-collapse" id="navbarMain">
             <ul class="navbar-nav mx-auto mb-2 mb-lg-0 fw-medium">
-                <li class="nav-item"><a class="nav-link active" th:href="@{/perfume-shop}">Home</a></li>
-                <li class="nav-item"><a class="nav-link" th:href="@{/perfume-shop/shop}">Shop</a></li>
+                <li class="nav-item"><a class="nav-link" th:href="@{/perfume-shop}">Home</a></li>
+                <li class="nav-item"><a class="nav-link active" th:href="@{/perfume-shop/shop}">Shop</a></li>
                 <li class="nav-item"><a class="nav-link" href="#">About</a></li>
                 <li class="nav-item"><a class="nav-link" href="#">Contact</a></li>
             </ul>
 
-            <form class="d-flex me-3" role="search">
-                <input class="form-control rounded-pill me-2" type="search" placeholder="Search scent...">
+            <form class="d-flex me-3" method="get" th:action="@{/perfume-shop/shop}">
+                <input class="form-control rounded-pill me-2"
+                       type="search"
+                       name="q"
+                       th:value="${q}"
+                       placeholder="Search scent...">
                 <button class="btn btn-outline-secondary rounded-pill" type="submit">
                     <i class="bi bi-search"></i>
                 </button>
@@ -222,16 +240,18 @@
                         <i class="bi bi-person fs-5"></i>
                     </a>
 
+                    <!-- Guest -->
                     <ul class="dropdown-menu dropdown-menu-end" th:if="${!customerLoggedIn}">
                         <li><a class="dropdown-item" th:href="@{/perfume-shop/auth/login}">Login</a></li>
                         <li><a class="dropdown-item" th:href="@{/perfume-shop/auth/register}">Register</a></li>
                     </ul>
 
+                    <!-- Logged in -->
                     <ul class="dropdown-menu dropdown-menu-end" th:if="${customerLoggedIn}">
                         <li>
-        <span class="dropdown-item-text dropdown-email" th:text="${customerEmail}">
-            customer@email.com
-        </span>
+                            <span class="dropdown-item-text dropdown-email" th:text="${customerEmail}">
+                                customer@email.com
+                            </span>
                         </li>
                         <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item" th:href="@{/perfume-shop/account}">My Account</a></li>
@@ -243,7 +263,6 @@
                             </form>
                         </li>
                     </ul>
-
                 </div>
 
                 <a th:href="@{/perfume-shop/cart}" class="btn btn-light position-relative rounded-circle p-2">
@@ -251,9 +270,7 @@
                     <span id="cartCountBadge"
                           class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-warning text-dark"
                           style="font-size: 0.7rem;"
-                          th:text="${cartCount}">
-                        0
-                    </span>
+                          th:text="${cartCount}">0</span>
                 </a>
             </div>
         </div>
@@ -261,58 +278,73 @@
 </nav>
 
 <div class="container mt-4">
-    <div id="perfumeCarousel" class="carousel slide carousel-fade" data-bs-ride="carousel">
-        <div class="carousel-indicators">
-            <button type="button" data-bs-target="#perfumeCarousel" data-bs-slide-to="0" class="active"></button>
-            <button type="button" data-bs-target="#perfumeCarousel" data-bs-slide-to="1"></button>
-            <button type="button" data-bs-target="#perfumeCarousel" data-bs-slide-to="2"></button>
-        </div>
-
-        <div class="carousel-inner rounded-4 shadow">
-            <div class="carousel-item active">
-                <img src="https://picsum.photos/id/1043/1600/500?grayscale&seed=perfume1" class="d-block w-100" alt="hero">
-                <div class="carousel-caption">
-                    <h3>Discover Your Signature Scent</h3>
-                    <p class="fs-5">Luxury fragrances crafted for every story</p>
-                    <a th:href="@{/perfume-shop/shop}" class="btn btn-gold btn-lg px-5 mt-2 rounded-pill">Shop Now</a>
-                </div>
-            </div>
-
-            <div class="carousel-item">
-                <img src="https://picsum.photos/id/64/1600/500?grayscale&seed=perfume2" class="d-block w-100" alt="hero">
-                <div class="carousel-caption">
-                    <h3>Spring Collection 2025</h3>
-                    <p class="fs-5">Fresh florals & modern citruses</p>
-                    <a href="#" class="btn btn-gold btn-lg px-5 mt-2 rounded-pill">Explore</a>
-                </div>
-            </div>
-
-            <div class="carousel-item">
-                <img src="https://picsum.photos/id/30/1600/500?grayscale&seed=perfume3" class="d-block w-100" alt="hero">
-                <div class="carousel-caption">
-                    <h3>Timeless Elegance</h3>
-                    <p class="fs-5">Exclusive oud & amber blends</p>
-                    <a th:href="@{/perfume-shop/shop}" class="btn btn-gold btn-lg px-5 mt-2 rounded-pill">Shop Now</a>
-                </div>
-            </div>
-        </div>
-
-        <button class="carousel-control-prev" type="button" data-bs-target="#perfumeCarousel" data-bs-slide="prev">
-            <span class="carousel-control-prev-icon"></span>
-        </button>
-        <button class="carousel-control-next" type="button" data-bs-target="#perfumeCarousel" data-bs-slide="next">
-            <span class="carousel-control-next-icon"></span>
-        </button>
+    <div class="section-banner shadow-sm">
+        <h2>Explore Our Perfume Collection</h2>
+        <p>Find your favorite fragrance by category, brand, and price.</p>
     </div>
 </div>
 
-<div class="container my-5 pt-4">
-    <h2 class="display-6 text-center mb-5" style="color: #6b4f32;">
-        <i class="fas fa-crown me-2" style="color: #c6a47e;"></i>Our Bestsellers
-    </h2>
+<div class="container my-4">
+    <div class="filter-card p-4">
+        <form method="get" th:action="@{/perfume-shop/shop}">
+            <div class="row g-3">
+                <div class="col-lg-4">
+                    <input type="text"
+                           class="form-control"
+                           name="q"
+                           th:value="${q}"
+                           placeholder="Search perfume name...">
+                </div>
+
+                <div class="col-lg-2">
+                    <select class="form-select" name="categoryId">
+                        <option value="">All Categories</option>
+                        <option th:each="c : ${categories}"
+                                th:value="${c.id}"
+                                th:selected="${categoryId != null and categoryId == c.id}"
+                                th:text="${c.name}">
+                        </option>
+                    </select>
+                </div>
+
+                <div class="col-lg-2">
+                    <select class="form-select" name="brandId">
+                        <option value="">All Brands</option>
+                        <option th:each="b : ${brands}"
+                                th:value="${b.id}"
+                                th:selected="${brandId != null and brandId == b.id}"
+                                th:text="${b.name}">
+                        </option>
+                    </select>
+                </div>
+
+                <div class="col-lg-2">
+                    <select class="form-select" name="sort">
+                        <option value="latest" th:selected="${sort == 'latest'}">Latest</option>
+                        <option value="priceAsc" th:selected="${sort == 'priceAsc'}">Price: Low to High</option>
+                        <option value="priceDesc" th:selected="${sort == 'priceDesc'}">Price: High to Low</option>
+                        <option value="nameAsc" th:selected="${sort == 'nameAsc'}">Name: A-Z</option>
+                    </select>
+                </div>
+
+                <div class="col-lg-2 d-grid">
+                    <button class="btn btn-gold" type="submit">Apply</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="container my-5 pt-2">
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <h2 class="display-6 mb-0" style="color: #6b4f32;">
+            <i class="fas fa-store me-2" style="color: #c6a47e;"></i>Shop
+        </h2>
+        <div class="text-muted" th:text="${products.totalElements} + ' products found'">0 products found</div>
+    </div>
 
     <div class="row g-4">
-        <div class="col-sm-6 col-lg-3 col-md-4" th:each="p : ${products}">
+        <div class="col-sm-6 col-lg-3 col-md-4" th:each="p : ${products.content}">
             <div class="card h-100 shadow-sm position-relative">
 
                 <span class="badge-sale" th:if="${p.discount != null and p.discount > 0}">
@@ -343,22 +375,20 @@
 
                     <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
                         <div class="btn-group" role="group">
-                            <button type="button"
-                                    class="btn btn-outline-gold rounded-pill me-1 btn-add-cart"
+                            <button class="btn btn-outline-gold rounded-pill me-1 btn-add-cart"
                                     th:attr="data-id=${p.id},data-name=${p.name}">
                                 <i class="bi bi-cart-plus"></i> Add
                             </button>
 
-                            <button type="button"
-                                    class="btn btn-gold rounded-pill view-detail"
+                            <button class="btn btn-gold rounded-pill view-detail"
                                     th:attr="
-                                            data-id=${p.id},
-                                            data-name=${p.name},
-                                            data-price=${#numbers.formatDecimal((p.price != null ? p.price : 0) - (p.discount != null ? p.discount : 0),1,'COMMA',2,'POINT')},
-                                            data-description=${p.description},
-                                            data-image=${p.image != null and !#strings.isEmpty(p.image) ? p.image : '/images/no-image.png'},
-                                            data-notes=${p.description},
-                                            data-size=${p.size != null and !#strings.isEmpty(p.size) ? p.size : 'N/A'}">
+                                        data-id=${p.id},
+                                        data-name=${p.name},
+                                        data-price=${#numbers.formatDecimal((p.price != null ? p.price : 0) - (p.discount != null ? p.discount : 0),1,'COMMA',2,'POINT')},
+                                        data-description=${p.description},
+                                        data-image=${p.image != null and !#strings.isEmpty(p.image) ? p.image : '/images/no-image.png'},
+                                        data-notes=${p.description},
+                                        data-size=${p.size != null and !#strings.isEmpty(p.size) ? p.size : 'N/A'}">
                                 <i class="bi bi-eye"></i> Details
                             </button>
                         </div>
@@ -367,12 +397,39 @@
             </div>
         </div>
 
-        <div class="col-12" th:if="${#lists.isEmpty(products)}">
+        <div class="col-12" th:if="${#lists.isEmpty(products.content)}">
             <div class="alert alert-light border text-center">
-                No products available.
+                No products found.
             </div>
         </div>
     </div>
+
+    <nav class="mt-5" th:if="${products.totalPages > 1}">
+        <ul class="pagination justify-content-center flex-wrap">
+            <li class="page-item" th:classappend="${products.first} ? 'disabled'">
+                <a class="page-link"
+                   th:href="@{/perfume-shop/shop(q=${q},categoryId=${categoryId},brandId=${brandId},sort=${sort},page=${products.number - 1})}">
+                    Previous
+                </a>
+            </li>
+
+            <li class="page-item"
+                th:each="i : ${#numbers.sequence(0, products.totalPages - 1)}"
+                th:classappend="${i == products.number} ? 'active'">
+                <a class="page-link"
+                   th:text="${i + 1}"
+                   th:href="@{/perfume-shop/shop(q=${q},categoryId=${categoryId},brandId=${brandId},sort=${sort},page=${i})}">
+                </a>
+            </li>
+
+            <li class="page-item" th:classappend="${products.last} ? 'disabled'">
+                <a class="page-link"
+                   th:href="@{/perfume-shop/shop(q=${q},categoryId=${categoryId},brandId=${brandId},sort=${sort},page=${products.number + 1})}">
+                    Next
+                </a>
+            </li>
+        </ul>
+    </nav>
 </div>
 
 <footer class="footer pt-5 pb-4 mt-5">
@@ -418,7 +475,7 @@
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header border-0 pb-0">
-                <h4 class="modal-title" style="font-family:'Playfair Display',serif;">Product Details</h4>
+                <h4 class="modal-title" style="font-family: 'Playfair Display';">Product Details</h4>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
 
@@ -431,12 +488,12 @@
                     <div class="col-md-6">
                         <h3 id="modalName" class="fw-bold"></h3>
                         <p class="text-secondary" id="modalSize"></p>
-                        <h4 style="color:#b38b5f;" id="modalPrice"></h4>
+                        <h4 style="color: #b38b5f;" id="modalPrice"></h4>
                         <hr>
                         <p id="modalDescription"></p>
                         <p><strong>Fragrance notes:</strong> <span id="modalNotes"></span></p>
                         <div class="d-grid gap-2 mt-4">
-                            <button type="button" class="btn btn-gold rounded-pill py-2" id="modalAddToCart">
+                            <button class="btn btn-gold rounded-pill py-2" id="modalAddToCart">
                                 <i class="bi bi-cart-plus"></i> Add to Cart
                             </button>
                         </div>
@@ -447,30 +504,30 @@
     </div>
 </div>
 
-<!-- Guest Login/Register Modal -->
-<div class="modal fade" id="guestAuthModal" tabindex="-1" aria-hidden="true">
+<!-- Login/Register Popup -->
+<div class="modal fade" id="authRequiredModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content" style="border-radius: 22px;">
-            <div class="modal-header border-0 pb-0">
-                <h5 class="modal-title fw-bold">Join Fragrance Haven</h5>
+        <div class="modal-content" style="border-radius: 24px;">
+            <div class="modal-header border-0">
+                <h5 class="modal-title">Login Required</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
 
-            <div class="modal-body text-center pt-2 pb-4">
-                <div class="guest-auth-icon mb-3">
+            <div class="modal-body text-center px-4 pb-4">
+                <div class="mb-3" style="font-size: 46px; color: #c6a47e;">
                     <i class="bi bi-person-lock"></i>
                 </div>
 
-                <h4 class="fw-bold mb-2">Login or Register First</h4>
+                <h4 class="mb-2">Please login or register</h4>
                 <p class="text-muted mb-4">
-                    You can browse freely, but adding products to cart requires an account.
+                    You need an account before adding products to cart or continuing checkout.
                 </p>
 
-                <div class="d-grid gap-2">
-                    <a th:href="@{/perfume-shop/auth/login}" class="btn btn-gold rounded-pill py-2">
+                <div class="d-flex gap-2 justify-content-center flex-wrap">
+                    <a th:href="@{/perfume-shop/auth/login}" class="btn btn-gold rounded-pill px-4">
                         Login
                     </a>
-                    <a th:href="@{/perfume-shop/auth/register}" class="btn btn-outline-gold rounded-pill py-2">
+                    <a th:href="@{/perfume-shop/auth/register}" class="btn btn-outline-gold rounded-pill px-4">
                         Register
                     </a>
                 </div>
@@ -488,8 +545,6 @@
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script th:src="@{/js/shop/add_to_cart.js}"></script>
-
 </body>
 </html>
