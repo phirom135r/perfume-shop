@@ -1,5 +1,6 @@
 package com.perfumeshop.controller.shop;
 
+import com.perfumeshop.config.SecurityHelper;
 import com.perfumeshop.entity.Customer;
 import com.perfumeshop.service.CustomerService;
 import org.springframework.security.core.Authentication;
@@ -19,7 +20,7 @@ public class ShopAccountController {
 
     @GetMapping
     public String accountPage(Authentication authentication, Model model) {
-        String email = authentication.getName();
+        String email = SecurityHelper.currentCustomerEmail(authentication);
         Customer customer = customerService.findByEmailOrThrow(email);
 
         model.addAttribute("customer", customer);
@@ -33,14 +34,17 @@ public class ShopAccountController {
                                 Authentication authentication,
                                 Model model) {
         try {
-            String email = authentication.getName();
+            String email = SecurityHelper.currentCustomerEmail(authentication);
             Customer updated = customerService.updateProfile(email, fullName, phone, address);
+
             model.addAttribute("customer", updated);
             model.addAttribute("successMessage", "Profile updated successfully.");
             return "shop/account";
+
         } catch (Exception e) {
-            String email = authentication.getName();
+            String email = SecurityHelper.currentCustomerEmail(authentication);
             Customer customer = customerService.findByEmailOrThrow(email);
+
             model.addAttribute("customer", customer);
             model.addAttribute("errorMessage", e.getMessage());
             return "shop/account";
@@ -53,7 +57,7 @@ public class ShopAccountController {
                                  @RequestParam String confirmPassword,
                                  Authentication authentication,
                                  Model model) {
-        String email = authentication.getName();
+        String email = SecurityHelper.currentCustomerEmail(authentication);
 
         try {
             customerService.changePassword(email, currentPassword, newPassword, confirmPassword);

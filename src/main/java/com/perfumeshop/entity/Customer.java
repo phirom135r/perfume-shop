@@ -35,6 +35,15 @@ public class Customer {
     @Column(length = 30)
     private String provider = "LOCAL"; // LOCAL / GOOGLE
 
+    @Column(name = "provider_id", length = 120)
+    private String providerId;
+
+    @Column(name = "reset_token", length = 120)
+    private String resetToken;
+
+    @Column(name = "reset_token_expired_at")
+    private LocalDateTime resetTokenExpiredAt;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
@@ -111,6 +120,30 @@ public class Customer {
 
     public String getProvider() {
         return provider;
+    }
+
+    public String getProviderId() {
+        return providerId;
+    }
+
+    public void setProviderId(String providerId) {
+        this.providerId = providerId;
+    }
+
+    public String getResetToken() {
+        return resetToken;
+    }
+
+    public void setResetToken(String resetToken) {
+        this.resetToken = resetToken;
+    }
+
+    public LocalDateTime getResetTokenExpiredAt() {
+        return resetTokenExpiredAt;
+    }
+
+    public void setResetTokenExpiredAt(LocalDateTime resetTokenExpiredAt) {
+        this.resetTokenExpiredAt = resetTokenExpiredAt;
     }
 
     public void setProvider(String provider) {

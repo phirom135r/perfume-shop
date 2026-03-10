@@ -1,5 +1,6 @@
 package com.perfumeshop.controller.shop;
 
+import com.perfumeshop.config.SecurityHelper;
 import com.perfumeshop.dto.ShopCheckoutForm;
 import com.perfumeshop.entity.Order;
 import com.perfumeshop.service.ShopCartService;
@@ -53,7 +54,7 @@ public class ShopCheckoutController {
                              Model model,
                              Authentication authentication) {
         try {
-            String customerEmail = authentication.getName();
+            String customerEmail = SecurityHelper.currentCustomerEmail(authentication);
             Order saved = shopOrderService.placeOrder(form, session, customerEmail);
             return "redirect:/perfume-shop/checkout/success?orderId=" + saved.getId();
         } catch (Exception e) {

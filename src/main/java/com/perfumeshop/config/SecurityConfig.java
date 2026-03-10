@@ -6,7 +6,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
@@ -14,21 +13,22 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SecurityConfig {
 
     private final CustomerUserDetailsService customerUserDetailsService;
+    private final GoogleOAuth2SuccessHandler googleOAuth2SuccessHandler;
+    private final PasswordEncoder passwordEncoder;
 
-    public SecurityConfig(CustomerUserDetailsService customerUserDetailsService) {
+    public SecurityConfig(CustomerUserDetailsService customerUserDetailsService,
+                          GoogleOAuth2SuccessHandler googleOAuth2SuccessHandler,
+                          PasswordEncoder passwordEncoder) {
         this.customerUserDetailsService = customerUserDetailsService;
-    }
-
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+        this.googleOAuth2SuccessHandler = googleOAuth2SuccessHandler;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Bean
     public DaoAuthenticationProvider customerAuthProvider() {
         DaoAuthenticationProvider provider =
                 new DaoAuthenticationProvider(customerUserDetailsService);
-        provider.setPasswordEncoder(passwordEncoder());
+        provider.setPasswordEncoder(passwordEncoder);
         return provider;
     }
 
@@ -36,8 +36,15 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
         http
+                .csrf(csrf -> csrf
+                        .ignoringRequestMatchers("/admin/**")
+                )
+
                 .authenticationProvider(customerAuthProvider())
+
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/admin/**").permitAll()
+
                         .requestMatchers(
                                 "/css/**",
                                 "/js/**",
@@ -45,31 +52,28 @@ public class SecurityConfig {
                                 "/uploads/**",
                                 "/auth/**",
                                 "/perfume-shop",
+                                "/perfume-shop/shop",
+                                "/perfume-shop/product/**",
                                 "/perfume-shop/auth/**",
-                                "/perfume-shop/product/**"
+                                "/oauth2/**",
+                                "/login/oauth2/**"
                         ).permitAll()
 
-                        // ✅ allow guest to call add-to-cart endpoint,
-                        // controller will return loginRequired=true
                         .requestMatchers(HttpMethod.POST, "/perfume-shop/cart/add").permitAll()
 
-                        // ✅ real protected customer pages
                         .requestMatchers(
                                 "/perfume-shop/cart",
+                                "/perfume-shop/cart/update",
+                                "/perfume-shop/cart/remove",
+                                "/perfume-shop/cart/clear",
                                 "/perfume-shop/checkout/**",
                                 "/perfume-shop/my-orders/**",
                                 "/perfume-shop/account/**"
-                        ).hasRole("CUSTOMER")
-
-                        // update/remove/clear should be customer only
-                        .requestMatchers(
-                                "/perfume-shop/cart/update",
-                                "/perfume-shop/cart/remove",
-                                "/perfume-shop/cart/clear"
-                        ).hasRole("CUSTOMER")
+                        ).authenticated()
 
                         .anyRequest().permitAll()
                 )
+
                 .formLogin(form -> form
                         .loginPage("/perfume-shop/auth/login")
                         .loginProcessingUrl("/perfume-shop/auth/login")
@@ -79,6 +83,12 @@ public class SecurityConfig {
                         .failureUrl("/perfume-shop/auth/login?error")
                         .permitAll()
                 )
+
+                .oauth2Login(oauth -> oauth
+                        .loginPage("/perfume-shop/auth/login")
+                        .successHandler(googleOAuth2SuccessHandler)
+                )
+
                 .logout(logout -> logout
                         .logoutUrl("/perfume-shop/auth/logout")
                         .logoutSuccessUrl("/perfume-shop/auth/login?logout")

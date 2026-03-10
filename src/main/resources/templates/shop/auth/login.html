@@ -93,6 +93,9 @@
         <div th:if="${logout}" class="alert alert-success">
           You have logged out successfully.
         </div>
+        <div th:if="${param.resetSuccess}" class="alert alert-success">
+          Password reset successful. Please login.
+        </div>
 
         <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
 
@@ -115,10 +118,23 @@
               <label class="form-check-label" for="rememberMe">Remember me</label>
             </div>
 
-            <a href="#" class="text-decoration-none">Forgot password?</a>
+            <div class="text-end mt-2">
+              <a th:href="@{/perfume-shop/auth/forgot-password}" class="text-decoration-none">
+                Forgot password?
+              </a>
+            </div>
           </div>
 
           <button type="submit" class="btn btn-gold w-100">Login</button>
+
+          <div class="text-center my-3 text-muted">or continue with</div>
+
+          <a href="/oauth2/authorization/google" class="btn btn-outline-dark w-100" style="border-radius:14px;height:48px;">
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+                 alt="Google"
+                 style="width:18px;height:18px;margin-right:8px;">
+            Login with Google
+          </a>
         </form>
 
         <div class="text-center mt-4">

@@ -91,4 +91,16 @@ public class ProductService {
         p.setActive(!Boolean.TRUE.equals(p.getActive()));
         productRepo.save(p);
     }
+    public Product findActiveDetailOrThrow(Long id) {
+        return productRepo.findActiveDetailById(id)
+                .orElseThrow(() -> new RuntimeException("Product not found: " + id));
+    }
+
+    public java.util.List<Product> relatedProducts(Long categoryId, Long productId) {
+        return productRepo.findTop4ByCategoryIdAndIdNotOrderByIdDesc(
+                categoryId,
+                productId,
+                org.springframework.data.domain.PageRequest.of(0, 4)
+        );
+    }
 }

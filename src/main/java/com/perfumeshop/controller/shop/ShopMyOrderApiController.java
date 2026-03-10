@@ -1,5 +1,6 @@
 package com.perfumeshop.controller.shop;
 
+import com.perfumeshop.config.SecurityHelper;
 import com.perfumeshop.entity.Order;
 import com.perfumeshop.entity.OrderItem;
 import com.perfumeshop.service.OrderService;
@@ -21,7 +22,7 @@ public class ShopMyOrderApiController {
 
     @GetMapping("/{id}")
     public ResponseEntity<?> detail(@PathVariable Long id, Authentication authentication) {
-        String email = authentication.getName();
+        String email = SecurityHelper.currentCustomerEmail(authentication);
         Order o = orderService.findMyOrderDetailOrThrow(id, email);
 
         Map<String, Object> data = new LinkedHashMap<>();

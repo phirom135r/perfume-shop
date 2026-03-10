@@ -118,6 +118,11 @@ public class ShopOrderService {
         order.setTotal(subtotal);
         order.setItems(orderItems);
 
+        int totalItems = orderItems.stream()
+                .mapToInt(OrderItem::getQty)
+                .sum();
+        order.setTotalItems(totalItems);
+
         Order saved = orderService.save(order);
 
         cartService.clear(session);
