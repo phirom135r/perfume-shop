@@ -1,4 +1,4 @@
-// src/main/java/com/perfumeshop/controller/admin/AdminPaymentVerifyApiController.java
+// src/main/java/com/perfumeshop/controller/admin/PaymentVerifyApiController.java
 package com.perfumeshop.controller.admin;
 
 import com.perfumeshop.entity.Order;

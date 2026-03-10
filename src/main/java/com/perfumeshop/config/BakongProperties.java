@@ -1,3 +1,4 @@
+//config/BakongProperties
 package com.perfumeshop.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
