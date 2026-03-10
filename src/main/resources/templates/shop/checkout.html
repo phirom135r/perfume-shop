@@ -4,19 +4,15 @@
     <meta charset="UTF-8">
     <title>Checkout - Perfume Shop</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
-
     <link rel="stylesheet"
           href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
-
     <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-
     <style>
         body {
             background: #f7f7f7;
             font-family: Arial, sans-serif;
         }
-
         .checkout-card,
         .order-summary {
             background: white;
@@ -24,7 +20,6 @@
             padding: 24px;
             box-shadow: 0 10px 22px rgba(0, 0, 0, .05);
         }
-
         .khqr-modal .modal-content {
             border: none;
             border-radius: 20px;
@@ -197,244 +192,6 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-
-<script>
-    (() => {
-        const checkoutForm = document.getElementById("checkoutForm");
-        const btnPlaceOrder = document.getElementById("btnPlaceOrder");
-        const csrfInput = checkoutForm.querySelector('input[name="_csrf"]');
-
-        const khqrModalEl = document.getElementById("khqrModal");
-        const khqrModal = new bootstrap.Modal(khqrModalEl, {
-            backdrop: "static",
-            keyboard: false
-        });
-
-        const khqrCanvasBox = document.getElementById("khqrCanvas");
-        const khqrTotal = document.getElementById("khqrTotal");
-        const countdownEl = document.getElementById("countdown");
-        const paymentStatusText = document.getElementById("paymentStatusText");
-        const btnCancelPayment = document.getElementById("btnCancelPayment");
-        const btnCloseKhqr = document.getElementById("btnCloseKhqr");
-
-        let currentMd5 = null;
-        let currentOrderId = null;
-        let pollTimer = null;
-        let countdownTimer = null;
-        let secondsLeft = 180;
-
-        function toastSuccess(title) {
-            Swal.fire({
-                toast: true,
-                position: "top-end",
-                icon: "success",
-                title,
-                showConfirmButton: false,
-                timer: 1400,
-                timerProgressBar: true
-            });
-        }
-
-        function toastError(title) {
-            Swal.fire({
-                toast: true,
-                position: "top-end",
-                icon: "error",
-                title,
-                showConfirmButton: false,
-                timer: 2200,
-                timerProgressBar: true
-            });
-        }
-
-        function setLoading(isLoading) {
-            btnPlaceOrder.disabled = isLoading;
-            btnPlaceOrder.textContent = isLoading ? "Processing..." : "Place Order";
-        }
-
-        function clearTimers() {
-            if (pollTimer) {
-                clearInterval(pollTimer);
-                pollTimer = null;
-            }
-            if (countdownTimer) {
-                clearInterval(countdownTimer);
-                countdownTimer = null;
-            }
-        }
-
-        function formatTime(totalSeconds) {
-            const min = String(Math.floor(totalSeconds / 60)).padStart(2, "0");
-            const sec = String(totalSeconds % 60).padStart(2, "0");
-            return `${min}:${sec}`;
-        }
-
-        function startCountdown() {
-            secondsLeft = 180;
-            countdownEl.textContent = formatTime(secondsLeft);
-
-            countdownTimer = setInterval(async () => {
-                secondsLeft--;
-                countdownEl.textContent = formatTime(secondsLeft);
-
-                if (secondsLeft <= 0) {
-                    clearTimers();
-                    paymentStatusText.textContent = "Payment expired.";
-
-                    if (currentMd5) {
-                        await cancelPayment(false);
-                    }
-                }
-            }, 1000);
-        }
-
-        async function openKhqrModal(orderId, total, khqrString, md5) {
-            currentOrderId = orderId;
-            currentMd5 = md5;
-
-            khqrTotal.textContent = Number(total || 0).toFixed(2);
-            paymentStatusText.textContent = "Waiting for payment...";
-            khqrCanvasBox.innerHTML = "";
-
-            await QRCode.toCanvas(khqrString, { width: 260 }, function (err, canvas) {
-                if (err) throw err;
-                khqrCanvasBox.appendChild(canvas);
-            });
-
-            khqrModal.show();
-            startCountdown();
-            pollTimer = setInterval(verifyPayment, 5000);
-        }
-
-        async function verifyPayment() {
-            if (!currentMd5) return;
-
-            try {
-                const res = await fetch(`/perfume-shop/api/payment/verify?md5=${encodeURIComponent(currentMd5)}`, {
-                    headers: { "Accept": "application/json" }
-                });
-
-                const json = await res.json();
-                const status = String(json.status || "").toUpperCase();
-
-                if (status === "PAID") {
-                    clearTimers();
-                    paymentStatusText.textContent = "Payment confirmed.";
-                    khqrModal.hide();
-
-                    await Swal.fire({
-                        icon: "success",
-                        title: "Payment Successful",
-                        text: "Your payment has been confirmed."
-                    });
-
-                    window.location.href = `/perfume-shop/checkout/success?orderId=${json.orderId || currentOrderId}`;
-                } else if (status === "CANCELLED") {
-                    clearTimers();
-                    khqrModal.hide();
-                    toastError("Payment cancelled");
-                    window.location.href = "/perfume-shop/cart";
-                } else if (status === "OUT_OF_STOCK") {
-                    clearTimers();
-                    paymentStatusText.textContent = "Out of stock.";
-                    await Swal.fire("Out of stock", "Some products are no longer available.", "error");
-                }
-            } catch (e) {
-                console.error(e);
-            }
-        }
-
-        async function cancelPayment(showConfirm = true) {
-            if (!currentMd5) return;
-
-            if (showConfirm) {
-                const ok = await Swal.fire({
-                    title: "Cancel payment?",
-                    text: "This order will be cancelled.",
-                    icon: "warning",
-                    showCancelButton: true,
-                    confirmButtonText: "Yes, cancel"
-                });
-
-                if (!ok.isConfirmed) return;
-            }
-
-            try {
-                const res = await fetch(`/perfume-shop/api/payment/cancel?md5=${encodeURIComponent(currentMd5)}`, {
-                    method: "POST",
-                    headers: {
-                        "Accept": "application/json",
-                        "X-CSRF-TOKEN": csrfInput ? csrfInput.value : ""
-                    }
-                });
-
-                const json = await res.json();
-                const status = String(json.status || "").toUpperCase();
-
-                clearTimers();
-                khqrModal.hide();
-
-                if (status === "CANCELLED") {
-                    toastSuccess("Payment cancelled");
-                    window.location.href = "/perfume-shop/cart";
-                } else if (status === "PAID") {
-                    window.location.href = `/perfume-shop/checkout/success?orderId=${currentOrderId}`;
-                } else {
-                    toastError("Cannot cancel payment");
-                }
-            } catch (e) {
-                console.error(e);
-                toastError("Cannot cancel payment");
-            }
-        }
-
-        checkoutForm.addEventListener("submit", async (e) => {
-            e.preventDefault();
-            setLoading(true);
-
-            try {
-                const fd = new FormData(checkoutForm);
-
-                const res = await fetch("/perfume-shop/checkout", {
-                    method: "POST",
-                    body: fd,
-                    headers: {
-                        "Accept": "application/json",
-                        "X-CSRF-TOKEN": csrfInput ? csrfInput.value : ""
-                    }
-                });
-
-                const json = await res.json();
-
-                if (!res.ok || !json.ok) {
-                    throw new Error(json.message || "Checkout failed");
-                }
-
-                const paymentMethod = String(json.paymentMethod || "CASH").toUpperCase();
-
-                if (paymentMethod === "KHQR") {
-                    await openKhqrModal(
-                        json.orderId,
-                        json.total,
-                        json.khqrString,
-                        json.md5
-                    );
-                } else {
-                    toastSuccess("Order placed successfully");
-                    window.location.href = `/perfume-shop/checkout/success?orderId=${json.orderId}`;
-                }
-            } catch (err) {
-                console.error(err);
-                toastError(err.message || "Checkout failed");
-            } finally {
-                setLoading(false);
-            }
-        });
-
-        btnCancelPayment.addEventListener("click", () => cancelPayment(true));
-        btnCloseKhqr.addEventListener("click", () => cancelPayment(true));
-    })();
-</script>
-
+<script th:src="@{/js/shop/checkout.js}"></script>
 </body>
 </html>
