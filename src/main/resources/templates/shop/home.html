@@ -349,18 +349,10 @@
                                 <i class="bi bi-cart-plus"></i> Add
                             </button>
 
-                            <button type="button"
-                                    class="btn btn-gold rounded-pill view-detail"
-                                    th:attr="
-                                            data-id=${p.id},
-                                            data-name=${p.name},
-                                            data-price=${#numbers.formatDecimal((p.price != null ? p.price : 0) - (p.discount != null ? p.discount : 0),1,'COMMA',2,'POINT')},
-                                            data-description=${p.description},
-                                            data-image=${p.image != null and !#strings.isEmpty(p.image) ? p.image : '/images/no-image.png'},
-                                            data-notes=${p.description},
-                                            data-size=${p.size != null and !#strings.isEmpty(p.size) ? p.size : 'N/A'}">
+                            <a class="btn btn-gold rounded-pill"
+                               th:href="@{'/perfume-shop/product/' + ${p.id}}">
                                 <i class="bi bi-eye"></i> Details
-                            </button>
+                            </a>
                         </div>
                     </div>
                 </div>

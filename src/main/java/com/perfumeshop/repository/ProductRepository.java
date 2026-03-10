@@ -67,4 +67,22 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
                              @Param("categoryId") Long categoryId,
                              @Param("brandId") Long brandId,
                              Pageable pageable);
+    @Query("""
+    SELECT p FROM Product p
+    LEFT JOIN FETCH p.brand
+    LEFT JOIN FETCH p.category
+    WHERE p.id = :id AND p.active = true
+""")
+    java.util.Optional<Product> findActiveDetailById(@Param("id") Long id);
+
+    @Query("""
+    SELECT p FROM Product p
+    WHERE p.active = true
+      AND p.category.id = :categoryId
+      AND p.id <> :productId
+    ORDER BY p.id DESC
+""")
+    java.util.List<Product> findTop4ByCategoryIdAndIdNotOrderByIdDesc(@Param("categoryId") Long categoryId,
+                                                                      @Param("productId") Long productId,
+                                                                      org.springframework.data.domain.Pageable pageable);
 }

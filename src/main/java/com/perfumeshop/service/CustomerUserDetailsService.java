@@ -18,15 +18,36 @@ public class CustomerUserDetailsService implements UserDetailsService {
     }
 
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
 
-        Customer c = customerRepository.findByEmail(username.trim().toLowerCase())
+        if (email == null || email.isBlank()) {
+            throw new UsernameNotFoundException("Email is required");
+        }
+
+        String cleanEmail = email.trim().toLowerCase();
+
+        Customer c = customerRepository.findByEmail(cleanEmail)
                 .orElseThrow(() -> new UsernameNotFoundException("Invalid email or password"));
+
+        boolean enabled = Boolean.TRUE.equals(c.getEnabled()) && Boolean.TRUE.equals(c.getActive());
+
+        /*
+         * IMPORTANT
+         * Google accounts do not have local password.
+         * Spring Security still requires a password value.
+         * So we provide a dummy password when password is null.
+         */
+
+        String password = c.getPassword();
+
+        if (password == null || password.isBlank()) {
+            password = "{noop}google-oauth2-user";
+        }
 
         return new User(
                 c.getEmail(),
-                c.getPassword(),
-                Boolean.TRUE.equals(c.getEnabled()),
+                password,
+                enabled,
                 true,
                 true,
                 true,

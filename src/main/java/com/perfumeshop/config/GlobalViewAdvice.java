@@ -1,5 +1,7 @@
 package com.perfumeshop.config;
 
+import com.perfumeshop.entity.Customer;
+import com.perfumeshop.service.CustomerService;
 import com.perfumeshop.service.ShopCartService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
@@ -13,9 +15,12 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 public class GlobalViewAdvice {
 
     private final ShopCartService shopCartService;
+    private final CustomerService customerService;
 
-    public GlobalViewAdvice(ShopCartService shopCartService) {
+    public GlobalViewAdvice(ShopCartService shopCartService,
+                            CustomerService customerService) {
         this.shopCartService = shopCartService;
+        this.customerService = customerService;
     }
 
     @ModelAttribute("activeMenu")
@@ -46,7 +51,15 @@ public class GlobalViewAdvice {
         model.addAttribute("customerLoggedIn", customerLoggedIn);
 
         if (customerLoggedIn) {
-            model.addAttribute("customerEmail", authentication.getName());
+
+            String email = authentication.getName();
+
+            try {
+                Customer customer = customerService.findByEmailOrThrow(email);
+                model.addAttribute("customerEmail", customer.getEmail());
+            } catch (Exception e) {
+                model.addAttribute("customerEmail", email);
+            }
         }
 
         model.addAttribute("cartCount", shopCartService.getCartCount(session));

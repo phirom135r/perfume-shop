@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${product.name} + ' - Perfume Shop'">Product Detail</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #faf7f2;
+            color: #3e3e3e;
+        }
+
+        h1, h2, h3, h4, h5, h6, .nav-link, .navbar-brand, .display-6 {
+            font-family: 'Playfair Display', serif;
+            font-weight: 500;
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            color: #8b6e4b !important;
+        }
+
+        .btn-gold {
+            background-color: #c6a47e;
+            border: none;
+            color: white;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+
+        .btn-gold:hover {
+            background-color: #b38b5f;
+            color: white;
+            box-shadow: 0 4px 10px rgba(181, 141, 98, 0.3);
+        }
+
+        .btn-outline-gold {
+            border: 1px solid #c6a47e;
+            color: #c6a47e;
+            background: transparent;
+        }
+
+        .btn-outline-gold:hover {
+            background-color: #c6a47e;
+            color: white;
+        }
+
+        .footer {
+            background-color: #e7d9cc;
+            color: #4d3e2e;
+            border-top-left-radius: 3rem;
+            border-top-right-radius: 3rem;
+        }
+
+        .footer a {
+            color: #4d3e2e;
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            color: #a5714c;
+        }
+
+        .detail-card {
+            border: none;
+            border-radius: 24px;
+            background: #fff;
+            box-shadow: 0 10px 28px rgba(0,0,0,.06);
+        }
+
+        .detail-image {
+            width: 100%;
+            height: 520px;
+            object-fit: cover;
+            border-radius: 24px;
+            background: #f3f4f6;
+        }
+
+        .price-old {
+            text-decoration: line-through;
+            color: #9ca3af;
+            font-size: 16px;
+        }
+
+        .price-new {
+            color: #b38b5f;
+            font-size: 34px;
+            font-weight: 700;
+        }
+
+        .meta-text {
+            color: #6b7280;
+            font-size: 15px;
+        }
+
+        .badge-sale {
+            display: inline-block;
+            background-color: #d4af37;
+            color: white;
+            font-weight: 600;
+            padding: 0.45rem 1rem;
+            border-radius: 999px;
+            font-size: 0.85rem;
+        }
+
+        .info-box {
+            border: 1px solid #eee;
+            border-radius: 18px;
+            background: #fcfcfc;
+            padding: 16px 18px;
+        }
+
+        .related-card {
+            border: none;
+            border-radius: 18px;
+            overflow: hidden;
+            background: #fff;
+            box-shadow: 0 8px 24px rgba(0,0,0,.05);
+            transition: .2s ease;
+            height: 100%;
+        }
+
+        .related-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 14px 26px rgba(0,0,0,.08);
+        }
+
+        .related-img {
+            width: 100%;
+            height: 220px;
+            object-fit: cover;
+            background: #f3f4f6;
+        }
+
+        .dropdown-email {
+            max-width: 240px;
+            white-space: normal;
+            font-size: 14px;
+            color: #666;
+        }
+
+        @media (max-width: 768px) {
+            .detail-image {
+                height: 340px;
+            }
+
+            .price-new {
+                font-size: 28px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg bg-white py-3 shadow-sm">
+    <div class="container">
+        <a class="navbar-brand fs-3" th:href="@{/perfume-shop}">
+            <i class="fas fa-spa me-2" style="color: #c6a47e;"></i>Fragrance Haven
+        </a>
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarMain">
+            <ul class="navbar-nav mx-auto mb-2 mb-lg-0 fw-medium">
+                <li class="nav-item"><a class="nav-link" th:href="@{/perfume-shop}">Home</a></li>
+                <li class="nav-item"><a class="nav-link active" th:href="@{/perfume-shop/shop}">Shop</a></li>
+                <li class="nav-item"><a class="nav-link" href="#">About</a></li>
+                <li class="nav-item"><a class="nav-link" href="#">Contact</a></li>
+            </ul>
+
+            <form class="d-flex me-3" method="get" th:action="@{/perfume-shop/shop}">
+                <input class="form-control rounded-pill me-2" type="search" name="q" placeholder="Search scent...">
+                <button class="btn btn-outline-secondary rounded-pill" type="submit">
+                    <i class="bi bi-search"></i>
+                </button>
+            </form>
+
+            <div class="d-flex align-items-center gap-2">
+                <div class="dropdown">
+                    <a class="btn btn-light rounded-circle p-2" href="#" role="button" data-bs-toggle="dropdown">
+                        <i class="bi bi-person fs-5"></i>
+                    </a>
+
+                    <ul class="dropdown-menu dropdown-menu-end" th:if="${!customerLoggedIn}">
+                        <li><a class="dropdown-item" th:href="@{/perfume-shop/auth/login}">Login</a></li>
+                        <li><a class="dropdown-item" th:href="@{/perfume-shop/auth/register}">Register</a></li>
+                    </ul>
+
+                    <ul class="dropdown-menu dropdown-menu-end" th:if="${customerLoggedIn}">
+                        <li>
+                            <span class="dropdown-item-text dropdown-email" th:text="${customerEmail}">
+                                customer@email.com
+                            </span>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" th:href="@{/perfume-shop/account}">My Account</a></li>
+                        <li><a class="dropdown-item" th:href="@{/perfume-shop/my-orders}">My Orders</a></li>
+                        <li>
+                            <form th:action="@{/perfume-shop/auth/logout}" method="post" class="m-0">
+                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                                <button type="submit" class="dropdown-item">Logout</button>
+                            </form>
+                        </li>
+                    </ul>
+                </div>
+
+                <a th:href="@{/perfume-shop/cart}" class="btn btn-light position-relative rounded-circle p-2">
+                    <i class="bi bi-cart3 fs-5"></i>
+                    <span id="cartCountBadge"
+                          class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-warning text-dark"
+                          style="font-size: 0.7rem;"
+                          th:text="${cartCount}">0</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<div class="container my-5">
+    <nav class="mb-4">
+        <a th:href="@{/perfume-shop}" class="text-decoration-none text-muted">Home</a>
+        <span class="text-muted mx-2">/</span>
+        <a th:href="@{/perfume-shop/shop}" class="text-decoration-none text-muted">Shop</a>
+        <span class="text-muted mx-2">/</span>
+        <span class="fw-semibold" th:text="${product.name}">Product</span>
+    </nav>
+
+    <div class="detail-card p-4 p-lg-5">
+        <div class="row g-5 align-items-start">
+            <div class="col-lg-6">
+                <img th:src="${product.image != null and !#strings.isEmpty(product.image) ? product.image : '/images/no-image.png'}"
+                     class="detail-image"
+                     th:alt="${product.name}">
+            </div>
+
+            <div class="col-lg-6">
+                <div class="mb-3" th:if="${product.discount != null and product.discount > 0}">
+                    <span class="badge-sale"><i class="fas fa-tag me-1"></i>SALE</span>
+                </div>
+
+                <h1 class="mb-2" th:text="${product.name}">Product Name</h1>
+
+                <div class="meta-text mb-3">
+                    <span th:text="${product.brand != null ? product.brand.name : 'No Brand'}">Brand</span>
+                    <span class="mx-2">·</span>
+                    <span th:text="${product.category != null ? product.category.name : 'No Category'}">Category</span>
+                    <span class="mx-2">·</span>
+                    <span th:text="${product.size != null and !#strings.isEmpty(product.size) ? product.size : 'N/A'}">100ml</span>
+                </div>
+
+                <div class="mb-3">
+                    <div class="price-old"
+                         th:if="${product.discount != null and product.discount > 0}"
+                         th:text="'$' + ${#numbers.formatDecimal(product.price,1,'COMMA',2,'POINT')}">$100.00</div>
+
+                    <div class="price-new"
+                         th:text="'$' + ${#numbers.formatDecimal((product.price != null ? product.price : 0) - (product.discount != null ? product.discount : 0),1,'COMMA',2,'POINT')}">$80.00</div>
+                </div>
+
+                <p class="mb-4"
+                   th:text="${product.description != null and !#strings.isEmpty(product.description) ? product.description : 'No description available.'}">
+                    Product description
+                </p>
+
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <div class="info-box">
+                            <div class="fw-semibold mb-1">Availability</div>
+                            <div th:text="${product.stock != null and product.stock > 0 ? 'In Stock' : 'Out of Stock'}">In Stock</div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="info-box">
+                            <div class="fw-semibold mb-1">Volume</div>
+                            <div th:text="${product.size != null and !#strings.isEmpty(product.size) ? product.size : 'N/A'}">100ml</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2 flex-wrap">
+                    <button class="btn btn-gold rounded-pill px-4 py-2 btn-add-cart"
+                            th:attr="data-id=${product.id},data-name=${product.name}"
+                            th:disabled="${product.stock == null or product.stock <= 0}">
+                        <i class="bi bi-cart-plus"></i> Add to Cart
+                    </button>
+
+                    <a th:href="@{/perfume-shop/shop}" class="btn btn-outline-gold rounded-pill px-4 py-2">
+                        Continue Shopping
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container my-5" th:if="${!#lists.isEmpty(relatedProducts)}">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="display-6 mb-0" style="color: #6b4f32;">
+            <i class="fas fa-crown me-2" style="color: #c6a47e;"></i>Related Products
+        </h2>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-sm-6 col-lg-3" th:each="p : ${relatedProducts}">
+            <div class="related-card">
+                <a th:href="@{'/perfume-shop/product/' + ${p.id}}" class="text-decoration-none text-dark">
+                    <img th:src="${p.image != null and !#strings.isEmpty(p.image) ? p.image : '/images/no-image.png'}"
+                         class="related-img"
+                         th:alt="${p.name}">
+                </a>
+
+                <div class="p-3">
+                    <h5 class="mb-1" th:text="${p.name}">Product</h5>
+                    <div class="text-muted mb-2">
+                        <span th:text="${p.brand != null ? p.brand.name : 'No Brand'}">Brand</span>
+                        ·
+                        <span th:text="${p.size != null and !#strings.isEmpty(p.size) ? p.size : 'N/A'}">100ml</span>
+                    </div>
+
+                    <div class="price-new mb-3"
+                         style="font-size: 24px;"
+                         th:text="'$' + ${#numbers.formatDecimal((p.price != null ? p.price : 0) - (p.discount != null ? p.discount : 0),1,'COMMA',2,'POINT')}">$0.00</div>
+
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-outline-gold flex-fill btn-add-cart"
+                                th:attr="data-id=${p.id},data-name=${p.name}">
+                            <i class="bi bi-cart-plus"></i> Add
+                        </button>
+                        <a th:href="@{'/perfume-shop/product/' + ${p.id}}"
+                           class="btn btn-gold flex-fill">
+                            Details
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer class="footer pt-5 pb-4 mt-5">
+    <div class="container">
+        <div class="row gy-4">
+            <div class="col-md-3">
+                <h5 class="fw-bold"><i class="fas fa-spa me-2"></i>Fragrance Haven</h5>
+                <p class="small">Curated luxury perfumes that tell your story. Since 2020.</p>
+            </div>
+            <div class="col-md-3">
+                <h6>About Us</h6>
+                <ul class="list-unstyled">
+                    <li><a href="#">Our story</a></li>
+                    <li><a href="#">Sustainability</a></li>
+                    <li><a href="#">Store locator</a></li>
+                </ul>
+            </div>
+            <div class="col-md-3">
+                <h6>Customer Service</h6>
+                <ul class="list-unstyled">
+                    <li><a href="#">Contact us</a></li>
+                    <li><a href="#">Shipping & returns</a></li>
+                    <li><a href="#">FAQ</a></li>
+                </ul>
+            </div>
+            <div class="col-md-3">
+                <h6>Follow Us</h6>
+                <div class="d-flex gap-3 fs-5">
+                    <a href="#"><i class="bi bi-instagram"></i></a>
+                    <a href="#"><i class="bi bi-facebook"></i></a>
+                    <a href="#"><i class="bi bi-pinterest"></i></a>
+                    <a href="#"><i class="bi bi-twitter-x"></i></a>
+                </div>
+            </div>
+        </div>
+        <hr class="opacity-25">
+        <div class="text-center small">© 2025 Fragrance Haven. All rights reserved.</div>
+    </div>
+</footer>
+
+<div class="modal fade" id="authRequiredModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius: 24px;">
+            <div class="modal-header border-0">
+                <h5 class="modal-title">Login Required</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body text-center px-4 pb-4">
+                <div class="mb-3" style="font-size: 46px; color: #c6a47e;">
+                    <i class="bi bi-person-lock"></i>
+                </div>
+
+                <h4 class="mb-2">Please login or register</h4>
+                <p class="text-muted mb-4">
+                    You need an account before adding products to cart or continuing checkout.
+                </p>
+
+                <div class="d-flex gap-2 justify-content-center flex-wrap">
+                    <a th:href="@{/perfume-shop/auth/login}" class="btn btn-gold rounded-pill px-4">
+                        Login
+                    </a>
+                    <a th:href="@{/perfume-shop/auth/register}" class="btn btn-outline-gold rounded-pill px-4">
+                        Register
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script th:inline="javascript">
+    window.shopAuth = {
+        customerLoggedIn: [[${customerLoggedIn}]],
+        csrfToken: [[${_csrf.token}]],
+        csrfHeader: [[${_csrf.headerName}]]
+    };
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script th:src="@{/js/shop/add_to_cart.js}"></script>
+</body>
+</html>
