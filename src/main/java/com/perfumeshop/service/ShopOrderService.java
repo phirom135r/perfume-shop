@@ -23,17 +23,20 @@ public class ShopOrderService {
     private final OrderService orderService;
     private final InvoiceService invoiceService;
     private final CustomerService customerService;
+    private final BakongQrService bakongQrService;
 
     public ShopOrderService(ShopCartService cartService,
                             ProductService productService,
                             OrderService orderService,
                             InvoiceService invoiceService,
-                            CustomerService customerService) {
+                            CustomerService customerService,
+                            BakongQrService bakongQrService) {
         this.cartService = cartService;
         this.productService = productService;
         this.orderService = orderService;
         this.invoiceService = invoiceService;
         this.customerService = customerService;
+        this.bakongQrService = bakongQrService;
     }
 
     @Transactional
@@ -74,7 +77,6 @@ public class ShopOrderService {
         order.setPhone(form.getPhone().trim());
         order.setAddress(form.getAddress().trim());
         order.setPaymentMethod(paymentMethod);
-        order.setStatus(OrderStatus.PAID);
         order.setDiscount(BigDecimal.ZERO);
 
         List<OrderItem> orderItems = new ArrayList<>();
@@ -103,9 +105,6 @@ public class ShopOrderService {
 
             orderItems.add(oi);
             subtotal = subtotal.add(lineTotal);
-
-            product.setStock(stock - qty);
-            productService.save(product);
         }
 
         if (orderItems.isEmpty()) {
@@ -123,9 +122,36 @@ public class ShopOrderService {
                 .sum();
         order.setTotalItems(totalItems);
 
+        if (paymentMethod == PaymentMethod.CASH) {
+            for (OrderItem it : orderItems) {
+                Product p = it.getProduct();
+                int qty = it.getQty();
+
+                int stock = p.getStock() == null ? 0 : p.getStock();
+                if (stock < qty) {
+                    throw new RuntimeException("Not enough stock for: " + p.getName());
+                }
+
+                p.setStock(stock - qty);
+                productService.save(p);
+            }
+
+            order.setStatus(OrderStatus.PAID);
+            Order saved = orderService.save(order);
+
+            cartService.clear(session);
+            return saved;
+        }
+
+        // KHQR flow
+        order.setStatus(OrderStatus.PENDING);
         Order saved = orderService.save(order);
 
-        cartService.clear(session);
+        BakongQrService.KhqrResult qr = bakongQrService.generate(saved.getTotal(), saved.getInvoice());
+        saved.setKhqrString(qr.khqrString());
+        saved.setMd5(qr.md5());
+
+        saved = orderService.save(saved);
 
         return saved;
     }

@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>KHQR Payment - Perfume Shop</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        body{
+            background:#faf7f2;
+            font-family:Arial,sans-serif;
+        }
+        .pay-card{
+            max-width:520px;
+            margin:50px auto;
+            background:#fff;
+            border-radius:24px;
+            padding:28px;
+            box-shadow:0 12px 28px rgba(0,0,0,.08);
+            text-align:center;
+        }
+        #qrcode canvas{
+            margin:auto;
+        }
+    </style>
+</head>
+<body>
+
+<div class="pay-card">
+    <h3 class="mb-2">Pay with KHQR</h3>
+    <div class="text-muted mb-3">Scan QR with your banking app</div>
+
+    <div class="mb-2"><strong>Order ID:</strong> <span th:text="${orderId}"></span></div>
+    <div class="mb-3"><strong>Total:</strong> $<span id="payTotal">0.00</span></div>
+
+    <div id="qrcode" class="mb-4"></div>
+
+    <div class="d-grid gap-2">
+        <button type="button" class="btn btn-outline-danger" id="btnCancel">Cancel Payment</button>
+    </div>
+
+    <div class="small text-muted mt-3">
+        Waiting for payment confirmation...
+    </div>
+</div>
+
+<script th:inline="javascript">
+    const orderId = [[${orderId}]];
+</script>
+
+<script>
+    (async function () {
+        const payTotal = document.getElementById("payTotal");
+        const qrcodeBox = document.getElementById("qrcode");
+        const btnCancel = document.getElementById("btnCancel");
+
+        let md5 = null;
+        let pollTimer = null;
+
+        async function loadPaymentInfo() {
+            const res = await fetch(`/perfume-shop/api/payment/${orderId}`, {
+                headers: { "Accept": "application/json" }
+            });
+
+            const json = await res.json();
+
+            if (!res.ok) {
+                throw new Error("Cannot load payment info");
+            }
+
+            payTotal.textContent = Number(json.total || 0).toFixed(2);
+            md5 = json.md5;
+
+            qrcodeBox.innerHTML = "";
+            await QRCode.toCanvas(json.khqrString, { width: 240 }, function (err, canvas) {
+                if (err) throw err;
+                qrcodeBox.appendChild(canvas);
+            });
+        }
+
+        async function verifyPayment() {
+            if (!md5) return;
+
+            try {
+                const res = await fetch(`/perfume-shop/api/payment/verify?md5=${encodeURIComponent(md5)}`, {
+                    headers: { "Accept": "application/json" }
+                });
+
+                const json = await res.json();
+                const status = String(json.status || "").toUpperCase();
+
+                if (status === "PAID") {
+                    clearInterval(pollTimer);
+
+                    await Swal.fire({
+                        icon: "success",
+                        title: "Payment Successful",
+                        text: "Your payment has been confirmed."
+                    });
+
+                    window.location.href = `/perfume-shop/checkout/success?orderId=${json.orderId || orderId}`;
+                } else if (status === "CANCELLED") {
+                    clearInterval(pollTimer);
+                    await Swal.fire("Cancelled", "Payment was cancelled.", "info");
+                    window.location.href = "/perfume-shop/cart";
+                } else if (status === "OUT_OF_STOCK") {
+                    clearInterval(pollTimer);
+                    await Swal.fire("Out of stock", "Some products are no longer available.", "error");
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        btnCancel.addEventListener("click", async function () {
+            if (!md5) return;
+
+            const ok = await Swal.fire({
+                title: "Cancel payment?",
+                text: "This order will be cancelled.",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonText: "Yes, cancel"
+            });
+
+            if (!ok.isConfirmed) return;
+
+            const res = await fetch(`/perfume-shop/api/payment/cancel?md5=${encodeURIComponent(md5)}`, {
+                method: "POST",
+                headers: { "Accept": "application/json" }
+            });
+
+            const json = await res.json();
+            if (String(json.status || "").toUpperCase() === "CANCELLED") {
+                window.location.href = "/perfume-shop/cart";
+            }
+        });
+
+        try {
+            await loadPaymentInfo();
+            pollTimer = setInterval(verifyPayment, 5000);
+        } catch (e) {
+            Swal.fire("Error", e.message || "Cannot load payment page", "error");
+        }
+    })();
+</script>
+
+</body>
+</html>

@@ -68,7 +68,8 @@ public class SecurityConfig {
                                 "/perfume-shop/cart/clear",
                                 "/perfume-shop/checkout/**",
                                 "/perfume-shop/my-orders/**",
-                                "/perfume-shop/account/**"
+                                "/perfume-shop/account/**",
+                                "/perfume-shop/api/payment/**"
                         ).authenticated()
 
                         .anyRequest().permitAll()
