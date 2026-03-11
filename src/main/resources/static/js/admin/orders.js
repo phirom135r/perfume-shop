@@ -1,3 +1,4 @@
+let currentAdminOrderId = null;
 let orderModal;
 let dt;
 
@@ -5,6 +6,14 @@ document.addEventListener("DOMContentLoaded", () => {
     const modalEl = document.getElementById("orderDetailModal");
     if (modalEl && window.bootstrap) {
         orderModal = new bootstrap.Modal(modalEl);
+    }
+
+    const btnDownload = document.getElementById("btnAdminDownloadInvoice");
+    if (btnDownload) {
+        btnDownload.addEventListener("click", () => {
+            if (!currentAdminOrderId) return;
+            window.open(`/admin/orders/${currentAdminOrderId}/invoice`, "_blank");
+        });
     }
 
     initOrderTable();
@@ -215,6 +224,7 @@ async function openOrderDetail(id) {
         }
 
         const o = await res.json();
+        currentAdminOrderId = o.id;
 
         document.getElementById("odCustomer").textContent = o.customerName || "-";
         document.getElementById("odPhone").textContent =

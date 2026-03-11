@@ -14,12 +14,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     document.getElementById("btnDownloadInvoice").addEventListener("click", function () {
         if (!currentOrderId) return;
-
-        Swal.fire({
-            icon: "info",
-            title: "Coming Soon",
-            text: "Invoice PDF download will be added next."
-        });
+        window.open(`/perfume-shop/my-orders/${currentOrderId}/invoice`, "_blank");
     });
 });
 
