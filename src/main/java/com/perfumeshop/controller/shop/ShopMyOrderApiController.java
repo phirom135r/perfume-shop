@@ -45,13 +45,14 @@ public class ShopMyOrderApiController {
             row.put("size", (it.getProduct() != null && it.getProduct().getSize() != null) ? it.getProduct().getSize() : "N/A");
             row.put("image", (it.getProduct() != null) ? it.getProduct().getImage() : null);
             row.put("qty", it.getQty());
+            row.put("originalPrice", it.getOriginalPrice());
             row.put("unitPrice", it.getUnitPrice());
+            row.put("discountAmount", it.getDiscountAmount());
             row.put("lineTotal", it.getLineTotal());
             items.add(row);
         }
 
         data.put("items", items);
-
         return ResponseEntity.ok(data);
     }
 }

@@ -1,0 +1,220 @@
+body {
+    font-family: 'Poppins', sans-serif;
+    background: #faf7f2;
+}
+
+h1,h2,h3,h4,h5,h6,.navbar-brand {
+    font-family: 'Playfair Display', serif;
+}
+
+.navbar-brand {
+    color: #8b6e4b !important;
+    font-weight: 700;
+}
+
+.card-soft {
+    border: none;
+    border-radius: 20px;
+    background: #fff;
+    box-shadow: 0 8px 24px rgba(0,0,0,.06);
+}
+
+.thumb {
+    width: 54px;
+    height: 54px;
+    object-fit: cover;
+    border-radius: 12px;
+    background: #f3f4f6;
+    border: 1px solid #eee;
+}
+
+.modal-content.order-modal {
+    border: 0;
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 0 18px 50px rgba(0,0,0,.14);
+}
+
+.order-modal .modal-header {
+    border-bottom: 1px solid #f1f5f9;
+    padding: 18px 22px 14px;
+}
+
+.order-modal .modal-title {
+    font-weight: 700;
+    color: #2f2a24;
+}
+
+.order-modal .modal-body {
+    padding: 20px 22px 22px;
+}
+
+.order-info-card {
+    height: 100%;
+    border: 1px solid #eceff3;
+    border-radius: 18px;
+    background: #fcfcfd;
+    padding: 16px 18px;
+}
+
+.order-info-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 10px;
+    line-height: 1.5;
+}
+
+.order-info-row:last-child {
+    margin-bottom: 0;
+}
+
+.order-info-label {
+    min-width: 84px;
+    font-weight: 700;
+    color: #374151;
+}
+
+.order-info-value {
+    color: #111827;
+    word-break: break-word;
+}
+
+.status-pill,
+.payment-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 92px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 700;
+    border: 1px solid transparent;
+}
+
+.status-paid {
+    background: #ecfdf5;
+    color: #166534;
+    border-color: #bbf7d0;
+}
+
+.status-pending {
+    background: #fff7ed;
+    color: #c2410c;
+    border-color: #fed7aa;
+}
+
+.status-cancelled {
+    background: #fef2f2;
+    color: #b91c1c;
+    border-color: #fecaca;
+}
+
+.payment-cash {
+    background: #ecfeff;
+    color: #0f766e;
+    border-color: #a5f3fc;
+}
+
+.payment-khqr {
+    background: #eff6ff;
+    color: #1d4ed8;
+    border-color: #bfdbfe;
+}
+
+.order-items-wrap {
+    margin-top: 18px;
+    border: 1px solid #eceff3;
+    border-radius: 18px;
+    overflow: hidden;
+    background: #fff;
+}
+
+.order-items-head {
+    padding: 14px 18px;
+    border-bottom: 1px solid #eef2f7;
+    font-weight: 700;
+    color: #2f2a24;
+    background: #fcfcfd;
+}
+
+.order-table {
+    margin-bottom: 0;
+}
+
+.order-table thead th {
+    background: #fff;
+    border-bottom: 1px solid #eef2f7;
+    color: #374151;
+    font-weight: 700;
+    padding-top: 12px;
+    padding-bottom: 12px;
+}
+
+.order-table td {
+    vertical-align: middle;
+    padding-top: 14px;
+    padding-bottom: 14px;
+}
+
+.product-name {
+    font-weight: 700;
+    color: #111827;
+    line-height: 1.2;
+}
+
+.product-sub {
+    font-size: 13px;
+    color: #6b7280;
+    margin-top: 3px;
+}
+
+.btn-view-order {
+    min-width: 82px;
+}
+
+.summary-box {
+    margin-top: 16px;
+    border: 1px solid #eceff3;
+    border-radius: 18px;
+    background: #fcfcfd;
+    padding: 16px 18px;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    color: #374151;
+}
+
+.summary-row:last-child {
+    margin-bottom: 0;
+}
+
+.summary-total {
+    font-size: 18px;
+    font-weight: 700;
+    color: #111827;
+    border-top: 1px solid #e5e7eb;
+    padding-top: 12px;
+    margin-top: 12px;
+}
+
+.empty-state {
+    text-align: center;
+    color: #6b7280;
+    padding: 48px 20px;
+}
+
+@media (max-width: 767px) {
+    .order-info-label {
+        min-width: 76px;
+    }
+
+    .order-modal .modal-body {
+        padding: 16px;
+    }
+}

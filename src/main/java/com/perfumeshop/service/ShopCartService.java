@@ -42,9 +42,24 @@ public class ShopCartService {
                 .sum();
     }
 
+    // total តម្លៃបន្ទាប់ពីបញ្ចុះ
     public BigDecimal getSubtotal(HttpSession session) {
         return getCartMap(session).values().stream()
                 .map(CartItemDto::getLineTotal)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    // total តម្លៃដើម
+    public BigDecimal getOriginalSubtotal(HttpSession session) {
+        return getCartMap(session).values().stream()
+                .map(CartItemDto::getOriginalLineTotal)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    // total discount
+    public BigDecimal getDiscount(HttpSession session) {
+        return getCartMap(session).values().stream()
+                .map(CartItemDto::getLineDiscount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
@@ -64,22 +79,32 @@ public class ShopCartService {
             throw new RuntimeException("Product is out of stock");
         }
 
-        BigDecimal price = p.getPrice() == null ? BigDecimal.ZERO : p.getPrice();
+        BigDecimal originalPrice = p.getPrice() == null ? BigDecimal.ZERO : p.getPrice();
         BigDecimal discount = p.getDiscount() == null ? BigDecimal.ZERO : p.getDiscount();
-        if (discount.compareTo(price) > 0) discount = price;
-        BigDecimal finalPrice = price.subtract(discount);
+
+        if (discount.compareTo(BigDecimal.ZERO) < 0) {
+            discount = BigDecimal.ZERO;
+        }
+        if (discount.compareTo(originalPrice) > 0) {
+            discount = originalPrice;
+        }
+
+        BigDecimal finalPrice = originalPrice.subtract(discount);
 
         Map<Long, CartItemDto> cart = getCartMap(session);
         CartItemDto existing = cart.get(productId);
 
         if (existing == null) {
             int safeQty = Math.min(qty, stock);
+
             CartItemDto item = new CartItemDto(
                     p.getId(),
                     p.getName(),
                     p.getImage(),
                     p.getSize(),
+                    originalPrice,
                     finalPrice,
+                    discount,
                     safeQty,
                     stock
             );
@@ -87,10 +112,15 @@ public class ShopCartService {
         } else {
             int newQty = existing.getQty() + qty;
             if (newQty > stock) newQty = stock;
+
             existing.setQty(newQty);
             existing.setStock(stock);
+            existing.setOriginalPrice(originalPrice);
             existing.setUnitPrice(finalPrice);
+            existing.setDiscountAmount(discount);
             existing.setSize(p.getSize());
+            existing.setImage(p.getImage());
+            existing.setName(p.getName());
         }
     }
 
@@ -109,8 +139,26 @@ public class ShopCartService {
 
         if (qty > stock) qty = stock;
 
+        BigDecimal originalPrice = p.getPrice() == null ? BigDecimal.ZERO : p.getPrice();
+        BigDecimal discount = p.getDiscount() == null ? BigDecimal.ZERO : p.getDiscount();
+
+        if (discount.compareTo(BigDecimal.ZERO) < 0) {
+            discount = BigDecimal.ZERO;
+        }
+        if (discount.compareTo(originalPrice) > 0) {
+            discount = originalPrice;
+        }
+
+        BigDecimal finalPrice = originalPrice.subtract(discount);
+
         item.setQty(qty);
         item.setStock(stock);
+        item.setOriginalPrice(originalPrice);
+        item.setUnitPrice(finalPrice);
+        item.setDiscountAmount(discount);
+        item.setSize(p.getSize());
+        item.setImage(p.getImage());
+        item.setName(p.getName());
     }
 
     public void removeItem(Long productId, HttpSession session) {

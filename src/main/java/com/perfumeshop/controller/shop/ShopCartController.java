@@ -25,8 +25,12 @@ public class ShopCartController {
     @GetMapping
     public String cartPage(Model model, HttpSession session) {
         model.addAttribute("items", cartService.getItems(session));
-        model.addAttribute("subtotal", cartService.getSubtotal(session));
         model.addAttribute("cartCount", cartService.getCartCount(session));
+
+        model.addAttribute("subtotal", cartService.getOriginalSubtotal(session));
+        model.addAttribute("discount", cartService.getDiscount(session));
+        model.addAttribute("total", cartService.getSubtotal(session));
+
         return "shop/cart";
     }
 
@@ -54,7 +58,9 @@ public class ShopCartController {
             cartService.addToCart(productId, qty, session);
             res.put("ok", true);
             res.put("cartCount", cartService.getCartCount(session));
-            res.put("subtotal", money(cartService.getSubtotal(session)));
+            res.put("subtotal", money(cartService.getOriginalSubtotal(session)));
+            res.put("discount", "-" + moneyNoSign(cartService.getDiscount(session)));
+            res.put("total", money(cartService.getSubtotal(session)));
             res.put("message", "Added to cart");
         } catch (Exception e) {
             res.put("ok", false);
@@ -93,11 +99,27 @@ public class ShopCartController {
 
             res.put("ok", true);
             res.put("cartCount", cartService.getCartCount(session));
-            res.put("subtotal", money(cartService.getSubtotal(session)));
+            res.put("subtotal", money(cartService.getOriginalSubtotal(session)));
+            res.put("discount", "-" + moneyNoSign(cartService.getDiscount(session)));
+            res.put("total", money(cartService.getSubtotal(session)));
+
             res.put("qty", item != null ? item.getQty() : 0);
             res.put("lineTotal", item != null
                     ? item.getLineTotal().setScale(2, RoundingMode.HALF_UP).toString()
                     : "0.00");
+
+            res.put("originalPrice", item != null
+                    ? item.getOriginalPrice().setScale(2, RoundingMode.HALF_UP).toString()
+                    : "0.00");
+
+            res.put("unitPrice", item != null
+                    ? item.getUnitPrice().setScale(2, RoundingMode.HALF_UP).toString()
+                    : "0.00");
+
+            res.put("discountAmount", item != null
+                    ? item.getDiscountAmount().setScale(2, RoundingMode.HALF_UP).toString()
+                    : "0.00");
+
         } catch (Exception e) {
             res.put("ok", false);
             res.put("message", e.getMessage());
@@ -128,7 +150,9 @@ public class ShopCartController {
             cartService.removeItem(productId, session);
             res.put("ok", true);
             res.put("cartCount", cartService.getCartCount(session));
-            res.put("subtotal", money(cartService.getSubtotal(session)));
+            res.put("subtotal", money(cartService.getOriginalSubtotal(session)));
+            res.put("discount", "-" + moneyNoSign(cartService.getDiscount(session)));
+            res.put("total", money(cartService.getSubtotal(session)));
         } catch (Exception e) {
             res.put("ok", false);
             res.put("message", e.getMessage());
@@ -159,6 +183,8 @@ public class ShopCartController {
             res.put("ok", true);
             res.put("cartCount", 0);
             res.put("subtotal", "$0.00");
+            res.put("discount", "-$0.00");
+            res.put("total", "$0.00");
         } catch (Exception e) {
             res.put("ok", false);
             res.put("message", e.getMessage());
@@ -167,6 +193,11 @@ public class ShopCartController {
     }
 
     private String money(java.math.BigDecimal value) {
+        if (value == null) return "$0.00";
+        return "$" + value.setScale(2, RoundingMode.HALF_UP);
+    }
+
+    private String moneyNoSign(java.math.BigDecimal value) {
         if (value == null) return "$0.00";
         return "$" + value.setScale(2, RoundingMode.HALF_UP);
     }
