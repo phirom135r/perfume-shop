@@ -1,6 +1,7 @@
 <!--shop/fragments/layout.html-->
 <!doctype html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,8 +11,6 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-
-    <!-- Custom Layout CSS -->
     <link rel="stylesheet" th:href="@{/css/shop/layout.css}">
 </head>
 <body>
@@ -29,20 +28,20 @@
         <div class="collapse navbar-collapse" id="navbarMain">
             <ul class="navbar-nav mx-auto mb-2 mb-lg-0 fw-medium">
                 <li class="nav-item">
-                    <a class="nav-link active" th:href="@{/perfume-shop}">Home</a>
+                    <a class="nav-link" th:href="@{/perfume-shop}">Home</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="#">Shop</a>
+                    <a class="nav-link" th:href="@{/perfume-shop/shop}">Shop</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="#">About</a>
+                    <a class="nav-link" th:href="@{/perfume-shop/about}">About</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="#">Contact</a>
+                    <a class="nav-link" th:href="@{/perfume-shop/contact}">Contact</a>
                 </li>
             </ul>
 
-            <form class="d-flex me-3" method="get" action="#">
+            <form class="d-flex me-3" method="get" th:action="@{/perfume-shop/shop}">
                 <input class="form-control rounded-pill me-2" type="search" name="q" placeholder="Search scent...">
                 <button class="btn btn-outline-secondary rounded-pill" type="submit">
                     <i class="bi bi-search"></i>
@@ -54,13 +53,31 @@
                     <a class="btn btn-light rounded-circle p-2" href="#" role="button" data-bs-toggle="dropdown">
                         <i class="bi bi-person fs-5"></i>
                     </a>
-                    <ul class="dropdown-menu dropdown-menu-end">
-                        <li><a class="dropdown-item" href="#"><i class="bi bi-box-arrow-in-right me-2"></i>Login</a></li>
-                        <li><a class="dropdown-item" href="#"><i class="bi bi-person-plus me-2"></i>Register</a></li>
+
+                    <ul class="dropdown-menu dropdown-menu-end" th:if="${!customerLoggedIn}">
+                        <li><a class="dropdown-item" th:href="@{/perfume-shop/auth/login}">Login</a></li>
+                        <li><a class="dropdown-item" th:href="@{/perfume-shop/auth/register}">Register</a></li>
+                    </ul>
+
+                    <ul class="dropdown-menu dropdown-menu-end" th:if="${customerLoggedIn}">
+                        <li>
+                            <span class="dropdown-item-text dropdown-email" th:text="${customerEmail}">
+                                customer@email.com
+                            </span>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" th:href="@{/perfume-shop/account}">My Account</a></li>
+                        <li><a class="dropdown-item" th:href="@{/perfume-shop/my-orders}">My Orders</a></li>
+                        <li>
+                            <form th:action="@{/perfume-shop/auth/logout}" method="post" class="m-0">
+                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                                <button type="submit" class="dropdown-item">Logout</button>
+                            </form>
+                        </li>
                     </ul>
                 </div>
 
-                <a href="#" class="btn btn-light position-relative rounded-circle p-2">
+                <a th:href="@{/perfume-shop/cart}" class="btn btn-light position-relative rounded-circle p-2">
                     <i class="bi bi-cart3 fs-5"></i>
                     <span id="cartCountBadge"
                           class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-warning text-dark"
@@ -72,9 +89,7 @@
     </div>
 </nav>
 
-<div th:fragment="content">
-    <!-- page content -->
-</div>
+<section layout:fragment="content"></section>
 
 <footer class="footer pt-5 pb-4 mt-5">
     <div class="container">
@@ -86,17 +101,13 @@
             <div class="col-md-3">
                 <h6>About Us</h6>
                 <ul class="list-unstyled">
-                    <li><a href="#">Our story</a></li>
-                    <li><a href="#">Sustainability</a></li>
-                    <li><a href="#">Store locator</a></li>
+                    <li><a th:href="@{/perfume-shop/about}">Our story</a></li>
                 </ul>
             </div>
             <div class="col-md-3">
                 <h6>Customer Service</h6>
                 <ul class="list-unstyled">
-                    <li><a href="#">Contact us</a></li>
-                    <li><a href="#">Shipping & returns</a></li>
-                    <li><a href="#">FAQ</a></li>
+                    <li><a th:href="@{/perfume-shop/contact}">Contact us</a></li>
                 </ul>
             </div>
             <div class="col-md-3">
@@ -115,5 +126,8 @@
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<th:block layout:fragment="pageScripts"></th:block>
+
 </body>
 </html>

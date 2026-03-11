@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{shop/fragments/layout}">
+
+<head>
+    <title>Contact - Fragrance Haven</title>
+</head>
+
+<body>
+
+<section layout:fragment="content">
+
+    <div class="container py-5">
+
+        <div class="text-center mb-5">
+            <h1 class="fw-bold">Contact Us</h1>
+            <p class="text-muted">
+                Have questions about perfumes or your order?
+                Our team is ready to help you.
+            </p>
+        </div>
+
+        <div class="row g-4">
+
+            <!-- Contact Info -->
+            <div class="col-md-5">
+
+                <div class="card border-0 shadow-sm p-4 h-100">
+
+                    <h4 class="fw-bold mb-3">Fragrance Haven</h4>
+
+                    <p class="text-muted">
+                        Premium perfumes curated for elegance and confidence.
+                    </p>
+
+                    <hr>
+
+                    <p>
+                        <i class="bi bi-geo-alt-fill me-2 text-warning"></i>
+                        Phnom Penh, Cambodia
+                    </p>
+
+                    <p>
+                        <i class="bi bi-telephone-fill me-2 text-warning"></i>
+                        +855 XX XXX XXX
+                    </p>
+
+                    <p>
+                        <i class="bi bi-envelope-fill me-2 text-warning"></i>
+                        support@fragrancehaven.com
+                    </p>
+
+                    <hr>
+
+                    <h6 class="fw-bold">Follow Us</h6>
+
+                    <div class="d-flex gap-3 fs-4 mt-2">
+                        <a href="#"><i class="bi bi-facebook"></i></a>
+                        <a href="#"><i class="bi bi-instagram"></i></a>
+                        <a href="#"><i class="bi bi-tiktok"></i></a>
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- Contact Form -->
+            <div class="col-md-7">
+
+                <div class="card border-0 shadow-sm p-4">
+
+                    <h4 class="fw-bold mb-4">Send us a message</h4>
+
+                    <form>
+
+                        <div class="mb-3">
+                            <label class="form-label">Full Name</label>
+                            <input type="text" class="form-control" placeholder="Enter your name">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-control" placeholder="Enter your email">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Message</label>
+                            <textarea class="form-control" rows="5" placeholder="Write your message"></textarea>
+                        </div>
+
+                        <button class="btn btn-gold px-4">
+                            Send Message
+                        </button>
+
+                    </form>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+</body>
+</html>

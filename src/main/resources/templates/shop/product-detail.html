@@ -11,6 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" th:href="@{/css/shop/home.css}">
 
     <style>
         body {
@@ -296,6 +297,9 @@
                             th:disabled="${product.stock == null or product.stock <= 0}">
                         <i class="bi bi-cart-plus"></i> Add to Cart
                     </button>
+<!--                    <button type="button" class="btn btn-gold rounded-pill py-2" id="modalAddToCart">-->
+<!--                        <i class="bi bi-cart-plus"></i> Add to Cart-->
+<!--                    </button>-->
 
                     <a th:href="@{/perfume-shop/shop}" class="btn btn-outline-gold rounded-pill px-4 py-2">
                         Continue Shopping
@@ -388,31 +392,27 @@
     </div>
 </footer>
 
-<div class="modal fade" id="authRequiredModal" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="guestAuthModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content" style="border-radius: 24px;">
-            <div class="modal-header border-0">
-                <h5 class="modal-title">Login Required</h5>
+        <div class="modal-content" style="border-radius: 22px;">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold">Join Fragrance Haven</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
 
-            <div class="modal-body text-center px-4 pb-4">
-                <div class="mb-3" style="font-size: 46px; color: #c6a47e;">
+            <div class="modal-body text-center pt-2 pb-4">
+                <div class="guest-auth-icon mb-3">
                     <i class="bi bi-person-lock"></i>
                 </div>
 
-                <h4 class="mb-2">Please login or register</h4>
+                <h4 class="fw-bold mb-2">Login or Register First</h4>
                 <p class="text-muted mb-4">
-                    You need an account before adding products to cart or continuing checkout.
+                    You can browse freely, but adding products to cart requires an account.
                 </p>
 
-                <div class="d-flex gap-2 justify-content-center flex-wrap">
-                    <a th:href="@{/perfume-shop/auth/login}" class="btn btn-gold rounded-pill px-4">
-                        Login
-                    </a>
-                    <a th:href="@{/perfume-shop/auth/register}" class="btn btn-outline-gold rounded-pill px-4">
-                        Register
-                    </a>
+                <div class="d-grid gap-2">
+                    <a th:href="@{/perfume-shop/auth/login}" class="btn btn-gold rounded-pill py-2">Login</a>
+                    <a th:href="@{/perfume-shop/auth/register}" class="btn btn-outline-gold rounded-pill py-2">Register</a>
                 </div>
             </div>
         </div>

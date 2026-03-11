@@ -9,10 +9,12 @@
     const modalAddToCart = document.getElementById("modalAddToCart");
     const cartCountBadge = document.getElementById("cartCountBadge");
 
-    const bsModal = modal ? new bootstrap.Modal(modal) : null;
+    const bsModal = (modal && window.bootstrap) ? new bootstrap.Modal(modal) : null;
 
     const guestAuthModalEl = document.getElementById("guestAuthModal");
-    const guestAuthModal = guestAuthModalEl ? new bootstrap.Modal(guestAuthModalEl) : null;
+    const guestAuthModal = (guestAuthModalEl && window.bootstrap)
+        ? new bootstrap.Modal(guestAuthModalEl)
+        : null;
 
     const customerLoggedIn = !!(window.shopAuth && window.shopAuth.customerLoggedIn);
     let autoPopupShown = false;
@@ -44,6 +46,8 @@
     function showLoginRequiredModal() {
         if (guestAuthModal) {
             guestAuthModal.show();
+        } else {
+            window.location.href = "/perfume-shop/auth/login";
         }
     }
 
@@ -72,7 +76,7 @@
 
             if (!json.ok) {
                 if (json.loginRequired) {
-                    showLoginRequiredModal();   // ✅ show popup login/register
+                    showLoginRequiredModal();
                     return;
                 }
 
