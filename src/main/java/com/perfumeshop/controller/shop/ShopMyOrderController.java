@@ -4,6 +4,7 @@ import com.perfumeshop.config.SecurityHelper;
 import com.perfumeshop.entity.Order;
 import com.perfumeshop.service.InvoicePdfService;
 import com.perfumeshop.service.OrderService;
+import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -46,13 +47,17 @@ public class ShopMyOrderController {
     public ResponseEntity<byte[]> downloadInvoice(@PathVariable Long id,
                                                   Authentication authentication) {
         String email = SecurityHelper.currentCustomerEmail(authentication);
-        Order order = orderService.findMyOrderDetailOrThrow(id, email);
+        Order order = orderService.findInvoiceForCustomerOrThrow(id, email);
 
         byte[] pdf = invoicePdfService.generate(order);
 
+        String filename = (order.getInvoice() != null && !order.getInvoice().isBlank())
+                ? order.getInvoice() + ".pdf"
+                : "invoice-" + order.getId() + ".pdf";
+
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION,
-                        "attachment; filename=invoice-" + order.getInvoice() + ".pdf")
+                        ContentDisposition.inline().filename(filename).build().toString())
                 .contentType(MediaType.APPLICATION_PDF)
                 .body(pdf);
     }
