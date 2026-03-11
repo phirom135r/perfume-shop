@@ -2,131 +2,109 @@
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout/layout}">
+<head>
+  <link rel="stylesheet" th:href="@{/css/admin/pos.css}">
+</head>
+<body>
 <div class="container-fluid py-3" layout:fragment="content">
-
-  <style>
-    .pos-shell{border:0;border-radius:18px;box-shadow:0 10px 28px rgba(0,0,0,.06);background:#fff;}
-    .pos-topbar{position:sticky;top:12px;z-index:5;background:rgba(255,255,255,.92);backdrop-filter:blur(8px);
-      border:1px solid #eef2f7;border-radius:14px;padding:12px;}
-    .pos-title{font-weight:800;letter-spacing:.2px;margin:0;line-height:1.1;}
-    .pos-sub{font-size:12px;color:#64748b;margin-top:2px;}
-    .pos-search{min-width:320px;border-radius:12px;border:1px solid #e5e7eb;padding-left:40px;height:42px;}
-    .pos-search-wrap{position:relative;flex:1;min-width:260px;}
-    .pos-search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#94a3b8;font-size:16px;}
-    .pos-btn{height:42px;border-radius:12px;padding:0 14px;font-weight:700;}
-    .pos-grid{padding-top:10px;}
-
-    .p-card{border:1px solid #eef2f7;border-radius:16px;overflow:hidden;transition:transform .12s ease, box-shadow .12s ease;background:#fff;position:relative;}
-    .p-card:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(0,0,0,.08);}
-    .p-img{height:170px;object-fit:cover;background:#f3f4f6;width:100%;display:block;}
-    .p-body{padding:12px 12px 14px;}
-    .p-name{font-weight:800;margin:0;line-height:1.2;font-size:14px;}
-    .p-brand{font-size:12px;color:#64748b;margin-top:2px;min-height:16px;}
-    .p-meta{display:flex;justify-content:space-between;align-items:center;margin-top:10px;}
-    .p-price{font-weight:900;font-size:16px;}
-    .p-stock{font-size:12px;border-radius:999px;padding:4px 10px;background:#ecfdf5;color:#16a34a;border:1px solid #dcfce7;font-weight:800;white-space:nowrap;}
-    .p-actions{margin-top:12px;display:flex;gap:8px;}
-    .btn-add{flex:1;border-radius:12px;height:40px;font-weight:800;}
-
-    .p-badge{position:absolute;top:10px;right:10px;border-radius:999px;padding:4px 10px;font-size:12px;font-weight:900;color:#fff;}
-    .badge-high{background:#16a34a;}
-    .badge-low{background:#f59e0b;}
-    .badge-out{background:#ef4444;}
-
-    .pos-footer{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:14px;padding:10px 0 2px;border-top:1px dashed #e5e7eb;}
-    .pager-btn{border-radius:12px;height:38px;padding:0 12px;font-weight:800;}
-
-    .sticky-col{position:sticky;top:12px;}
-    .qty-btn{width:36px;height:36px;padding:0;}
-    .card-soft{border:0;box-shadow:0 6px 18px rgba(0,0,0,.06);border-radius:16px;}
-    .cart-item{border:1px solid #eef2f7;border-radius:12px;padding:10px;}
-    .cart-title{font-weight:700;}
-    .cart-sub{font-size:12px;color:#64748b;}
-  </style>
 
   <div class="row g-3">
     <!-- LEFT -->
-    <div class="col-12 col-lg-8">
+    <div class="col-12 col-xl-8">
       <div class="pos-shell p-3">
 
-        <div class="pos-topbar d-flex flex-wrap gap-2 align-items-center">
-          <div class="me-2">
+        <!-- Toolbar -->
+        <div class="pos-toolbar">
+          <div class="toolbar-title-wrap">
             <h5 class="pos-title">POS</h5>
-
+            <div class="pos-subtitle">Fast product search and checkout</div>
           </div>
 
-          <div class="ms-auto d-flex gap-2 align-items-center flex-wrap" style="width: 100%;">
+          <div class="toolbar-controls">
             <div class="pos-search-wrap">
               <span class="pos-search-icon">🔎</span>
-              <input id="q" class="form-control pos-search" placeholder="Search products by name, brand..." />
+              <input id="q"
+                     class="form-control pos-search"
+                     placeholder="Search products by name, brand...">
             </div>
-            <button class="btn btn-primary pos-btn" id="btnSearch" type="button">Search</button>
-          </div>
 
-          <!-- ✅ Category Tabs -->
-          <div class="d-flex flex-wrap gap-2 mt-2 w-100" id="catTabs">
-            <button class="btn btn-sm btn-outline-primary active" data-cat="">All</button>
+            <select id="categoryFilter" class="form-select pos-select">
+              <option value="">All Categories</option>
+            </select>
+
+            <select id="brandFilter" class="form-select pos-select">
+              <option value="">All Brands</option>
+            </select>
+
+            <button class="btn btn-primary pos-btn" id="btnSearch" type="button">Search</button>
+            <button class="btn btn-outline-secondary pos-btn" id="btnReset" type="button">Reset</button>
           </div>
         </div>
 
-        <div id="productsGrid" class="row g-3 pos-grid mt-1"></div>
+        <!-- Products -->
+        <div id="productsGrid" class="row g-3 pos-grid mt-2"></div>
 
+        <!-- Footer -->
         <div class="pos-footer">
           <button class="btn btn-outline-secondary pager-btn" id="prevBtn" type="button">← Prev</button>
-          <div class="small text-muted" id="pageInfo">Page 1</div>
+          <div class="small text-muted fw-semibold" id="pageInfo">Page 1</div>
           <button class="btn btn-outline-secondary pager-btn" id="nextBtn" type="button">Next →</button>
         </div>
-
       </div>
     </div>
 
     <!-- RIGHT -->
-    <div class="col-12 col-lg-4">
+    <div class="col-12 col-xl-4">
       <div class="card card-soft sticky-col">
-        <div class="card-header bg-primary text-white d-flex align-items-center gap-2"
-             style="border-top-left-radius:16px;border-top-right-radius:16px;">
+        <div class="card-header cart-header">
           <span class="fw-bold">Shopping Cart</span>
         </div>
 
         <div class="card-body">
-          <div id="cartList" class="vstack gap-3"></div>
-          <hr/>
+          <div id="cartList" class="vstack gap-2"></div>
 
-          <div class="d-flex justify-content-between">
-            <div class="text-muted">Subtotal</div>
-            <div class="fw-semibold">$<span id="subtotal">0.00</span></div>
+          <hr>
+
+          <div class="summary-line">
+            <span class="text-muted">Subtotal</span>
+            <span class="fw-semibold">$<span id="subtotal">0.00</span></span>
           </div>
 
-          <div class="d-flex justify-content-between mt-2">
-            <div class="text-muted">Extra Discount</div>
-            <div class="fw-semibold text-danger">- $<span id="discountShow">0.00</span></div>
+          <div class="summary-line">
+            <span class="text-muted">Product Discount</span>
+            <span class="fw-semibold text-danger">- $<span id="productDiscountShow">0.00</span></span>
           </div>
 
-          <div class="d-flex justify-content-between mt-3 fs-5">
-            <div class="fw-bold">Total</div>
-            <div class="fw-bold text-primary">$<span id="total">0.00</span></div>
+          <div class="summary-line">
+            <span class="text-muted">Extra Discount</span>
+            <span class="fw-semibold text-danger">- $<span id="discountShow">0.00</span></span>
           </div>
 
-          <hr/>
+          <div class="summary-total">
+            <span>Total</span>
+            <span class="text-primary">$<span id="total">0.00</span></span>
+          </div>
+
+          <hr>
 
           <div class="mb-2">
             <label class="form-label">Customer Name <span class="text-danger">*</span></label>
-            <input id="customerName" class="form-control" placeholder="Enter customer name"/>
+            <input id="customerName" class="form-control" placeholder="Enter customer name">
           </div>
 
           <div class="mb-2">
             <label class="form-label">Phone</label>
-            <input id="phone" class="form-control" placeholder="Enter phone number"/>
+            <input id="phone" class="form-control" placeholder="Enter phone number">
           </div>
 
           <div class="mb-2">
             <label class="form-label">Address</label>
-            <input id="address" class="form-control" placeholder="Enter address"/>
+            <input id="address" class="form-control" placeholder="Enter address">
           </div>
 
           <div class="mb-2">
             <label class="form-label">Extra Discount ($)</label>
-            <input id="extraDiscount" class="form-control" value="0"/>
+            <input id="extraDiscount" class="form-control" value="0">
           </div>
 
           <div class="mb-3">
@@ -137,36 +115,35 @@
             </select>
           </div>
 
-          <button id="btnComplete" class="btn btn-success w-100" type="button">✅ Complete Order</button>
+          <button id="btnComplete" class="btn btn-success w-100 fw-bold" type="button">✅ Complete Order</button>
           <button id="btnClear" class="btn btn-outline-danger w-100 mt-2" type="button">🗑 Clear Cart</button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- KHQR MODAL (keep yours if already) -->
+  <!-- KHQR Modal -->
   <div class="modal fade" id="khqrModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content" style="border-radius:16px;">
-        <div class="modal-header">
+      <div class="modal-content khqr-modal-content">
+        <div class="modal-header border-0">
           <h5 class="modal-title">Scan to Pay (KHQR)</h5>
           <button type="button" class="btn-close btnCancelKhqr"></button>
         </div>
-        <div class="modal-body">
-          <div class="text-center mb-2">
-            <div class="fw-bold">$<span id="khqrAmount">0.00</span></div>
+        <div class="modal-body text-center pt-0">
+          <div class="fw-bold fs-5 mb-3">$<span id="khqrAmount">0.00</span></div>
+
+          <div class="khqr-box mx-auto mb-3">
+            <div id="khqrQrBox"></div>
           </div>
-          <div class="d-flex justify-content-center">
-            <div id="khqrQrBox" style="padding:10px;border:2px solid #ef4444;border-radius:12px;"></div>
+
+          <div class="small text-muted mb-2">
+            Time left: <span id="khqrTimeLeft" class="fw-semibold">03:00</span>
           </div>
-          <div class="d-flex justify-content-center mt-2">
-            <div class="small text-muted">
-              Time left: <span id="khqrTimeLeft" class="fw-semibold">03:00</span>
-            </div>
-          </div>
-          <div id="khqrHint" class="text-muted mt-3 text-center">Waiting for payment...</div>
+
+          <div id="khqrHint" class="text-muted mt-2 text-center">Waiting for payment...</div>
         </div>
-        <div class="modal-footer">
+        <div class="modal-footer border-0">
           <button type="button" class="btn btn-danger w-100 btnCancelKhqr">Cancel Payment</button>
         </div>
       </div>
@@ -174,6 +151,8 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script th:src="@{/js/admin/pos.js}"></script>
 </div>
+</body>
 </html>

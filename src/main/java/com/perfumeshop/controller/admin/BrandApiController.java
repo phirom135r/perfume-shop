@@ -4,7 +4,9 @@ import com.perfumeshop.entity.Brand;
 import com.perfumeshop.service.BrandService;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/admin/api/brands")
@@ -26,6 +28,19 @@ public class BrandApiController {
     public List<Brand> listActive() {
         return service.listActive();
     }
+
+    @GetMapping("/simple")
+    public List<Map<String, Object>> simple() {
+        return service.listActive().stream()
+                .map(c -> {
+                    Map<String, Object> m = new HashMap<>();
+                    m.put("id", c.getId());
+                    m.put("name", c.getName());
+                    return m;
+                })
+                .toList();
+    }
+
 
     @GetMapping("/{id}")
     public Brand get(@PathVariable Long id) {

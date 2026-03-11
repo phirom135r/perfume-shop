@@ -1,3 +1,4 @@
+let currentAdminOrderId = null;
 let orderModal;
 let dt;
 
@@ -5,6 +6,14 @@ document.addEventListener("DOMContentLoaded", () => {
     const modalEl = document.getElementById("orderDetailModal");
     if (modalEl && window.bootstrap) {
         orderModal = new bootstrap.Modal(modalEl);
+    }
+
+    const btnDownload = document.getElementById("btnAdminDownloadInvoice");
+    if (btnDownload) {
+        btnDownload.addEventListener("click", () => {
+            if (!currentAdminOrderId) return;
+            window.open(`/admin/orders/${currentAdminOrderId}/invoice`, "_blank");
+        });
     }
 
     initOrderTable();
@@ -110,7 +119,7 @@ function bindViewButtons() {
 }
 
 function bindStatusSelects() {
-    document.querySelectorAll(".orderStatusSelect").forEach((sel) => {
+    document.querySelectorAll(".order-status-select").forEach((sel) => {
         sel.onchange = async () => {
             const id = sel.getAttribute("data-id");
             if (!id) return;
@@ -215,6 +224,7 @@ async function openOrderDetail(id) {
         }
 
         const o = await res.json();
+        currentAdminOrderId = o.id;
 
         document.getElementById("odCustomer").textContent = o.customerName || "-";
         document.getElementById("odPhone").textContent =
@@ -245,11 +255,28 @@ async function openOrderDetail(id) {
             tbody.innerHTML = `<tr><td colspan="4" class="text-center text-muted">No items</td></tr>`;
         } else {
             items.forEach((it) => {
+                const originalPriceHtml =
+                    Number(it.originalPrice || 0) > Number(it.price || 0)
+                        ? `<div class="small text-muted text-decoration-line-through">$${money2(it.originalPrice)}</div>`
+                        : "";
+
+                const discountHtml =
+                    Number(it.discountAmount || 0) > 0
+                        ? `<div class="small text-danger">Save $${money2(it.discountAmount)}</div>`
+                        : "";
+
                 const tr = document.createElement("tr");
                 tr.innerHTML = `
-                    <td>${escapeHtml(it.product || "-")}</td>
+                    <td>
+                        <div class="fw-semibold">${escapeHtml(it.product || "-")}</div>
+                        <div class="small text-muted">${escapeHtml(it.size || "N/A")}</div>
+                    </td>
                     <td class="text-center">${Number(it.qty || 0)}</td>
-                    <td class="text-end">$${money2(it.price)}</td>
+                    <td class="text-end">
+                        ${originalPriceHtml}
+                        <div>$${money2(it.price)}</div>
+                        ${discountHtml}
+                    </td>
                     <td class="text-end">$${money2(it.amount)}</td>
                 `;
                 tbody.appendChild(tr);

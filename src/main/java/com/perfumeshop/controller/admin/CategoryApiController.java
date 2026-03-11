@@ -2,28 +2,42 @@ package com.perfumeshop.controller.admin;
 
 import com.perfumeshop.entity.Category;
 import com.perfumeshop.service.CategoryService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/admin/api/categories")
 public class CategoryApiController {
 
-    @Autowired
-    private CategoryService service;
+    private final CategoryService service;
 
-    // ✅ list all (admin table)
+    public CategoryApiController(CategoryService service) {
+        this.service = service;
+    }
+
     @GetMapping
     public List<Category> list() {
         return service.list();
     }
 
-    // ✅ list active only (for product dropdown)
     @GetMapping("/active")
     public List<Category> listActive() {
         return service.listActive();
+    }
+
+    @GetMapping("/simple")
+    public List<Map<String, Object>> simple() {
+        return service.listActive().stream()
+                .map(c -> {
+                    Map<String, Object> m = new HashMap<>();
+                    m.put("id", c.getId());
+                    m.put("name", c.getName());
+                    return m;
+                })
+                .toList();
     }
 
     @GetMapping("/{id}")
@@ -33,7 +47,6 @@ public class CategoryApiController {
 
     @PostMapping
     public Category save(@RequestBody Category c) {
-        // ✅ important: if active is null, default true
         if (c.getActive() == null) c.setActive(true);
         return service.save(c);
     }

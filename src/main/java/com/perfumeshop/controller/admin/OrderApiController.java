@@ -27,10 +27,6 @@ public class OrderApiController {
         this.orderService = orderService;
     }
 
-    /**
-     * ✅ DataTable list
-     * GET /admin/api/orders/dt
-     */
     @GetMapping("/dt")
     public DataTableResponse<OrderRowDto> datatable(
             @RequestParam(defaultValue = "0") int draw,
@@ -72,10 +68,6 @@ public class OrderApiController {
         return asc ? Sort.by(prop).ascending() : Sort.by(prop).descending();
     }
 
-    /**
-     * Order details for modal
-     * GET /admin/api/orders/{id}
-     */
     @GetMapping("/{id}")
     public ResponseEntity<?> detail(@PathVariable Long id) {
 
@@ -84,25 +76,45 @@ public class OrderApiController {
         List<Map<String, Object>> items = new ArrayList<>();
         for (OrderItem it : o.getItems()) {
 
-            BigDecimal price = (it.getUnitPrice() != null)
-                    ? it.getUnitPrice()
+            BigDecimal originalPrice = it.getOriginalPrice() != null
+                    ? it.getOriginalPrice()
                     : (it.getProduct() != null && it.getProduct().getPrice() != null
                     ? it.getProduct().getPrice()
                     : BigDecimal.ZERO);
 
-            BigDecimal amount = (it.getLineTotal() != null)
+            BigDecimal unitPrice = it.getUnitPrice() != null
+                    ? it.getUnitPrice()
+                    : originalPrice;
+
+            BigDecimal discountAmount = it.getDiscountAmount() != null
+                    ? it.getDiscountAmount()
+                    : originalPrice.subtract(unitPrice).max(BigDecimal.ZERO);
+
+            BigDecimal lineTotal = it.getLineTotal() != null
                     ? it.getLineTotal()
-                    : price.multiply(BigDecimal.valueOf(it.getQty()));
+                    : unitPrice.multiply(BigDecimal.valueOf(it.getQty()));
 
             String productName = (it.getProduct() != null && it.getProduct().getName() != null)
                     ? it.getProduct().getName()
                     : "-";
 
+            String size = (it.getProduct() != null && it.getProduct().getSize() != null)
+                    ? it.getProduct().getSize()
+                    : "N/A";
+
+            String image = (it.getProduct() != null && it.getProduct().getImage() != null && !it.getProduct().getImage().isBlank())
+                    ? it.getProduct().getImage()
+                    : "/images/no-image.png";
+
             Map<String, Object> row = new LinkedHashMap<>();
             row.put("product", productName);
+            row.put("size", size);
+            row.put("image", image);
             row.put("qty", it.getQty());
-            row.put("price", price);
-            row.put("amount", amount);
+            row.put("originalPrice", originalPrice);
+            row.put("price", unitPrice);
+            row.put("discountAmount", discountAmount);
+            row.put("amount", lineTotal);
             items.add(row);
         }
 
@@ -128,10 +140,6 @@ public class OrderApiController {
         return ResponseEntity.ok(data);
     }
 
-    /**
-     * ✅ Update order status from select option
-     * PATCH /admin/api/orders/{id}/status
-     */
     @PatchMapping("/{id}/status")
     public ResponseEntity<?> updateStatus(@PathVariable Long id,
                                           @RequestBody Map<String, String> body) {

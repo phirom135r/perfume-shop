@@ -1,0 +1,188 @@
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: #faf7f2;
+    color: #3e3e3e;
+}
+
+h1, h2, h3, h4, h5, h6, .nav-link, .navbar-brand, .display-6 {
+    font-family: 'Playfair Display', serif;
+    font-weight: 500;
+}
+
+.navbar-brand {
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    color: #8b6e4b !important;
+}
+
+.btn-gold {
+    background-color: #c6a47e;
+    border: none;
+    color: white;
+    transition: all 0.2s;
+    font-weight: 500;
+}
+
+.btn-gold:hover {
+    background-color: #b38b5f;
+    color: white;
+    box-shadow: 0 4px 10px rgba(181, 141, 98, 0.3);
+}
+
+.btn-outline-gold {
+    border: 1px solid #c6a47e;
+    color: #c6a47e;
+    background: transparent;
+}
+
+.btn-outline-gold:hover {
+    background-color: #c6a47e;
+    color: white;
+}
+
+.card {
+    border: none;
+    border-radius: 1rem;
+    transition: transform 0.2s, box-shadow 0.2s;
+    background-color: white;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1) !important;
+}
+
+.card-img-top {
+    border-top-left-radius: 1rem;
+    border-top-right-radius: 1rem;
+    object-fit: cover;
+    height: 220px;
+    background-color: #f0e4d3;
+}
+
+.badge-sale {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    background-color: #d4af37;
+    color: white;
+    font-weight: 600;
+    padding: 0.4rem 1rem;
+    border-radius: 2rem;
+    font-size: 0.8rem;
+    z-index: 5;
+}
+
+.footer {
+    background-color: #e7d9cc;
+    color: #4d3e2e;
+    border-top-left-radius: 3rem;
+    border-top-right-radius: 3rem;
+}
+
+.footer a {
+    color: #4d3e2e;
+    text-decoration: none;
+}
+
+.footer a:hover {
+    color: #a5714c;
+}
+
+.modal-content {
+    border-radius: 2rem;
+    border: none;
+}
+
+.detail-image {
+    border-radius: 1.5rem;
+    width: 100%;
+    max-height: 300px;
+    object-fit: cover;
+}
+
+.price-old {
+    text-decoration: line-through;
+    color: #9ca3af;
+    font-size: 14px;
+}
+
+.price-new {
+    color: #b38b5f;
+    font-size: 22px;
+    font-weight: 700;
+}
+
+.filter-card {
+    border: none;
+    border-radius: 1.25rem;
+    background: #fff;
+    box-shadow: 0 8px 24px rgba(0,0,0,.05);
+}
+
+.filter-card .form-control,
+.filter-card .form-select {
+    min-height: 46px;
+    border-radius: 14px;
+}
+
+.section-banner {
+    background: linear-gradient(145deg, #cfb9a1, #a48b73);
+    color: #fff;
+    border-radius: 1.5rem;
+    padding: 40px 32px;
+    overflow: hidden;
+    position: relative;
+}
+
+.section-banner h2 {
+    font-size: 2.3rem;
+    font-weight: 700;
+}
+
+.section-banner p {
+    margin-bottom: 0;
+    opacity: .95;
+}
+
+.page-link {
+    color: #8b6e4b;
+    border-radius: 999px !important;
+    margin: 0 4px;
+    border: 1px solid #e5d8c8;
+}
+
+.page-link:hover {
+    color: #fff;
+    background-color: #c6a47e;
+    border-color: #c6a47e;
+}
+
+.page-item.active .page-link {
+    background-color: #c6a47e;
+    border-color: #c6a47e;
+    color: #fff;
+}
+
+.page-item.disabled .page-link {
+    color: #999;
+    background-color: #fff;
+    border-color: #eee;
+}
+
+.dropdown-email {
+    max-width: 240px;
+    white-space: normal;
+    font-size: 14px;
+    color: #666;
+}
+
+@media (max-width: 768px) {
+    .section-banner {
+        padding: 28px 20px;
+    }
+
+    .section-banner h2 {
+        font-size: 1.7rem;
+    }
+}
