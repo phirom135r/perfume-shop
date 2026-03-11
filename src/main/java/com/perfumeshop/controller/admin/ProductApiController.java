@@ -31,6 +31,7 @@ public class ProductApiController {
     @GetMapping("/pos")
     public Page<Map<String, Object>> posProducts(
             @RequestParam(defaultValue = "") String q,
+            @RequestParam(required = false) Long categoryId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "9") int size
     ) {
@@ -40,7 +41,7 @@ public class ProductApiController {
                 Sort.by("id").descending()
         );
 
-        Page<Product> result = service.search(q, null, true, pageable);
+        Page<Product> result = service.search(q, categoryId, true, pageable);
 
         return result.map(p -> {
             Map<String, Object> m = new HashMap<>();
@@ -48,14 +49,13 @@ public class ProductApiController {
             m.put("name", p.getName());
             m.put("size", p.getSize() == null ? "" : p.getSize());
 
-            // brand: return name + id for UI
             m.put("brandId", p.getBrand() != null ? p.getBrand().getId() : null);
             m.put("brand", p.getBrand() != null ? p.getBrand().getName() : "");
 
-            BigDecimal price = (p.getPrice() == null) ? BigDecimal.ZERO : p.getPrice();
-            BigDecimal discount = (p.getDiscount() == null) ? BigDecimal.ZERO : p.getDiscount();
+            BigDecimal price = p.getPrice() == null ? BigDecimal.ZERO : p.getPrice();
+            BigDecimal discount = p.getDiscount() == null ? BigDecimal.ZERO : p.getDiscount();
 
-            // ✅ clamp discount not exceed price
+            if (discount.compareTo(BigDecimal.ZERO) < 0) discount = BigDecimal.ZERO;
             if (discount.compareTo(price) > 0) discount = price;
 
             BigDecimal finalPrice = price.subtract(discount);
@@ -63,10 +63,8 @@ public class ProductApiController {
             m.put("price", price);
             m.put("discount", discount);
             m.put("finalPrice", finalPrice);
-
             m.put("stock", p.getStock() == null ? 0 : p.getStock());
 
-            // imageUrl for browser
             String img = p.getImage();
             if (img == null || img.isBlank()) {
                 m.put("imageUrl", "/images/no-image.png");
@@ -80,10 +78,6 @@ public class ProductApiController {
         });
     }
 
-    // =====================================================
-    // DataTables endpoint (ADMIN LIST PAGE)
-    // URL: /admin/api/products/dt
-    // =====================================================
     @GetMapping("/dt")
     public DataTableResponse<ProductRowDto> datatable(
             @RequestParam(defaultValue = "0") int draw,
@@ -109,20 +103,15 @@ public class ProductApiController {
             dto.setId(p.getId());
             dto.setName(p.getName());
             dto.setSize(p.getSize());
-
-            // ✅ brand name + brandId (for edit dropdown)
             dto.setBrand(p.getBrand() != null ? p.getBrand().getName() : "");
             dto.setBrandId(p.getBrand() != null ? p.getBrand().getId() : null);
-
             dto.setStock(p.getStock());
             dto.setPrice(p.getPrice());
             dto.setDiscount(p.getDiscount());
             dto.setImage(p.getImage());
             dto.setActive(p.getActive());
-
             dto.setCategory(p.getCategory() != null ? p.getCategory().getName() : "");
             dto.setCategoryId(p.getCategory() != null ? p.getCategory().getId() : null);
-
             dto.setCreatedAt(p.getCreatedAt() != null ? p.getCreatedAt().format(fmt) : "");
             rows.add(dto);
         }
@@ -152,10 +141,6 @@ public class ProductApiController {
         return asc ? Sort.by(prop).ascending() : Sort.by(prop).descending();
     }
 
-    // =====================================================
-    // CREATE / UPDATE (multipart/form-data)
-    // URL: /admin/api/products
-    // =====================================================
     @PostMapping(consumes = "multipart/form-data")
     public ResponseEntity<?> save(
             @RequestParam(required = false) Long id,

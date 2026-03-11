@@ -49,7 +49,7 @@ public class PosCheckoutApiController {
             return ResponseEntity.badRequest().body("Cart is empty");
         }
 
-        String customerName = (req.getCustomerName() == null) ? "" : req.getCustomerName().trim();
+        String customerName = req.getCustomerName() == null ? "" : req.getCustomerName().trim();
         if (customerName.isBlank()) {
             return ResponseEntity.badRequest().body("Customer name is required");
         }
@@ -63,51 +63,84 @@ public class PosCheckoutApiController {
             pm = PaymentMethod.CASH;
         }
 
-        BigDecimal subtotal = BigDecimal.ZERO;
+        BigDecimal originalSubtotal = BigDecimal.ZERO;   // តម្លៃដើមសរុប
+        BigDecimal productDiscount = BigDecimal.ZERO;    // discount ពី product
         List<OrderItem> items = new ArrayList<>();
 
-        // Build items
         for (PosCheckoutRequest.Item it : req.getItems()) {
             if (it == null || it.getProductId() == null || it.getQty() <= 0) continue;
 
             Product p = productService.findOrThrow(it.getProductId());
             int qty = it.getQty();
 
-            if (p.getStock() != null && p.getStock() < qty) {
+            int stock = p.getStock() == null ? 0 : p.getStock();
+            if (stock < qty) {
                 return ResponseEntity.badRequest().body("Not enough stock for product: " + p.getName());
             }
 
-            BigDecimal price = nvl(p.getPrice());
-            BigDecimal disc = nvl(p.getDiscount());
+            BigDecimal originalPrice = nvl(p.getPrice());
+            BigDecimal discountAmount = nvl(p.getDiscount());
 
-            if (disc.compareTo(BigDecimal.ZERO) < 0) disc = BigDecimal.ZERO;
-            if (disc.compareTo(price) > 0) disc = price;
+            if (discountAmount.compareTo(BigDecimal.ZERO) < 0) {
+                discountAmount = BigDecimal.ZERO;
+            }
+            if (discountAmount.compareTo(originalPrice) > 0) {
+                discountAmount = originalPrice;
+            }
 
-            BigDecimal finalUnitPrice = price.subtract(disc);
-            if (finalUnitPrice.compareTo(BigDecimal.ZERO) < 0) finalUnitPrice = BigDecimal.ZERO;
+            BigDecimal finalUnitPrice = originalPrice.subtract(discountAmount);
+            if (finalUnitPrice.compareTo(BigDecimal.ZERO) < 0) {
+                finalUnitPrice = BigDecimal.ZERO;
+            }
 
-            BigDecimal lineTotal = finalUnitPrice.multiply(BigDecimal.valueOf(qty));
-            subtotal = subtotal.add(lineTotal);
+            BigDecimal originalLineTotal = originalPrice.multiply(BigDecimal.valueOf(qty));
+            BigDecimal lineDiscount = discountAmount.multiply(BigDecimal.valueOf(qty));
+            BigDecimal finalLineTotal = finalUnitPrice.multiply(BigDecimal.valueOf(qty));
+
+            originalSubtotal = originalSubtotal.add(originalLineTotal);
+            productDiscount = productDiscount.add(lineDiscount);
 
             OrderItem oi = new OrderItem();
             oi.setProduct(p);
             oi.setQty(qty);
-            oi.setUnitPrice(finalUnitPrice);
-            oi.setLineTotal(lineTotal);
+
+            // តម្លៃក្រោយបញ្ចុះ ក្នុង 1 unit
+            oi.setUnitPrice(finalUnitPrice.setScale(2, RoundingMode.HALF_UP));
+
+            // line total ក្រោយបញ្ចុះ
+            oi.setLineTotal(finalLineTotal.setScale(2, RoundingMode.HALF_UP));
+
+            // optional fields បើ entity របស់អ្នកបានបន្ថែមរួច
+            oi.setOriginalPrice(originalPrice.setScale(2, RoundingMode.HALF_UP));
+            oi.setDiscountAmount(discountAmount.setScale(2, RoundingMode.HALF_UP));
 
             items.add(oi);
         }
 
-        if (items.isEmpty()) return ResponseEntity.badRequest().body("Cart is empty");
+        if (items.isEmpty()) {
+            return ResponseEntity.badRequest().body("Cart is empty");
+        }
 
-        BigDecimal discount = BigDecimal.valueOf(req.getDiscount());
-        if (discount.compareTo(BigDecimal.ZERO) < 0) discount = BigDecimal.ZERO;
-        if (discount.compareTo(subtotal) > 0) discount = subtotal;
+        BigDecimal extraDiscount = BigDecimal.valueOf(req.getDiscount());
+        if (extraDiscount.compareTo(BigDecimal.ZERO) < 0) {
+            extraDiscount = BigDecimal.ZERO;
+        }
 
-        BigDecimal total = subtotal.subtract(discount);
+        BigDecimal maxExtraDiscount = originalSubtotal.subtract(productDiscount);
+        if (maxExtraDiscount.compareTo(BigDecimal.ZERO) < 0) {
+            maxExtraDiscount = BigDecimal.ZERO;
+        }
+        if (extraDiscount.compareTo(maxExtraDiscount) > 0) {
+            extraDiscount = maxExtraDiscount;
+        }
 
-        subtotal = subtotal.setScale(2, RoundingMode.HALF_UP);
-        discount = discount.setScale(2, RoundingMode.HALF_UP);
+        BigDecimal totalDiscount = productDiscount.add(extraDiscount);
+        BigDecimal total = originalSubtotal.subtract(totalDiscount);
+
+        originalSubtotal = originalSubtotal.setScale(2, RoundingMode.HALF_UP);
+        productDiscount = productDiscount.setScale(2, RoundingMode.HALF_UP);
+        extraDiscount = extraDiscount.setScale(2, RoundingMode.HALF_UP);
+        totalDiscount = totalDiscount.setScale(2, RoundingMode.HALF_UP);
         total = total.setScale(2, RoundingMode.HALF_UP);
 
         Order order = new Order();
@@ -115,33 +148,35 @@ public class PosCheckoutApiController {
         order.setCustomerName(customerName);
         order.setPhone(req.getPhone());
         order.setAddress(req.getAddress());
-        order.setSubtotal(subtotal);
-        order.setDiscount(discount);
-        order.setTotal(total);
+
+        // ✅ important
+        order.setSubtotal(originalSubtotal); // តម្លៃដើម
+        order.setDiscount(totalDiscount);    // product discount + extra discount
+        order.setTotal(total);               // grand total
         order.setPaymentMethod(pm);
 
-        for (OrderItem oi : items) oi.setOrder(order);
+        for (OrderItem oi : items) {
+            oi.setOrder(order);
+        }
         order.setItems(items);
 
-        // ✅ NEW
         int totalItems = items.stream()
                 .mapToInt(OrderItem::getQty)
                 .sum();
         order.setTotalItems(totalItems);
 
-        // CASH
         if (pm == PaymentMethod.CASH) {
             for (OrderItem oi : items) {
                 Product p = oi.getProduct();
                 int qty = oi.getQty();
 
-                if (p.getStock() != null) {
-                    if (p.getStock() < qty) {
-                        return ResponseEntity.badRequest().body("Not enough stock for product: " + p.getName());
-                    }
-                    p.setStock(p.getStock() - qty);
-                    productService.save(p);
+                int stock = p.getStock() == null ? 0 : p.getStock();
+                if (stock < qty) {
+                    return ResponseEntity.badRequest().body("Not enough stock for product: " + p.getName());
                 }
+
+                p.setStock(stock - qty);
+                productService.save(p);
             }
 
             order.setStatus(OrderStatus.PAID);
@@ -149,7 +184,6 @@ public class PosCheckoutApiController {
             return ResponseEntity.ok(new PosCheckoutResponse(order.getId(), "/admin/orders"));
         }
 
-        // KHQR
         order.setStatus(OrderStatus.PENDING);
         order = orderService.save(order);
 
@@ -160,7 +194,13 @@ public class PosCheckoutApiController {
         order = orderService.save(order);
 
         return ResponseEntity.ok(
-                new PosCheckoutResponse(order.getId(), order.getInvoice(), order.getTotal(), order.getMd5(), order.getKhqrString())
+                new PosCheckoutResponse(
+                        order.getId(),
+                        order.getInvoice(),
+                        order.getTotal(),
+                        order.getMd5(),
+                        order.getKhqrString()
+                )
         );
     }
 

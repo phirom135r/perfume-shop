@@ -1,9 +1,9 @@
-// src/main/resources/static/js/pos.js
-
 let page = 0;
 const size = 9;
+
 let currentQuery = "";
-let currentCategoryId = ""; // ✅ NEW
+let currentCategoryId = "";
+let currentBrandId = "";
 
 const cart = new Map();
 
@@ -18,7 +18,11 @@ let remainingSeconds = KHQR_TTL_SECONDS;
 document.addEventListener("DOMContentLoaded", () => {
     const modalEl = document.getElementById("khqrModal");
     if (modalEl && window.bootstrap) {
-        khqrModal = new bootstrap.Modal(modalEl, { backdrop: "static", keyboard: false });
+        khqrModal = new bootstrap.Modal(modalEl, {
+            backdrop: "static",
+            keyboard: false
+        });
+
         modalEl.addEventListener("hidden.bs.modal", () => {
             stopKhqrPolling();
             stopCountdown();
@@ -29,6 +33,25 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("btnSearch")?.addEventListener("click", () => {
         page = 0;
         currentQuery = (document.getElementById("q")?.value || "").trim();
+        currentCategoryId = document.getElementById("categoryFilter")?.value || "";
+        currentBrandId = document.getElementById("brandFilter")?.value || "";
+        loadProducts();
+    });
+
+    document.getElementById("btnReset")?.addEventListener("click", () => {
+        page = 0;
+        currentQuery = "";
+        currentCategoryId = "";
+        currentBrandId = "";
+
+        const q = document.getElementById("q");
+        const category = document.getElementById("categoryFilter");
+        const brand = document.getElementById("brandFilter");
+
+        if (q) q.value = "";
+        if (category) category.value = "";
+        if (brand) brand.value = "";
+
         loadProducts();
     });
 
@@ -37,16 +60,34 @@ document.addEventListener("DOMContentLoaded", () => {
             e.preventDefault();
             page = 0;
             currentQuery = (document.getElementById("q")?.value || "").trim();
+            currentCategoryId = document.getElementById("categoryFilter")?.value || "";
+            currentBrandId = document.getElementById("brandFilter")?.value || "";
             loadProducts();
         }
     });
 
+    document.getElementById("categoryFilter")?.addEventListener("change", () => {
+        page = 0;
+        currentCategoryId = document.getElementById("categoryFilter")?.value || "";
+        loadProducts();
+    });
+
+    document.getElementById("brandFilter")?.addEventListener("change", () => {
+        page = 0;
+        currentBrandId = document.getElementById("brandFilter")?.value || "";
+        loadProducts();
+    });
+
     document.getElementById("prevBtn")?.addEventListener("click", () => {
-        if (page > 0) { page--; loadProducts(); }
+        if (page > 0) {
+            page--;
+            loadProducts();
+        }
     });
 
     document.getElementById("nextBtn")?.addEventListener("click", () => {
-        page++; loadProducts();
+        page++;
+        loadProducts();
     });
 
     document.getElementById("btnClear")?.addEventListener("click", () => {
@@ -68,17 +109,21 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
-    loadCategories(); // ✅ NEW
+    loadCategories();
+    loadBrands();
     loadProducts();
     renderCart();
 });
 
-// ===== helpers =====
-function money2(n) { return Number(n || 0).toFixed(2); }
+function money2(n) {
+    return Number(n || 0).toFixed(2);
+}
+
 function parseMoneyInput(v) {
     const n = Number(String(v || "0").replace(/[^\d.]/g, ""));
     return Number.isFinite(n) ? n : 0;
 }
+
 function escapeHtml(s) {
     return String(s || "")
         .replaceAll("&", "&amp;")
@@ -90,60 +135,83 @@ function escapeHtml(s) {
 
 function toastSuccess(title) {
     if (!window.Swal) return;
-    Swal.fire({ toast:true, position:"top-end", icon:"success", title, showConfirmButton:false, timer:900, timerProgressBar:true });
+    Swal.fire({
+        toast: true,
+        position: "top-end",
+        icon: "success",
+        title,
+        showConfirmButton: false,
+        timer: 900,
+        timerProgressBar: true
+    });
 }
+
 function notEnoughStock(productName) {
     if (!window.Swal) return;
     Swal.fire("Not enough stock", `Not enough stock for product: ${productName}`, "warning");
 }
 
-// ======================================================
-// CATEGORY TABS (NEW)
-// ======================================================
 async function loadCategories() {
-    const wrap = document.getElementById("catTabs");
-    if (!wrap) return;
+    const select = document.getElementById("categoryFilter");
+    if (!select) return;
 
     try {
-        const res = await fetch("/admin/api/categories/simple", { headers: { Accept: "application/json" } });
+        const res = await fetch("/admin/api/categories/simple", {
+            headers: { Accept: "application/json" }
+        });
+
         if (!res.ok) return;
+
         const cats = await res.json();
 
+        select.innerHTML = `<option value="">All Categories</option>`;
         cats.forEach(c => {
-            const b = document.createElement("button");
-            b.className = "btn btn-sm btn-outline-primary";
-            b.textContent = c.name;
-            b.setAttribute("data-cat", c.id);
-            wrap.appendChild(b);
-        });
-
-        wrap.querySelectorAll("[data-cat]").forEach(btn => {
-            btn.addEventListener("click", () => {
-                wrap.querySelectorAll(".active").forEach(x => x.classList.remove("active"));
-                btn.classList.add("active");
-
-                currentCategoryId = btn.getAttribute("data-cat") || "";
-                page = 0;
-                loadProducts();
-            });
+            const option = document.createElement("option");
+            option.value = c.id;
+            option.textContent = c.name;
+            select.appendChild(option);
         });
     } catch (e) {
-        // ignore
+        console.error(e);
     }
 }
 
-// ======================================================
-// COUNTDOWN
-// ======================================================
+async function loadBrands() {
+    const select = document.getElementById("brandFilter");
+    if (!select) return;
+
+    try {
+        const res = await fetch("/admin/api/brands/active", {
+            headers: { Accept: "application/json" }
+        });
+
+        if (!res.ok) return;
+
+        const brands = await res.json();
+
+        select.innerHTML = `<option value="">All Brands</option>`;
+        brands.forEach(b => {
+            const option = document.createElement("option");
+            option.value = b.id;
+            option.textContent = b.name;
+            select.appendChild(option);
+        });
+    } catch (e) {
+        console.error(e);
+    }
+}
+
 function formatMMSS(sec) {
     const mm = String(Math.floor(sec / 60)).padStart(2, "0");
     const ss = String(sec % 60).padStart(2, "0");
     return `${mm}:${ss}`;
 }
+
 function renderTimeLeft() {
     const el = document.getElementById("khqrTimeLeft");
     if (el) el.textContent = formatMMSS(remainingSeconds);
 }
+
 function startCountdown(seconds = KHQR_TTL_SECONDS) {
     stopCountdown();
     remainingSeconds = seconds;
@@ -171,13 +239,14 @@ function startCountdown(seconds = KHQR_TTL_SECONDS) {
         }
     }, 1000);
 }
+
 function stopCountdown() {
-    if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = null; }
+    if (countdownTimer) {
+        clearInterval(countdownTimer);
+        countdownTimer = null;
+    }
 }
 
-// ======================================================
-// PRODUCTS
-// ======================================================
 async function loadProducts() {
     const grid = document.getElementById("productsGrid");
     if (!grid) return;
@@ -188,6 +257,7 @@ async function loadProducts() {
         const url =
             `/admin/api/products/pos?q=${encodeURIComponent(currentQuery)}` +
             `&categoryId=${encodeURIComponent(currentCategoryId || "")}` +
+            `&brandId=${encodeURIComponent(currentBrandId || "")}` +
             `&page=${page}&size=${size}`;
 
         const res = await fetch(url, { headers: { Accept: "application/json" } });
@@ -218,7 +288,7 @@ async function loadProducts() {
 
         content.forEach((p) => {
             const col = document.createElement("div");
-            col.className = "col-12 col-sm-6 col-md-4";
+            col.className = "col-12 col-sm-6 col-lg-4";
 
             const imgSrc = p.imageUrl || "/images/no-image.png";
             const stock = Number(p.stock ?? 0);
@@ -231,54 +301,64 @@ async function loadProducts() {
             const brand = escapeHtml(p.brand || "");
             const brandHtml = brand ? `<div class="p-brand">${brand}</div>` : `<div class="p-brand"></div>`;
 
-            // ✅ price + discount
-            const price = Number(p.price ?? 0);
-            const discount = Number(p.discount ?? 0);
-            const finalPrice = Number(p.finalPrice ?? (price - discount));
-            const showDiscount = discount > 0;
-            const percent = price > 0 ? Math.round((discount / price) * 100) : 0;
-            const pctHtml = (showDiscount && percent > 0) ? `<span class="badge bg-danger ms-2">-${percent}%</span>` : "";
+            const originalPrice = Number(p.price ?? 0);
+            const discountAmount = Number(p.discount ?? 0);
+            const finalPrice = Number(p.finalPrice ?? (originalPrice - discountAmount));
+            const showDiscount = discountAmount > 0;
+            const percent = originalPrice > 0 ? Math.round((discountAmount / originalPrice) * 100) : 0;
+            const pctHtml = (showDiscount && percent > 0)
+                ? `<span class="badge bg-danger ms-2">-${percent}%</span>`
+                : "";
 
             const priceHtml = showDiscount
                 ? `
-          <div>
-            <div class="p-price text-danger">$${money2(finalPrice)} ${pctHtml}</div>
-            <div class="small text-muted"><del>$${money2(price)}</del></div>
-          </div>
-        `
-                : `<div class="p-price text-danger">$${money2(price)}</div>`;
+                    <div class="p-price-wrap">
+                        <div class="p-price">$${money2(finalPrice)} ${pctHtml}</div>
+                        <div class="p-old-price">$${money2(originalPrice)}</div>
+                    </div>
+                  `
+                : `
+                    <div class="p-price-wrap">
+                        <div class="p-price">$${money2(originalPrice)}</div>
+                    </div>
+                  `;
 
-            // ✅ stock badge
             let badgeClass = "badge-high";
             let badgeText = "High Stock";
-            if (stock <= 0) { badgeClass = "badge-out"; badgeText = "Out of Stock"; }
-            else if (stock <= 5) { badgeClass = "badge-low"; badgeText = "Low Stock"; }
+            if (stock <= 0) {
+                badgeClass = "badge-out";
+                badgeText = "Out of Stock";
+            } else if (stock <= 5) {
+                badgeClass = "badge-low";
+                badgeText = "Low Stock";
+            }
 
             const badgeHtml = `<div class="p-badge ${badgeClass}">${badgeText}</div>`;
 
             col.innerHTML = `
-        <div class="p-card h-100">
-          ${badgeHtml}
-          <img class="p-img" src="${imgSrc}" alt="">
-          <div class="p-body">
-            <div class="p-name">${name}</div>
-            ${brandHtml}
+                <div class="p-card h-100">
+                    ${badgeHtml}
+                    <img class="p-img" src="${imgSrc}" alt="">
+                    <div class="p-body">
+                        <div class="p-name">${name}</div>
+                        ${brandHtml}
 
-            <div class="p-meta">
-              ${priceHtml}
-              <div class="p-stock">${stock} in</div>
-            </div>
+                        <div class="p-meta">
+                            ${priceHtml}
+                            <div class="p-stock">${stock} in</div>
+                        </div>
 
-            <div class="p-actions">
-              <button class="btn btn-primary btn-add"
-                type="button"
-                data-add="${p.id}" ${disableAdd ? "disabled" : ""}>
-                ${stock <= 0 ? "Out of Stock" : reached ? "Max in Cart" : "Add to Cart"}
-              </button>
-            </div>
-          </div>
-        </div>
-      `;
+                        <div class="p-actions">
+                            <button class="btn btn-primary btn-add"
+                                    type="button"
+                                    data-add="${p.id}"
+                                    ${disableAdd ? "disabled" : ""}>
+                                ${stock <= 0 ? "Out of Stock" : reached ? "Max in Cart" : "Add to Cart"}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
 
             grid.appendChild(col);
         });
@@ -298,15 +378,15 @@ async function loadProducts() {
     }
 }
 
-// ======================================================
-// CART
-// ======================================================
 function addToCart(p) {
     const id = Number(p.id);
     if (!id) return;
 
     const stock = Number(p.stock ?? 0);
-    if (stock <= 0) { notEnoughStock(p.name || ""); return; }
+    if (stock <= 0) {
+        notEnoughStock(p.name || "");
+        return;
+    }
 
     const existing = cart.get(id);
 
@@ -317,13 +397,19 @@ function addToCart(p) {
         }
         existing.qty += 1;
     } else {
+        const originalPrice = Number(p.price ?? 0);
+        const discountAmount = Number(p.discount ?? 0);
+        const finalPrice = Number(p.finalPrice ?? (originalPrice - discountAmount));
+
         cart.set(id, {
             id,
             name: p.name || "",
-            price: Number(p.finalPrice ?? p.price ?? 0),
+            originalPrice,
+            unitPrice: finalPrice,
+            discountAmount,
             imageUrl: p.imageUrl || "",
             qty: 1,
-            stock: stock,
+            stock: stock
         });
     }
 
@@ -350,21 +436,26 @@ function renderCart() {
         const stock = Number(item.stock ?? 0);
         const atMax = Number(item.qty || 0) >= stock && stock > 0;
 
-        row.innerHTML = `
-      <div class="d-flex gap-2 align-items-center">
-        <div class="flex-grow-1">
-          <div class="cart-title">${escapeHtml(item.name)}</div>
-          <div class="cart-sub">$${money2(item.price)} each ${stock ? `• Stock: ${stock}` : ""}</div>
-        </div>
+        const oldPriceHtml = Number(item.originalPrice || 0) > Number(item.unitPrice || 0)
+            ? `<div class="cart-old">$${money2(item.originalPrice)}</div>`
+            : "";
 
-        <div class="d-flex align-items-center gap-1">
-          <button class="btn btn-outline-secondary qty-btn" type="button" data-dec="${item.id}">-</button>
-          <div style="min-width:28px;text-align:center;">${item.qty}</div>
-          <button class="btn btn-outline-secondary qty-btn" type="button" data-inc="${item.id}" ${atMax ? "disabled" : ""}>+</button>
-          <button class="btn btn-outline-danger qty-btn" type="button" data-del="${item.id}">×</button>
-        </div>
-      </div>
-    `;
+        row.innerHTML = `
+            <div class="d-flex gap-2 align-items-center">
+                <div class="flex-grow-1">
+                    <div class="cart-title">${escapeHtml(item.name)}</div>
+                    ${oldPriceHtml}
+                    <div class="cart-sub">$${money2(item.unitPrice)} each ${stock ? `• Stock: ${stock}` : ""}</div>
+                </div>
+
+                <div class="d-flex align-items-center gap-1">
+                    <button class="btn btn-outline-secondary qty-btn" type="button" data-dec="${item.id}">-</button>
+                    <div style="min-width:28px;text-align:center;">${item.qty}</div>
+                    <button class="btn btn-outline-secondary qty-btn" type="button" data-inc="${item.id}" ${atMax ? "disabled" : ""}>+</button>
+                    <button class="btn btn-outline-danger qty-btn" type="button" data-del="${item.id}">×</button>
+                </div>
+            </div>
+        `;
 
         list.appendChild(row);
     }
@@ -376,7 +467,10 @@ function renderCart() {
             if (!it) return;
 
             const stock = Number(it.stock ?? 0);
-            if (stock <= 0 || it.qty >= stock) { notEnoughStock(it.name); return; }
+            if (stock <= 0 || it.qty >= stock) {
+                notEnoughStock(it.name);
+                return;
+            }
 
             it.qty += 1;
             renderCart();
@@ -410,24 +504,36 @@ function renderCart() {
 
 function updateTotals() {
     let subtotal = 0;
-    for (const it of cart.values()) subtotal += Number(it.price || 0) * Number(it.qty || 0);
+    let productDiscount = 0;
+
+    for (const it of cart.values()) {
+        const qty = Number(it.qty || 0);
+        subtotal += Number(it.originalPrice || 0) * qty;
+        productDiscount += Number(it.discountAmount || 0) * qty;
+    }
 
     const discountInput = document.getElementById("extraDiscount");
-    const discount = parseMoneyInput(discountInput?.value);
-    const discountClamped = Math.max(0, Math.min(discount, subtotal));
-    const total = Math.max(0, subtotal - discountClamped);
+    const extraDiscount = parseMoneyInput(discountInput?.value);
+
+    let extraDiscountClamped = Math.max(0, extraDiscount);
+    const maxExtra = Math.max(0, subtotal - productDiscount);
+    if (extraDiscountClamped > maxExtra) {
+        extraDiscountClamped = maxExtra;
+    }
+
+    const total = Math.max(0, subtotal - productDiscount - extraDiscountClamped);
 
     document.getElementById("subtotal").textContent = money2(subtotal);
-    document.getElementById("discountShow").textContent = money2(discountClamped);
+    document.getElementById("productDiscountShow").textContent = money2(productDiscount);
+    document.getElementById("discountShow").textContent = money2(extraDiscountClamped);
     document.getElementById("total").textContent = money2(total);
 }
 
-// ======================================================
-// CHECKOUT (keep your backend endpoints)
-// ======================================================
 function getCartItems() {
     const items = [];
-    for (const it of cart.values()) items.push({ productId: it.id, qty: it.qty });
+    for (const it of cart.values()) {
+        items.push({ productId: it.id, qty: it.qty });
+    }
     return items;
 }
 
@@ -435,8 +541,14 @@ async function completeOrder() {
     const items = getCartItems();
     const customerName = (document.getElementById("customerName")?.value || "").trim();
 
-    if (!items.length) { Swal.fire("Cart empty", "Please add product", "warning"); return; }
-    if (!customerName) { Swal.fire("Customer required", "Please input customer name", "warning"); return; }
+    if (!items.length) {
+        Swal.fire("Cart empty", "Please add product", "warning");
+        return;
+    }
+    if (!customerName) {
+        Swal.fire("Customer required", "Please input customer name", "warning");
+        return;
+    }
 
     const payload = {
         customerName,
@@ -444,7 +556,7 @@ async function completeOrder() {
         address: (document.getElementById("address")?.value || "").trim(),
         discount: Number(parseMoneyInput(document.getElementById("extraDiscount")?.value) || 0),
         paymentMethod: (document.getElementById("paymentMethod")?.value || "CASH").toUpperCase(),
-        items,
+        items
     };
 
     try {
@@ -462,8 +574,14 @@ async function completeOrder() {
 
         const data = await res.json();
 
-        if (data.redirectUrl) { window.location.href = data.redirectUrl; return; }
-        if (data.md5 && data.khqrString) { openKhqrModal(data); return; }
+        if (data.redirectUrl) {
+            window.location.href = data.redirectUrl;
+            return;
+        }
+        if (data.md5 && data.khqrString) {
+            openKhqrModal(data);
+            return;
+        }
 
         Swal.fire("Error", "Invalid response from server", "error");
     } catch (e) {
@@ -471,18 +589,22 @@ async function completeOrder() {
     }
 }
 
-// ======================================================
-// KHQR MODAL + POLLING (same as yours)
-// ======================================================
 function openKhqrModal(data) {
     document.getElementById("khqrAmount").textContent = money2(data.amount);
 
     const hint = document.getElementById("khqrHint");
-    if (hint) { hint.textContent = "Waiting for payment..."; hint.className = "text-muted mt-2 text-center"; }
+    if (hint) {
+        hint.textContent = "Waiting for payment...";
+        hint.className = "text-muted mt-2 text-center";
+    }
 
     const box = document.getElementById("khqrQrBox");
     box.innerHTML = "";
-    new QRCode(box, { text: data.khqrString, width: 220, height: 220 });
+    new QRCode(box, {
+        text: data.khqrString,
+        width: 220,
+        height: 220
+    });
 
     currentMd5 = data.md5;
 
@@ -498,7 +620,9 @@ async function cancelPayment() {
             method: "POST",
             headers: { Accept: "application/json" },
         });
-    } catch (e) { /* ignore */ }
+    } catch (e) {
+        console.error(e);
+    }
 }
 
 function startKhqrPolling() {
@@ -544,7 +668,10 @@ function startKhqrPolling() {
                 stopKhqrPolling();
                 stopCountdown();
 
-                if (hint) { hint.textContent = "Payment cancelled."; hint.className = "text-danger mt-2 text-center"; }
+                if (hint) {
+                    hint.textContent = "Payment cancelled.";
+                    hint.className = "text-danger mt-2 text-center";
+                }
 
                 setTimeout(() => {
                     currentMd5 = null;
@@ -562,14 +689,25 @@ function startKhqrPolling() {
             }
 
             if (st === "NOT_FOUND") {
-                if (hint) { hint.textContent = "Order not found (md5)."; hint.className = "text-danger mt-2 text-center"; }
+                if (hint) {
+                    hint.textContent = "Order not found (md5).";
+                    hint.className = "text-danger mt-2 text-center";
+                }
             } else {
-                if (hint) { hint.textContent = "Waiting for payment..."; hint.className = "text-muted mt-2 text-center"; }
+                if (hint) {
+                    hint.textContent = "Waiting for payment...";
+                    hint.className = "text-muted mt-2 text-center";
+                }
             }
-        } catch (e) { /* ignore */ }
+        } catch (e) {
+            console.error(e);
+        }
     }, 3000);
 }
 
 function stopKhqrPolling() {
-    if (verifyTimer) { clearInterval(verifyTimer); verifyTimer = null; }
+    if (verifyTimer) {
+        clearInterval(verifyTimer);
+        verifyTimer = null;
+    }
 }
