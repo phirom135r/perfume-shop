@@ -8,194 +8,9 @@
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" th:href="@{/css/shop/my-orders.css}">
 
-    <style>
-        body {
-            font-family: 'Poppins', sans-serif;
-            background: #faf7f2;
-        }
-
-        h1,h2,h3,h4,h5,h6,.navbar-brand {
-            font-family: 'Playfair Display', serif;
-        }
-
-        .navbar-brand {
-            color:#8b6e4b !important;
-            font-weight:700;
-        }
-
-        .card-soft {
-            border: none;
-            border-radius: 20px;
-            background: #fff;
-            box-shadow: 0 8px 24px rgba(0,0,0,.06);
-        }
-
-        .thumb {
-            width: 54px;
-            height: 54px;
-            object-fit: cover;
-            border-radius: 12px;
-            background: #f3f4f6;
-            border: 1px solid #eee;
-        }
-
-        .modal-content.order-modal {
-            border: 0;
-            border-radius: 24px;
-            overflow: hidden;
-            box-shadow: 0 18px 50px rgba(0,0,0,.14);
-        }
-
-        .order-modal .modal-header {
-            border-bottom: 1px solid #f1f5f9;
-            padding: 18px 22px 14px;
-        }
-
-        .order-modal .modal-title {
-            font-weight: 700;
-            color: #2f2a24;
-        }
-
-        .order-modal .modal-body {
-            padding: 20px 22px 22px;
-        }
-
-        .order-info-card {
-            height: 100%;
-            border: 1px solid #eceff3;
-            border-radius: 18px;
-            background: #fcfcfd;
-            padding: 16px 18px;
-        }
-
-        .order-info-row {
-            display: flex;
-            align-items: flex-start;
-            gap: 10px;
-            margin-bottom: 10px;
-            line-height: 1.5;
-        }
-
-        .order-info-row:last-child {
-            margin-bottom: 0;
-        }
-
-        .order-info-label {
-            min-width: 84px;
-            font-weight: 700;
-            color: #374151;
-        }
-
-        .order-info-value {
-            color: #111827;
-            word-break: break-word;
-        }
-
-        .status-pill,
-        .payment-pill {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            min-width: 92px;
-            padding: 6px 12px;
-            border-radius: 999px;
-            font-size: 13px;
-            font-weight: 700;
-            border: 1px solid transparent;
-        }
-
-        .status-paid {
-            background: #ecfdf5;
-            color: #166534;
-            border-color: #bbf7d0;
-        }
-
-        .status-pending {
-            background: #fff7ed;
-            color: #c2410c;
-            border-color: #fed7aa;
-        }
-
-        .status-cancelled {
-            background: #fef2f2;
-            color: #b91c1c;
-            border-color: #fecaca;
-        }
-
-        .payment-cash {
-            background: #ecfeff;
-            color: #0f766e;
-            border-color: #a5f3fc;
-        }
-
-        .payment-khqr {
-            background: #eff6ff;
-            color: #1d4ed8;
-            border-color: #bfdbfe;
-        }
-
-        .order-items-wrap {
-            margin-top: 18px;
-            border: 1px solid #eceff3;
-            border-radius: 18px;
-            overflow: hidden;
-            background: #fff;
-        }
-
-        .order-items-head {
-            padding: 14px 18px;
-            border-bottom: 1px solid #eef2f7;
-            font-weight: 700;
-            color: #2f2a24;
-            background: #fcfcfd;
-        }
-
-        .order-table {
-            margin-bottom: 0;
-        }
-
-        .order-table thead th {
-            background: #fff;
-            border-bottom: 1px solid #eef2f7;
-            color: #374151;
-            font-weight: 700;
-            padding-top: 12px;
-            padding-bottom: 12px;
-        }
-
-        .order-table td {
-            vertical-align: middle;
-            padding-top: 14px;
-            padding-bottom: 14px;
-        }
-
-        .product-name {
-            font-weight: 700;
-            color: #111827;
-            line-height: 1.2;
-        }
-
-        .product-sub {
-            font-size: 13px;
-            color: #6b7280;
-            margin-top: 3px;
-        }
-
-        .btn-view-order {
-            min-width: 82px;
-        }
-
-        @media (max-width: 767px) {
-            .order-info-label {
-                min-width: 76px;
-            }
-
-            .order-modal .modal-body {
-                padding: 16px;
-            }
-        }
-    </style>
 </head>
 <body>
 
@@ -212,8 +27,10 @@
     <h2 class="mb-4">My Orders</h2>
 
     <div class="card-soft p-4">
-        <div th:if="${#lists.isEmpty(orders)}" class="text-center text-muted py-5">
-            You do not have any orders yet.
+        <div th:if="${#lists.isEmpty(orders)}" class="empty-state">
+            <h5 class="mb-2">No orders yet</h5>
+            <div class="mb-3">You do not have any orders yet.</div>
+            <a th:href="@{/perfume-shop/shop}" class="btn btn-dark rounded-pill px-4">Start Shopping</a>
         </div>
 
         <div class="table-responsive" th:if="${!#lists.isEmpty(orders)}">
@@ -231,13 +48,24 @@
                 <tbody>
                 <tr th:each="o : ${orders}">
                     <td class="fw-semibold" th:text="${o.invoice}">INV-000001</td>
-                    <td th:text="${o.createdAt != null ? #temporals.format(o.createdAt, 'dd/MM/yyyy HH:mm') : '-'}">date</td>
+                    <td th:text="${o.createdAt != null ? #temporals.format(o.createdAt, 'dd MMM yyyy, HH:mm') : '-'}">date</td>
                     <td>
-                        <span class="badge text-bg-success" th:if="${o.status != null and o.status.name() == 'PAID'}">PAID</span>
-                        <span class="badge text-bg-warning" th:if="${o.status != null and o.status.name() == 'PENDING'}">PENDING</span>
-                        <span class="badge text-bg-danger" th:if="${o.status != null and o.status.name() == 'CANCELLED'}">CANCELLED</span>
+                        <span class="status-pill status-paid"
+                              th:if="${o.status != null and o.status.name() == 'PAID'}">PAID</span>
+
+                        <span class="status-pill status-pending"
+                              th:if="${o.status != null and o.status.name() == 'PENDING'}">PENDING</span>
+
+                        <span class="status-pill status-cancelled"
+                              th:if="${o.status != null and o.status.name() == 'CANCELLED'}">CANCELLED</span>
                     </td>
-                    <td th:text="${o.paymentMethod != null ? o.paymentMethod.name() : '-'}">CASH</td>
+                    <td>
+                        <span class="payment-pill payment-cash"
+                              th:if="${o.paymentMethod != null and o.paymentMethod.name() == 'CASH'}">CASH</span>
+
+                        <span class="payment-pill payment-khqr"
+                              th:if="${o.paymentMethod != null and o.paymentMethod.name() == 'KHQR'}">KHQR</span>
+                    </td>
                     <td class="text-end"
                         th:text="'$' + ${#numbers.formatDecimal(o.total,1,'COMMA',2,'POINT')}">$0.00</td>
                     <td class="text-center">
@@ -339,135 +167,36 @@
                     </div>
                 </div>
 
+                <div class="summary-box">
+                    <div class="summary-row">
+                        <span>Subtotal</span>
+                        <span id="odSubtotal">$0.00</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>Discount</span>
+                        <span id="odDiscount">$0.00</span>
+                    </div>
+                    <div class="summary-row summary-total">
+                        <span>Grand Total</span>
+                        <span id="odGrandTotal">$0.00</span>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2 mt-4">
+                    <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">
+                        Close
+                    </button>
+                    <button type="button" class="btn btn-dark rounded-pill px-4" id="btnDownloadInvoice">
+                        Download Invoice
+                    </button>
+                </div>
+
             </div>
         </div>
     </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-    let orderModal;
-
-    document.addEventListener("DOMContentLoaded", () => {
-        const modalEl = document.getElementById("orderDetailModal");
-        orderModal = new bootstrap.Modal(modalEl);
-
-        document.querySelectorAll(".btn-view-order").forEach(btn => {
-            btn.addEventListener("click", async function () {
-                const id = this.dataset.id;
-                await openOrderDetail(id);
-            });
-        });
-    });
-
-    function money(v) {
-        return "$" + Number(v || 0).toFixed(2);
-    }
-
-    function fmtDate(v) {
-        if (!v) return "-";
-        return String(v).replace("T", " ").substring(0, 16);
-    }
-
-    function escapeHtml(s) {
-        return String(s || "")
-            .replaceAll("&", "&amp;")
-            .replaceAll("<", "&lt;")
-            .replaceAll(">", "&gt;")
-            .replaceAll('"', "&quot;")
-            .replaceAll("'", "&#039;");
-    }
-
-    function applyStatusPill(el, status) {
-        const st = String(status || "").toUpperCase();
-        el.className = "status-pill";
-
-        if (st === "PAID") {
-            el.classList.add("status-paid");
-            el.textContent = "PAID";
-        } else if (st === "CANCELLED") {
-            el.classList.add("status-cancelled");
-            el.textContent = "CANCELLED";
-        } else {
-            el.classList.add("status-pending");
-            el.textContent = st || "PENDING";
-        }
-    }
-
-    function applyPaymentPill(el, payment) {
-        const pay = String(payment || "").toUpperCase();
-        el.className = "payment-pill";
-
-        if (pay === "KHQR") {
-            el.classList.add("payment-khqr");
-            el.textContent = "KHQR";
-        } else {
-            el.classList.add("payment-cash");
-            el.textContent = pay || "CASH";
-        }
-    }
-
-    async function openOrderDetail(id) {
-        try {
-            const res = await fetch(`/perfume-shop/api/my-orders/${id}`, {
-                headers: { "Accept": "application/json" }
-            });
-
-            if (!res.ok) {
-                alert("Cannot load order detail");
-                return;
-            }
-
-            const o = await res.json();
-
-            document.getElementById("odInvoice").textContent = o.invoice || "-";
-            document.getElementById("odCustomer").textContent = o.customerName || "-";
-            document.getElementById("odPhone").textContent = o.phone || "-";
-            document.getElementById("odAddress").textContent = o.address || "-";
-            document.getElementById("odDate").textContent = fmtDate(o.createdAt);
-            document.getElementById("odTotal").textContent = money(o.total);
-
-            applyStatusPill(document.getElementById("odStatus"), o.status);
-            applyPaymentPill(document.getElementById("odPayment"), o.paymentMethod);
-
-            const tbody = document.getElementById("odItems");
-            tbody.innerHTML = "";
-
-            (o.items || []).forEach(it => {
-                const tr = document.createElement("tr");
-                const img = it.image ? it.image : "/images/no-image.png";
-
-                tr.innerHTML = `
-                    <td>
-                        <div class="d-flex align-items-center gap-3">
-                            <img src="${img}" class="thumb" alt="product">
-                            <div>
-                                <div class="product-name">${escapeHtml(it.productName)}</div>
-                                <div class="product-sub">${escapeHtml(it.size || "N/A")}</div>
-                            </div>
-                        </div>
-                    </td>
-                    <td class="text-center">${it.qty ?? 0}</td>
-                    <td class="text-end">${money(it.unitPrice)}</td>
-                    <td class="text-end">${money(it.lineTotal)}</td>
-                `;
-                tbody.appendChild(tr);
-            });
-
-            if ((o.items || []).length === 0) {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="4" class="text-center text-muted py-4">No items</td>
-                    </tr>
-                `;
-            }
-
-            orderModal.show();
-        } catch (e) {
-            alert("Cannot load order detail");
-        }
-    }
-</script>
-
+<script th:src="@{/js/shop/my-orders.js}"></script>
 </body>
 </html>

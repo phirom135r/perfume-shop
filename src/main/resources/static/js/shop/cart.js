@@ -2,6 +2,8 @@
     const cartCountBadge = document.getElementById("cartCountBadge");
     const summaryCartCount = document.getElementById("summaryCartCount");
     const summarySubtotal = document.getElementById("summarySubtotal");
+    const summaryDiscount = document.getElementById("summaryDiscount");
+    const summaryTotal = document.getElementById("summaryTotal");
     const cartItemsWrap = document.getElementById("cartItemsWrap");
 
     function csrfHeaders() {
@@ -41,10 +43,12 @@
         });
     }
 
-    function syncSummary(cartCount, subtotal) {
+    function syncSummary(cartCount, subtotal, discount, total) {
         if (cartCountBadge) cartCountBadge.textContent = cartCount ?? 0;
         if (summaryCartCount) summaryCartCount.textContent = cartCount ?? 0;
         if (summarySubtotal) summarySubtotal.textContent = subtotal ?? "$0.00";
+        if (summaryDiscount) summaryDiscount.textContent = discount ?? "-$0.00";
+        if (summaryTotal) summaryTotal.textContent = total ?? "$0.00";
     }
 
     function renderEmptyState() {
@@ -73,6 +77,36 @@
         return await res.json();
     }
 
+    function updatePriceBlock(productId, originalPrice, unitPrice, discountAmount, qty) {
+        const oldPriceEl = document.getElementById(`old-price-${productId}`);
+        const unitPriceEl = document.getElementById(`unit-price-${productId}`);
+        const savePriceEl = document.getElementById(`save-price-${productId}`);
+
+        if (unitPriceEl) {
+            unitPriceEl.textContent = `$${unitPrice ?? "0.00"}`;
+        }
+
+        if (oldPriceEl) {
+            if (Number(originalPrice || 0) > Number(unitPrice || 0)) {
+                oldPriceEl.textContent = `$${originalPrice ?? "0.00"}`;
+                oldPriceEl.style.display = "";
+            } else {
+                oldPriceEl.style.display = "none";
+            }
+        }
+
+        if (savePriceEl) {
+            const totalSave = Number(discountAmount || 0) * Number(qty || 0);
+
+            if (totalSave > 0) {
+                savePriceEl.textContent = `Save $${totalSave.toFixed(2)}`;
+                savePriceEl.style.display = "";
+            } else {
+                savePriceEl.style.display = "none";
+            }
+        }
+    }
+
     async function updateQty(productId, qty) {
         try {
             const json = await postForm("/perfume-shop/cart/update", { productId, qty });
@@ -88,7 +122,8 @@
             if (qtyInput) qtyInput.value = json.qty ?? qty;
             if (lineTotal) lineTotal.textContent = `$${json.lineTotal ?? "0.00"}`;
 
-            syncSummary(json.cartCount, json.subtotal);
+            updatePriceBlock(productId, json.originalPrice, json.unitPrice, json.discountAmount, json.qty);
+            syncSummary(json.cartCount, json.subtotal, json.discount, json.total);
         } catch (e) {
             toastError("Cannot update cart");
         }
@@ -117,7 +152,7 @@
             const row = document.getElementById(`cart-row-${productId}`);
             if (row) row.remove();
 
-            syncSummary(json.cartCount, json.subtotal);
+            syncSummary(json.cartCount, json.subtotal, json.discount, json.total);
 
             const remainingRows = document.querySelectorAll(".cart-row");
             if (remainingRows.length === 0) {
@@ -150,7 +185,7 @@
                 return;
             }
 
-            syncSummary(0, "$0.00");
+            syncSummary(0, "$0.00", "-$0.00", "$0.00");
             renderEmptyState();
             toastSuccess("Cart cleared");
         } catch (e) {

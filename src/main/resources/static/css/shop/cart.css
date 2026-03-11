@@ -1,0 +1,101 @@
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: #faf7f2;
+    color: #3e3e3e;
+}
+
+h1, h2, h3, h4, h5, h6, .navbar-brand {
+    font-family: 'Playfair Display', serif;
+}
+
+.navbar-brand {
+    color: #8b6e4b !important;
+    font-weight: 700;
+}
+
+.btn-gold {
+    background-color: #c6a47e;
+    border: none;
+    color: #fff;
+}
+
+.btn-gold:hover {
+    background-color: #b38b5f;
+    color: #fff;
+}
+
+.cart-card {
+    border: none;
+    border-radius: 18px;
+    background: #fff;
+    box-shadow: 0 8px 24px rgba(0,0,0,.06);
+}
+
+.cart-img {
+    width: 90px;
+    height: 90px;
+    object-fit: cover;
+    border-radius: 14px;
+    background: #f3f4f6;
+}
+
+.summary-box {
+    border: none;
+    border-radius: 18px;
+    background: #fff;
+    box-shadow: 0 8px 24px rgba(0,0,0,.06);
+}
+
+.qty-box {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #fff;
+}
+
+.qty-btn {
+    width: 38px;
+    height: 38px;
+    border: 0;
+    background: #f8fafc;
+    font-weight: 700;
+}
+
+.qty-input {
+    width: 56px;
+    height: 38px;
+    border: 0;
+    text-align: center;
+    outline: none;
+}
+
+.empty-state {
+    padding: 48px 20px;
+    text-align: center;
+    color: #6b7280;
+}
+
+.empty-state i {
+    font-size: 54px;
+    color: #d1d5db;
+    margin-bottom: 12px;
+}
+
+.cart-row {
+    transition: all .2s ease;
+}
+
+.old-price {
+    color: #9ca3af;
+    font-size: 13px;
+    text-decoration: line-through;
+    margin-bottom: 2px;
+}
+
+.save-price {
+    color: #dc3545;
+    font-size: 13px;
+    margin-top: 3px;
+}

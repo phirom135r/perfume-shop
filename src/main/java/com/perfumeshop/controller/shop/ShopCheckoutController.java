@@ -2,8 +2,10 @@ package com.perfumeshop.controller.shop;
 
 import com.perfumeshop.config.SecurityHelper;
 import com.perfumeshop.dto.ShopCheckoutForm;
+import com.perfumeshop.entity.Customer;
 import com.perfumeshop.entity.Order;
 import com.perfumeshop.enums.PaymentMethod;
+import com.perfumeshop.service.CustomerService;
 import com.perfumeshop.service.ShopCartService;
 import com.perfumeshop.service.ShopOrderService;
 import jakarta.servlet.http.HttpSession;
@@ -23,19 +25,25 @@ public class ShopCheckoutController {
 
     private final ShopCartService cartService;
     private final ShopOrderService shopOrderService;
+    private final CustomerService customerService;
 
     public ShopCheckoutController(ShopCartService cartService,
-                                  ShopOrderService shopOrderService) {
+                                  ShopOrderService shopOrderService,
+                                  CustomerService customerService) {
         this.cartService = cartService;
         this.shopOrderService = shopOrderService;
+        this.customerService = customerService;
     }
 
     @GetMapping
     public String checkoutPage(Model model,
                                HttpSession session,
                                Authentication authentication) {
+
         var items = cartService.getItems(session);
-        BigDecimal subtotal = cartService.getSubtotal(session);
+        BigDecimal subtotal = cartService.getOriginalSubtotal(session);
+        BigDecimal discount = cartService.getDiscount(session);
+        BigDecimal total = cartService.getSubtotal(session);
         int cartCount = cartService.getCartCount(session);
 
         if (items == null || items.isEmpty()) {
@@ -46,13 +54,21 @@ public class ShopCheckoutController {
         model.addAttribute("customerEmail", customerEmail);
 
         if (!model.containsAttribute("form")) {
+            Customer customer = customerService.findByEmailOrThrow(customerEmail);
+
             ShopCheckoutForm form = new ShopCheckoutForm();
+            form.setFullName(customer.getFullName());
+            form.setPhone(customer.getPhone());
+            form.setAddress(customer.getAddress());
             form.setPaymentMethod("CASH");
+
             model.addAttribute("form", form);
         }
 
         model.addAttribute("items", items);
         model.addAttribute("subtotal", subtotal);
+        model.addAttribute("discount", discount);
+        model.addAttribute("total", total);
         model.addAttribute("cartCount", cartCount);
 
         return "shop/checkout";
@@ -88,11 +104,5 @@ public class ShopCheckoutController {
             res.put("message", e.getMessage());
             return ResponseEntity.badRequest().body(res);
         }
-    }
-
-    @GetMapping("/success")
-    public String successPage(@RequestParam Long orderId, Model model) {
-        model.addAttribute("orderId", orderId);
-        return "shop/order-success";
     }
 }

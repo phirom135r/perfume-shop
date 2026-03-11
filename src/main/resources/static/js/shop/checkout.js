@@ -56,31 +56,29 @@
     return `${min}:${sec}`;
 }
 
-    function showOrderSuccess(orderId) {
-    Swal.fire({
-    icon: "success",
-    title: "Order Placed Successfully",
-    html: `
-                <div style="font-size:15px">
-                    Thank you for shopping with <b>Fragrance Haven</b>.<br><br>
-                    Your order ID is:<br>
-                    <b style="font-size:18px">#${orderId}</b>
-                </div>
-            `,
-    showDenyButton: true,
-    confirmButtonText: "My Orders",
-    denyButtonText: "Continue Shopping",
-    confirmButtonColor: "#c7a27a",
-    denyButtonColor: "#cccccc",
-    reverseButtons: true
-}).then((result) => {
-    if (result.isConfirmed) {
-    window.location.href = "/perfume-shop/my-orders";
-} else {
-    window.location.href = "/perfume-shop/shop";
-}
-});
-}
+    function showOrderSuccess() {
+        Swal.fire({
+            icon: "success",
+            title: "Order Placed Successfully",
+            html: `
+            <div style="font-size:15px">
+                Thank you for shopping with <b>Fragrance Haven</b>.
+            </div>
+        `,
+            showDenyButton: true,
+            confirmButtonText: "My Orders",
+            denyButtonText: "Continue Shopping",
+            confirmButtonColor: "#c7a27a",
+            denyButtonColor: "#cccccc",
+            reverseButtons: true
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = "/perfume-shop/my-orders";
+            } else {
+                window.location.href = "/perfume-shop/shop";
+            }
+        });
+    }
 
     function startCountdown() {
     secondsLeft = 180;
@@ -133,7 +131,7 @@
     if (status === "PAID") {
     clearTimers();
     khqrModal.hide();
-    showOrderSuccess(json.orderId || currentOrderId);
+    showOrderSuccess();
 } else if (status === "CANCELLED") {
     clearTimers();
     khqrModal.hide();
@@ -239,7 +237,7 @@
     json.md5
     );
 } else {
-    showOrderSuccess(json.orderId);
+    showOrderSuccess();
 }
 
 } catch (err) {

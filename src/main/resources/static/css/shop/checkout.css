@@ -1,0 +1,62 @@
+body {
+    background: #f7f7f7;
+    font-family: Arial, sans-serif;
+}
+.checkout-card,
+.order-summary {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 10px 22px rgba(0, 0, 0, .05);
+}
+.khqr-modal .modal-content {
+    border: none;
+    border-radius: 20px;
+    overflow: hidden;
+}
+
+.khqr-box {
+    border: 2px solid #f1b0b0;
+    border-radius: 18px;
+    padding: 12px;
+    display: inline-block;
+    background: #fff;
+}
+
+#khqrCanvas canvas {
+    display: block;
+    margin: 0 auto;
+}
+
+.countdown-text {
+    color: #999;
+    font-size: 14px;
+}
+
+.status-text {
+    color: #666;
+    font-size: 15px;
+}
+
+.product-line {
+    font-weight: 600;
+}
+
+.product-sub {
+    color: #888;
+    font-size: 13px;
+}
+
+.old-price {
+    color: #9ca3af;
+    font-size: 13px;
+    text-decoration: line-through;
+    margin-bottom: 2px;
+}
+
+.save-price {
+    color: #dc3545;
+    font-size: 13px;
+    margin-top: 3px;
+}
+
