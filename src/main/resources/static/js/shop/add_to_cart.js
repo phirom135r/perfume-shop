@@ -1,3 +1,4 @@
+// shop/add_to_cart.js
 (function () {
     const modal = document.getElementById("productDetailModal");
     const modalImage = document.getElementById("modalImage");

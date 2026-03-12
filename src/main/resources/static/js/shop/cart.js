@@ -1,3 +1,4 @@
+// shop/cart.js
 (function () {
     const cartCountBadge = document.getElementById("cartCountBadge");
     const summaryCartCount = document.getElementById("summaryCartCount");

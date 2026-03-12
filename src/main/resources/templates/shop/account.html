@@ -1,207 +1,113 @@
 <!DOCTYPE html>
 <html lang="en"
-      xmlns:th="http://www.thymeleaf.org">
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{shop/fragments/layout}">
 <head>
-    <meta charset="UTF-8">
     <title>My Account - Perfume Shop</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" th:href="@{/css/shop/account.css}">
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
-
-    <style>
-        body {
-            font-family: 'Poppins', sans-serif;
-            background: #faf7f2;
-            color: #2f2a24;
-        }
-
-        h1,h2,h3,h4,h5,h6,.navbar-brand {
-            font-family: 'Playfair Display', serif;
-        }
-
-        .navbar-brand {
-            color:#8b6e4b !important;
-            font-weight:700;
-        }
-
-        .card-soft {
-            border: none;
-            border-radius: 22px;
-            background: #fff;
-            box-shadow: 0 10px 28px rgba(0,0,0,.06);
-        }
-
-        .form-control {
-            min-height: 48px;
-            border-radius: 14px;
-            border: 1px solid #e5e7eb;
-        }
-
-        textarea.form-control {
-            min-height: 120px;
-        }
-
-        .btn-gold {
-            background-color: #c6a47e;
-            border: none;
-            color: #fff;
-            border-radius: 999px;
-            padding: 11px 22px;
-            font-weight: 600;
-        }
-
-        .btn-gold:hover {
-            background-color: #b38b5f;
-            color: #fff;
-        }
-
-        .profile-top {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            margin-bottom: 26px;
-        }
-
-        .profile-avatar {
-            width: 72px;
-            height: 72px;
-            border-radius: 50%;
-            background: #f4e7d6;
-            color: #8b6e4b;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 28px;
-            font-weight: 700;
-        }
-
-        .label-soft {
-            font-size: 13px;
-            color: #6b7280;
-            margin-bottom: 6px;
-        }
-
-        .section-title {
-            font-size: 22px;
-            margin-bottom: 18px;
-        }
-
-        .divider-soft {
-            border-top: 1px solid #eee;
-            margin: 30px 0;
-        }
-    </style>
 </head>
 <body>
 
-<nav class="navbar navbar-expand-lg bg-white py-3 shadow-sm">
-    <div class="container">
-        <a class="navbar-brand fs-3" th:href="@{/perfume-shop}">Fragrance Haven</a>
+<section layout:fragment="content">
+    <div class="container my-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card-soft p-4 p-md-5">
 
-        <div class="ms-auto d-flex gap-2">
-            <a th:href="@{/perfume-shop/my-orders}" class="btn btn-outline-secondary rounded-pill">My Orders</a>
-            <a th:href="@{/perfume-shop}" class="btn btn-outline-secondary rounded-pill">Back Home</a>
-        </div>
-    </div>
-</nav>
+                    <div class="profile-top">
+                        <div class="profile-avatar"
+                             th:text="${customer.fullName != null and !#strings.isEmpty(customer.fullName) ? #strings.substring(customer.fullName,0,1) : 'U'}">
+                            U
+                        </div>
 
-<div class="container my-5">
-    <div class="row justify-content-center">
-        <div class="col-lg-8">
-            <div class="card-soft p-4 p-md-5">
-
-                <div class="profile-top">
-                    <div class="profile-avatar"
-                         th:text="${customer.fullName != null and !#strings.isEmpty(customer.fullName) ? #strings.substring(customer.fullName,0,1) : 'U'}">
-                        U
+                        <div>
+                            <h3 class="mb-1">My Account</h3>
+                            <div class="text-muted" th:text="${customer.email}">customer@email.com</div>
+                        </div>
                     </div>
 
-                    <div>
-                        <h3 class="mb-1">My Account</h3>
-                        <div class="text-muted" th:text="${customer.email}">customer@email.com</div>
-                    </div>
+                    <h4 class="section-title">Profile Information</h4>
+
+                    <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
+                    <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
+
+                    <form th:action="@{/perfume-shop/account}" method="post">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="label-soft">Full Name</div>
+                                <input type="text" name="fullName" class="form-control"
+                                       th:value="${customer.fullName}" placeholder="Enter full name">
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="label-soft">Email</div>
+                                <input type="email" class="form-control"
+                                       th:value="${customer.email}" readonly>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="label-soft">Phone</div>
+                                <input type="text" name="phone" class="form-control"
+                                       th:value="${customer.phone}" placeholder="Enter phone number">
+                            </div>
+
+                            <div class="col-md-12">
+                                <div class="label-soft">Address</div>
+                                <textarea name="address" class="form-control" placeholder="Enter your address"
+                                          th:text="${customer.address}"></textarea>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 d-flex justify-content-end">
+                            <button type="submit" class="btn btn-gold">
+                                Save Profile
+                            </button>
+                        </div>
+                    </form>
+
+                    <div class="divider-soft"></div>
+
+                    <h4 class="section-title">Change Password</h4>
+
+                    <div th:if="${passwordSuccessMessage}" class="alert alert-success" th:text="${passwordSuccessMessage}"></div>
+                    <div th:if="${passwordErrorMessage}" class="alert alert-danger" th:text="${passwordErrorMessage}"></div>
+
+                    <form th:action="@{/perfume-shop/account/change-password}" method="post">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+
+                        <div class="row g-3">
+                            <div class="col-md-12">
+                                <div class="label-soft">Current Password</div>
+                                <input type="password" name="currentPassword" class="form-control" placeholder="Enter current password">
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="label-soft">New Password</div>
+                                <input type="password" name="newPassword" class="form-control" placeholder="Enter new password">
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="label-soft">Confirm New Password</div>
+                                <input type="password" name="confirmPassword" class="form-control" placeholder="Confirm new password">
+                            </div>
+                        </div>
+
+                        <div class="mt-4 d-flex justify-content-end">
+                            <button type="submit" class="btn btn-gold">
+                                Change Password
+                            </button>
+                        </div>
+                    </form>
+
                 </div>
-
-                <h4 class="section-title">Profile Information</h4>
-
-                <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
-                <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
-
-                <form th:action="@{/perfume-shop/account}" method="post">
-                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <div class="label-soft">Full Name</div>
-                            <input type="text" name="fullName" class="form-control"
-                                   th:value="${customer.fullName}" placeholder="Enter full name">
-                        </div>
-
-                        <div class="col-md-6">
-                            <div class="label-soft">Email</div>
-                            <input type="email" class="form-control"
-                                   th:value="${customer.email}" readonly>
-                        </div>
-
-                        <div class="col-md-6">
-                            <div class="label-soft">Phone</div>
-                            <input type="text" name="phone" class="form-control"
-                                   th:value="${customer.phone}" placeholder="Enter phone number">
-                        </div>
-
-                        <div class="col-md-12">
-                            <div class="label-soft">Address</div>
-                            <textarea name="address" class="form-control" placeholder="Enter your address"
-                                      th:text="${customer.address}"></textarea>
-                        </div>
-                    </div>
-
-                    <div class="mt-4 d-flex justify-content-end">
-                        <button type="submit" class="btn btn-gold">
-                            Save Profile
-                        </button>
-                    </div>
-                </form>
-
-                <div class="divider-soft"></div>
-
-                <h4 class="section-title">Change Password</h4>
-
-                <div th:if="${passwordSuccessMessage}" class="alert alert-success" th:text="${passwordSuccessMessage}"></div>
-                <div th:if="${passwordErrorMessage}" class="alert alert-danger" th:text="${passwordErrorMessage}"></div>
-
-                <form th:action="@{/perfume-shop/account/change-password}" method="post">
-                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-
-                    <div class="row g-3">
-                        <div class="col-md-12">
-                            <div class="label-soft">Current Password</div>
-                            <input type="password" name="currentPassword" class="form-control" placeholder="Enter current password">
-                        </div>
-
-                        <div class="col-md-6">
-                            <div class="label-soft">New Password</div>
-                            <input type="password" name="newPassword" class="form-control" placeholder="Enter new password">
-                        </div>
-
-                        <div class="col-md-6">
-                            <div class="label-soft">Confirm New Password</div>
-                            <input type="password" name="confirmPassword" class="form-control" placeholder="Confirm new password">
-                        </div>
-                    </div>
-
-                    <div class="mt-4 d-flex justify-content-end">
-                        <button type="submit" class="btn btn-gold">
-                            Change Password
-                        </button>
-                    </div>
-                </form>
-
             </div>
         </div>
     </div>
-</div>
+</section>
 
 </body>
 </html>

@@ -1,176 +1,185 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{shop/fragments/layout}">
 <head>
-    <meta charset="UTF-8">
     <title>Checkout - Perfume Shop</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet"
-          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="stylesheet" th:href="@{/css/shop/checkout.css}">
+    <style>
+        .checkout-page {
+            margin-top: 3rem;
+            margin-bottom: 3rem;
+        }
+    </style>
 </head>
 <body>
 
-<div class="container mt-5 mb-5">
-    <div class="row g-4">
+<section layout:fragment="content">
+    <div class="container checkout-page">
+        <div class="row g-4">
 
-        <div class="col-lg-7">
-            <div class="checkout-card">
-                <h4 class="mb-4">Billing Information</h4>
+            <div class="col-lg-7">
+                <div class="checkout-card">
+                    <h4 class="mb-4">Billing Information</h4>
 
-                <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
+                    <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
 
-                <form id="checkoutForm" method="post" th:object="${form}">
-                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                    <form id="checkoutForm" method="post" th:object="${form}">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
 
-                    <div class="mb-3">
-                        <label class="form-label">Email</label>
-                        <input type="text"
-                               class="form-control"
-                               th:value="${customerEmail}"
-                               readonly>
+                        <div class="mb-3">
+                            <label class="form-label">Email</label>
+                            <input type="text"
+                                   class="form-control"
+                                   th:value="${customerEmail}"
+                                   readonly>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Full Name</label>
+                            <input type="text"
+                                   class="form-control"
+                                   th:field="*{fullName}"
+                                   required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Phone</label>
+                            <input type="text"
+                                   class="form-control"
+                                   th:field="*{phone}"
+                                   required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Address</label>
+                            <textarea class="form-control"
+                                      rows="3"
+                                      th:field="*{address}"
+                                      required></textarea>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label">Payment Method</label>
+                            <select class="form-select" th:field="*{paymentMethod}">
+                                <option value="CASH">Cash</option>
+                                <option value="KHQR">KHQR (ABA / Bakong)</option>
+                            </select>
+                        </div>
+
+                        <button type="submit" id="btnPlaceOrder" class="btn btn-dark w-100">
+                            Place Order
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="col-lg-5">
+                <div class="order-summary">
+                    <h5 class="mb-4">Order Summary</h5>
+
+                    <table class="table align-middle">
+                        <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th class="text-center">Qty</th>
+                            <th class="text-end">Price</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="i : ${items}">
+                            <td>
+                                <div class="product-line" th:text="${i.name}">Product</div>
+                                <div class="product-sub" th:text="${i.size != null ? i.size : 'N/A'}">100ml</div>
+                            </td>
+                            <td class="text-center" th:text="${i.qty}">1</td>
+                            <td class="text-end">
+                                <div th:if="${i.originalPrice > i.unitPrice}"
+                                     class="old-price">
+                                    $<span th:text="${#numbers.formatDecimal(i.originalPrice,1,'COMMA',2,'POINT')}">0.00</span>
+                                </div>
+
+                                <div>
+                                    $<span th:text="${#numbers.formatDecimal(i.unitPrice,1,'COMMA',2,'POINT')}">0.00</span>
+                                </div>
+
+                                <div th:if="${i.discountAmount > 0}"
+                                     class="save-price">
+                                    Save $<span th:text="${#numbers.formatDecimal(i.discountAmount,1,'COMMA',2,'POINT')}">0.00</span>
+                                </div>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+
+                    <hr>
+
+                    <div class="d-flex justify-content-between">
+                        <span>Subtotal</span>
+                        <span>
+                            $<span th:text="${#numbers.formatDecimal(subtotal,1,'COMMA',2,'POINT')}">0.00</span>
+                        </span>
                     </div>
 
-                    <div class="mb-3">
-                        <label class="form-label">Full Name</label>
-                        <input type="text"
-                               class="form-control"
-                               th:field="*{fullName}"
-                               required>
+                    <div class="d-flex justify-content-between text-danger">
+                        <span>Discount</span>
+                        <span>
+                            -$<span th:text="${#numbers.formatDecimal(discount,1,'COMMA',2,'POINT')}">0.00</span>
+                        </span>
                     </div>
 
-                    <div class="mb-3">
-                        <label class="form-label">Phone</label>
-                        <input type="text"
-                               class="form-control"
-                               th:field="*{phone}"
-                               required>
+                    <hr>
+
+                    <div class="d-flex justify-content-between fw-bold fs-5">
+                        <span>Total</span>
+                        <span>
+                            $<span th:text="${#numbers.formatDecimal(total,1,'COMMA',2,'POINT')}">0.00</span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- KHQR Modal -->
+    <div class="modal fade khqr-modal" id="khqrModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header border-0 pb-0">
+                    <button type="button" class="btn-close ms-auto" id="btnCloseKhqr"></button>
+                </div>
+
+                <div class="modal-body text-center px-4 pt-0 pb-4">
+                    <h3 class="mb-2">Scan to Pay (KHQR)</h3>
+                    <div class="fs-5 fw-semibold mb-3">$<span id="khqrTotal">0.00</span></div>
+
+                    <div class="khqr-box mb-3">
+                        <div id="khqrCanvas"></div>
                     </div>
 
-                    <div class="mb-3">
-                        <label class="form-label">Address</label>
-                        <textarea class="form-control"
-                                  rows="3"
-                                  th:field="*{address}"
-                                  required></textarea>
+                    <div class="countdown-text mb-2">
+                        Time left: <span id="countdown">03:00</span>
                     </div>
 
-                    <div class="mb-4">
-                        <label class="form-label">Payment Method</label>
-                        <select class="form-select" th:field="*{paymentMethod}">
-                            <option value="CASH">Cash</option>
-                            <option value="KHQR">KHQR (ABA / Bakong)</option>
-                        </select>
+                    <div class="status-text mb-3" id="paymentStatusText">
+                        Waiting for payment...
                     </div>
 
-                    <button type="submit" id="btnPlaceOrder" class="btn btn-dark w-100">
-                        Place Order
+                    <button type="button" class="btn btn-danger w-100" id="btnCancelPayment">
+                        Cancel Payment
                     </button>
-                </form>
-            </div>
-        </div>
-
-        <div class="col-lg-5">
-            <div class="order-summary">
-                <h5 class="mb-4">Order Summary</h5>
-
-                <table class="table align-middle">
-                    <thead>
-                    <tr>
-                        <th>Product</th>
-                        <th class="text-center">Qty</th>
-                        <th class="text-end">Price</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr th:each="i : ${items}">
-                        <td>
-                            <div class="product-line" th:text="${i.name}">Product</div>
-                            <div class="product-sub" th:text="${i.size != null ? i.size : 'N/A'}">100ml</div>
-                        </td>
-                        <td class="text-center" th:text="${i.qty}">1</td>
-                        <td class="text-end">
-                            <div th:if="${i.originalPrice > i.unitPrice}"
-                                 class="old-price">
-                                $<span th:text="${#numbers.formatDecimal(i.originalPrice,1,'COMMA',2,'POINT')}">0.00</span>
-                            </div>
-
-                            <div>
-                                $<span th:text="${#numbers.formatDecimal(i.unitPrice,1,'COMMA',2,'POINT')}">0.00</span>
-                            </div>
-
-                            <div th:if="${i.discountAmount > 0}"
-                                 class="save-price">
-                                Save $<span th:text="${#numbers.formatDecimal(i.discountAmount,1,'COMMA',2,'POINT')}">0.00</span>
-                            </div>
-                        </td>
-                    </tr>
-                    </tbody>
-                </table>
-
-                <hr>
-
-                <div class="d-flex justify-content-between">
-                    <span>Subtotal</span>
-                    <span>
-                        $<span th:text="${#numbers.formatDecimal(subtotal,1,'COMMA',2,'POINT')}">0.00</span>
-                    </span>
-                </div>
-
-                <div class="d-flex justify-content-between text-danger">
-                    <span>Discount</span>
-                    <span>
-                        -$<span th:text="${#numbers.formatDecimal(discount,1,'COMMA',2,'POINT')}">0.00</span>
-                    </span>
-                </div>
-
-                <hr>
-
-                <div class="d-flex justify-content-between fw-bold fs-5">
-                    <span>Total</span>
-                    <span>
-                        $<span th:text="${#numbers.formatDecimal(total,1,'COMMA',2,'POINT')}">0.00</span>
-                    </span>
                 </div>
             </div>
         </div>
     </div>
-</div>
+</section>
 
-<!-- KHQR Modal -->
-<div class="modal fade khqr-modal" id="khqrModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header border-0 pb-0">
-                <button type="button" class="btn-close ms-auto" id="btnCloseKhqr"></button>
-            </div>
+<th:block layout:fragment="pageScripts">
+    <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script th:src="@{/js/shop/checkout.js}"></script>
+</th:block>
 
-            <div class="modal-body text-center px-4 pt-0 pb-4">
-                <h3 class="mb-2">Scan to Pay (KHQR)</h3>
-                <div class="fs-5 fw-semibold mb-3">$<span id="khqrTotal">0.00</span></div>
-
-                <div class="khqr-box mb-3">
-                    <div id="khqrCanvas"></div>
-                </div>
-
-                <div class="countdown-text mb-2">
-                    Time left: <span id="countdown">03:00</span>
-                </div>
-
-                <div class="status-text mb-3" id="paymentStatusText">
-                    Waiting for payment...
-                </div>
-
-                <button type="button" class="btn btn-danger w-100" id="btnCancelPayment">
-                    Cancel Payment
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<script th:src="@{/js/shop/checkout.js}"></script>
 </body>
 </html>

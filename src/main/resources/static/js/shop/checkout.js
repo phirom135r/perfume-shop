@@ -1,3 +1,4 @@
+// shop/checkout.js
 (() => {
     const checkoutForm = document.getElementById("checkoutForm");
     if (!checkoutForm) return;

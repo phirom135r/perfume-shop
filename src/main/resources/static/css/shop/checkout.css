@@ -1,7 +1,9 @@
 body {
-    background: #f7f7f7;
-    font-family: Arial, sans-serif;
+    background: #faf7f2;
+    font-family: 'Poppins', sans-serif;
+    color: #3e3e3e;
 }
+
 .checkout-card,
 .order-summary {
     background: white;
@@ -9,6 +11,7 @@ body {
     padding: 24px;
     box-shadow: 0 10px 22px rgba(0, 0, 0, .05);
 }
+
 .khqr-modal .modal-content {
     border: none;
     border-radius: 20px;
@@ -59,4 +62,3 @@ body {
     font-size: 13px;
     margin-top: 3px;
 }
-

@@ -1,0 +1,77 @@
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background: #faf7f2;
+    color: #2f2a24;
+}
+
+h1,h2,h3,h4,h5,h6,.navbar-brand {
+    font-family: 'Playfair Display', serif;
+}
+
+.card-soft {
+    border: none;
+    border-radius: 22px;
+    background: #fff;
+    box-shadow: 0 10px 28px rgba(0,0,0,.06);
+}
+
+.form-control {
+    min-height: 48px;
+    border-radius: 14px;
+    border: 1px solid #e5e7eb;
+}
+
+textarea.form-control {
+    min-height: 120px;
+}
+
+.btn-gold {
+    background-color: #c6a47e;
+    border: none;
+    color: #fff;
+    border-radius: 999px;
+    padding: 11px 22px;
+    font-weight: 600;
+}
+
+.btn-gold:hover {
+    background-color: #b38b5f;
+    color: #fff;
+}
+
+.profile-top {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 26px;
+}
+
+.profile-avatar {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: #f4e7d6;
+    color: #8b6e4b;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    font-weight: 700;
+}
+
+.label-soft {
+    font-size: 13px;
+    color: #6b7280;
+    margin-bottom: 6px;
+}
+
+.section-title {
+    font-size: 22px;
+    margin-bottom: 18px;
+}
+
+.divider-soft {
+    border-top: 1px solid #eee;
+    margin: 30px 0;
+}

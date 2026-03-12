@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Invoice</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Noto+Sans+Khmer:wght@400;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+
+    <style>
+
+        body{
+            margin:0;
+            padding:30px;
+            background:#f5f5f5;
+            font-family:'Poppins','Noto Sans Khmer',sans-serif;
+            color:#222;
+        }
+
+        .invoice-box{
+            max-width:950px;
+            margin:auto;
+            background:#fff;
+            padding:40px;
+            box-shadow:0 10px 30px rgba(0,0,0,.08);
+        }
+
+        .brand{
+            font-family:'Playfair Display',serif;
+            font-size:34px;
+            color:#c09a5b;
+            font-weight:700;
+        }
+
+        .top{
+            display:flex;
+            justify-content:space-between;
+            margin-bottom:30px;
+        }
+
+        .meta{
+            text-align:right;
+            line-height:1.8;
+        }
+
+        .invoice-title{
+            font-size:36px;
+            font-weight:700;
+            color:#c09a5b;
+        }
+
+        .section-title{
+            font-weight:700;
+            color:#a07a40;
+            margin-top:30px;
+            margin-bottom:10px;
+        }
+
+        .bill-box{
+            border:1px solid #e5dccc;
+            background:#f7f3ed;
+            padding:18px;
+            line-height:1.8;
+        }
+
+        table{
+            width:100%;
+            border-collapse:collapse;
+            margin-top:10px;
+        }
+
+        thead th{
+            background:#c09a5b;
+            color:white;
+            padding:12px;
+        }
+
+        tbody td{
+            border:1px solid #e8dfcf;
+            padding:12px;
+        }
+
+        .text-center{
+            text-align:center;
+        }
+
+        .text-right{
+            text-align:right;
+        }
+
+        .red{
+            color:#c0392b;
+        }
+
+        .summary{
+            width:320px;
+            margin-left:auto;
+            margin-top:25px;
+        }
+
+        .summary-row{
+            display:flex;
+            justify-content:space-between;
+            border-bottom:1px solid #eee;
+            padding:8px 0;
+        }
+
+        .grand{
+            font-size:22px;
+            font-weight:700;
+        }
+
+        .notes{
+            margin-top:40px;
+            font-size:14px;
+        }
+
+        .print-bar{
+            text-align:right;
+            margin-bottom:20px;
+        }
+
+        .print-btn{
+            border:none;
+            padding:10px 18px;
+            background:#111;
+            color:white;
+            border-radius:30px;
+            cursor:pointer;
+        }
+
+        @media print{
+
+            body{
+                background:white;
+            }
+
+            .print-bar{
+                display:none;
+            }
+
+            .invoice-box{
+                box-shadow:none;
+            }
+
+        }
+
+    </style>
+</head>
+
+
+<body>
+
+<div class="print-bar">
+    <button class="print-btn" onclick="window.print()">Print / Save PDF</button>
+</div>
+
+
+<div class="invoice-box">
+
+    <div class="top">
+
+        <div>
+
+            <div class="brand">Fragrance Haven</div>
+
+            <div style="color:#666;font-size:14px;line-height:1.7">
+                Premium Perfume Store<br>
+                Phnom Penh, Cambodia<br>
+                Phone: +855 xx xxx xxx<br>
+                Email: support@fragrancehaven.com
+            </div>
+
+        </div>
+
+
+        <div class="meta">
+
+            <div class="invoice-title">INVOICE</div>
+
+            <div>
+                <strong>Invoice :</strong>
+                <span th:text="${order.invoice}"></span>
+            </div>
+
+            <div>
+                <strong>Date :</strong>
+                <span th:text="${order.createdAt != null ? #temporals.format(order.createdAt,'dd/MM/yyyy HH:mm') : '-'}"></span>
+            </div>
+
+            <div>
+                <strong>Payment :</strong>
+                <span th:text="${order.paymentMethod}"></span>
+            </div>
+
+            <div>
+                <strong>Status :</strong>
+                <span th:text="${order.status}"></span>
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="section-title">Billed To</div>
+
+    <div class="bill-box">
+
+        <div style="font-weight:600"
+             th:text="${order.customerName}"></div>
+
+        <div>
+            Phone:
+            <span th:text="${order.phone}"></span>
+        </div>
+
+        <div>
+            Address:
+            <span th:text="${order.address}"></span>
+        </div>
+
+    </div>
+
+
+    <div class="section-title">Items</div>
+
+    <table>
+
+        <thead>
+        <tr>
+
+            <th>Description</th>
+            <th>Qty</th>
+            <th>Original</th>
+            <th>Unit</th>
+            <th>Disc</th>
+            <th>Amount</th>
+
+        </tr>
+        </thead>
+
+        <tbody>
+
+        <tr th:each="it : ${order.items}">
+
+            <td>
+                <span th:text="${it.product != null ? it.product.name : '-'}"></span>
+
+                <span th:if="${it.product != null and it.product.size != null}"
+                      th:text="' / ' + ${it.product.size}">
+</span>
+
+            </td>
+
+            <td class="text-center"
+                th:text="${it.qty}">
+            </td>
+
+            <td class="text-right"
+                th:text="'$'+${#numbers.formatDecimal(it.originalPrice,1,'COMMA',2,'POINT')}">
+            </td>
+
+            <td class="text-right"
+                th:text="'$'+${#numbers.formatDecimal(it.unitPrice,1,'COMMA',2,'POINT')}">
+            </td>
+
+            <td class="text-right red"
+                th:text="'$'+${#numbers.formatDecimal(it.discountAmount,1,'COMMA',2,'POINT')}">
+            </td>
+
+            <td class="text-right"
+                style="font-weight:600"
+                th:text="'$'+${#numbers.formatDecimal(it.lineTotal,1,'COMMA',2,'POINT')}">
+            </td>
+
+        </tr>
+
+        </tbody>
+
+    </table>
+
+
+
+    <div class="summary">
+
+        <div class="summary-row">
+
+            <span>Subtotal</span>
+
+            <span th:text="'$'+${#numbers.formatDecimal(order.subtotal,1,'COMMA',2,'POINT')}"></span>
+
+        </div>
+
+
+        <div class="summary-row"
+             th:if="${order.discount != null and order.discount > 0}">
+
+            <span>Discount</span>
+
+            <span class="red"
+                  th:text="'-$'+${#numbers.formatDecimal(order.discount,1,'COMMA',2,'POINT')}"></span>
+
+        </div>
+
+
+        <div class="summary-row grand">
+
+            <span>Grand Total</span>
+
+            <span th:text="'$'+${#numbers.formatDecimal(order.total,1,'COMMA',2,'POINT')}"></span>
+
+        </div>
+
+    </div>
+
+
+    <div class="notes">
+
+        <div class="section-title">Notes</div>
+
+        <div>Thank you for shopping with Fragrance Haven.</div>
+        <div>Luxury fragrance, elegant experience.</div>
+
+    </div>
+
+</div>
+
+</body>
+</html>

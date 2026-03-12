@@ -1,202 +1,189 @@
 <!DOCTYPE html>
 <html lang="en"
-      xmlns:th="http://www.thymeleaf.org">
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{shop/fragments/layout}">
 <head>
-    <meta charset="UTF-8">
     <title>My Orders - Perfume Shop</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <link rel="stylesheet" th:href="@{/css/shop/my-orders.css}">
-
 </head>
 <body>
+<section layout:fragment="content">
+    <div class="container my-5">
+        <h2 class="mb-4">My Orders</h2>
 
-<nav class="navbar navbar-expand-lg bg-white py-3 shadow-sm">
-    <div class="container">
-        <a class="navbar-brand fs-3" th:href="@{/perfume-shop}">Fragrance Haven</a>
-        <div class="ms-auto">
-            <a th:href="@{/perfume-shop}" class="btn btn-outline-secondary rounded-pill">Back Home</a>
+        <div class="card-soft p-4">
+            <div th:if="${#lists.isEmpty(orders)}" class="empty-state">
+                <h5 class="mb-2">No orders yet</h5>
+                <div class="mb-3">You do not have any orders yet.</div>
+                <a th:href="@{/perfume-shop/shop}" class="btn btn-dark rounded-pill px-4">Start Shopping</a>
+            </div>
+
+            <div class="table-responsive" th:if="${!#lists.isEmpty(orders)}">
+                <table class="table align-middle">
+                    <thead class="table-light">
+                    <tr>
+                        <th>Invoice</th>
+                        <th>Date</th>
+                        <th>Status</th>
+                        <th>Payment</th>
+                        <th class="text-end">Total</th>
+                        <th class="text-center">Action</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="o : ${orders}">
+                        <td class="fw-semibold" th:text="${o.invoice}">INV-000001</td>
+                        <td th:text="${o.createdAt != null ? #temporals.format(o.createdAt, 'dd MMM yyyy, HH:mm') : '-'}">date</td>
+                        <td>
+                            <span class="status-pill status-paid"
+                                  th:if="${o.status != null and o.status.name() == 'PAID'}">PAID</span>
+
+                            <span class="status-pill status-pending"
+                                  th:if="${o.status != null and o.status.name() == 'PENDING'}">PENDING</span>
+
+                            <span class="status-pill status-cancelled"
+                                  th:if="${o.status != null and o.status.name() == 'CANCELLED'}">CANCELLED</span>
+                        </td>
+                        <td>
+                            <span class="payment-pill payment-cash"
+                                  th:if="${o.paymentMethod != null and o.paymentMethod.name() == 'CASH'}">CASH</span>
+
+                            <span class="payment-pill payment-khqr"
+                                  th:if="${o.paymentMethod != null and o.paymentMethod.name() == 'KHQR'}">KHQR</span>
+                        </td>
+                        <td class="text-end"
+                            th:text="'$' + ${#numbers.formatDecimal(o.total,1,'COMMA',2,'POINT')}">$0.00</td>
+                        <td class="text-center">
+                            <button type="button"
+                                    class="btn btn-sm btn-outline-primary rounded-pill btn-view-order"
+                                    th:attr="data-id=${o.id}">
+                                View
+                            </button>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
-</nav>
 
-<div class="container my-5">
-    <h2 class="mb-4">My Orders</h2>
+    <!-- Order Detail Modal -->
+    <div class="modal fade" id="orderDetailModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content order-modal">
+                <div class="modal-header">
+                    <h5 class="modal-title">Order Detail</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
 
-    <div class="card-soft p-4">
-        <div th:if="${#lists.isEmpty(orders)}" class="empty-state">
-            <h5 class="mb-2">No orders yet</h5>
-            <div class="mb-3">You do not have any orders yet.</div>
-            <a th:href="@{/perfume-shop/shop}" class="btn btn-dark rounded-pill px-4">Start Shopping</a>
-        </div>
+                <div class="modal-body">
 
-        <div class="table-responsive" th:if="${!#lists.isEmpty(orders)}">
-            <table class="table align-middle">
-                <thead class="table-light">
-                <tr>
-                    <th>Invoice</th>
-                    <th>Date</th>
-                    <th>Status</th>
-                    <th>Payment</th>
-                    <th class="text-end">Total</th>
-                    <th class="text-center">Action</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr th:each="o : ${orders}">
-                    <td class="fw-semibold" th:text="${o.invoice}">INV-000001</td>
-                    <td th:text="${o.createdAt != null ? #temporals.format(o.createdAt, 'dd MMM yyyy, HH:mm') : '-'}">date</td>
-                    <td>
-                        <span class="status-pill status-paid"
-                              th:if="${o.status != null and o.status.name() == 'PAID'}">PAID</span>
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <div class="order-info-card">
+                                <div class="order-info-row">
+                                    <div class="order-info-label">Invoice:</div>
+                                    <div class="order-info-value" id="odInvoice">-</div>
+                                </div>
 
-                        <span class="status-pill status-pending"
-                              th:if="${o.status != null and o.status.name() == 'PENDING'}">PENDING</span>
+                                <div class="order-info-row">
+                                    <div class="order-info-label">Name:</div>
+                                    <div class="order-info-value" id="odCustomer">-</div>
+                                </div>
 
-                        <span class="status-pill status-cancelled"
-                              th:if="${o.status != null and o.status.name() == 'CANCELLED'}">CANCELLED</span>
-                    </td>
-                    <td>
-                        <span class="payment-pill payment-cash"
-                              th:if="${o.paymentMethod != null and o.paymentMethod.name() == 'CASH'}">CASH</span>
+                                <div class="order-info-row">
+                                    <div class="order-info-label">Phone:</div>
+                                    <div class="order-info-value" id="odPhone">-</div>
+                                </div>
 
-                        <span class="payment-pill payment-khqr"
-                              th:if="${o.paymentMethod != null and o.paymentMethod.name() == 'KHQR'}">KHQR</span>
-                    </td>
-                    <td class="text-end"
-                        th:text="'$' + ${#numbers.formatDecimal(o.total,1,'COMMA',2,'POINT')}">$0.00</td>
-                    <td class="text-center">
-                        <button type="button"
-                                class="btn btn-sm btn-outline-primary rounded-pill btn-view-order"
-                                th:attr="data-id=${o.id}">
-                            View
+                                <div class="order-info-row">
+                                    <div class="order-info-label">Address:</div>
+                                    <div class="order-info-value" id="odAddress">-</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="order-info-card">
+                                <div class="order-info-row">
+                                    <div class="order-info-label">Date:</div>
+                                    <div class="order-info-value" id="odDate">-</div>
+                                </div>
+
+                                <div class="order-info-row">
+                                    <div class="order-info-label">Status:</div>
+                                    <div class="order-info-value">
+                                        <span id="odStatus" class="status-pill">-</span>
+                                    </div>
+                                </div>
+
+                                <div class="order-info-row">
+                                    <div class="order-info-label">Payment:</div>
+                                    <div class="order-info-value">
+                                        <span id="odPayment" class="payment-pill">-</span>
+                                    </div>
+                                </div>
+
+                                <div class="order-info-row">
+                                    <div class="order-info-label">Total:</div>
+                                    <div class="order-info-value fw-bold" id="odTotal">-</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="order-items-wrap">
+                        <div class="order-items-head">Items</div>
+
+                        <div class="table-responsive">
+                            <table class="table order-table align-middle">
+                                <thead>
+                                <tr>
+                                    <th style="min-width: 320px;">Product</th>
+                                    <th class="text-center" style="width: 110px;">Qty</th>
+                                    <th class="text-end" style="width: 160px;">Unit Price</th>
+                                    <th class="text-end" style="width: 160px;">Line Total</th>
+                                </tr>
+                                </thead>
+                                <tbody id="odItems"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="summary-box">
+                        <div class="summary-row">
+                            <span>Subtotal</span>
+                            <span id="odSubtotal">$0.00</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>Discount</span>
+                            <span id="odDiscount">$0.00</span>
+                        </div>
+                        <div class="summary-row summary-total">
+                            <span>Grand Total</span>
+                            <span id="odGrandTotal">$0.00</span>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-end gap-2 mt-4">
+                        <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">
+                            Close
                         </button>
-                    </td>
-                </tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
-
-<!-- Order Detail Modal -->
-<div class="modal fade" id="orderDetailModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-centered">
-        <div class="modal-content order-modal">
-            <div class="modal-header">
-                <h5 class="modal-title">Order Detail</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-
-            <div class="modal-body">
-
-                <div class="row g-4">
-                    <!-- LEFT -->
-                    <div class="col-md-6">
-                        <div class="order-info-card">
-                            <div class="order-info-row">
-                                <div class="order-info-label">Invoice:</div>
-                                <div class="order-info-value" id="odInvoice">-</div>
-                            </div>
-
-                            <div class="order-info-row">
-                                <div class="order-info-label">Name:</div>
-                                <div class="order-info-value" id="odCustomer">-</div>
-                            </div>
-
-                            <div class="order-info-row">
-                                <div class="order-info-label">Phone:</div>
-                                <div class="order-info-value" id="odPhone">-</div>
-                            </div>
-
-                            <div class="order-info-row">
-                                <div class="order-info-label">Address:</div>
-                                <div class="order-info-value" id="odAddress">-</div>
-                            </div>
-                        </div>
+                        <button type="button" class="btn btn-dark rounded-pill px-4" id="btnDownloadInvoice">
+                            Download Invoice
+                        </button>
                     </div>
 
-                    <!-- RIGHT -->
-                    <div class="col-md-6">
-                        <div class="order-info-card">
-                            <div class="order-info-row">
-                                <div class="order-info-label">Date:</div>
-                                <div class="order-info-value" id="odDate">-</div>
-                            </div>
-
-                            <div class="order-info-row">
-                                <div class="order-info-label">Status:</div>
-                                <div class="order-info-value">
-                                    <span id="odStatus" class="status-pill">-</span>
-                                </div>
-                            </div>
-
-                            <div class="order-info-row">
-                                <div class="order-info-label">Payment:</div>
-                                <div class="order-info-value">
-                                    <span id="odPayment" class="payment-pill">-</span>
-                                </div>
-                            </div>
-
-                            <div class="order-info-row">
-                                <div class="order-info-label">Total:</div>
-                                <div class="order-info-value fw-bold" id="odTotal">-</div>
-                            </div>
-                        </div>
-                    </div>
                 </div>
-
-                <div class="order-items-wrap">
-                    <div class="order-items-head">Items</div>
-
-                    <div class="table-responsive">
-                        <table class="table order-table align-middle">
-                            <thead>
-                            <tr>
-                                <th style="min-width: 320px;">Product</th>
-                                <th class="text-center" style="width: 110px;">Qty</th>
-                                <th class="text-end" style="width: 160px;">Unit Price</th>
-                                <th class="text-end" style="width: 160px;">Line Total</th>
-                            </tr>
-                            </thead>
-                            <tbody id="odItems"></tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div class="summary-box">
-                    <div class="summary-row">
-                        <span>Subtotal</span>
-                        <span id="odSubtotal">$0.00</span>
-                    </div>
-                    <div class="summary-row">
-                        <span>Discount</span>
-                        <span id="odDiscount">$0.00</span>
-                    </div>
-                    <div class="summary-row summary-total">
-                        <span>Grand Total</span>
-                        <span id="odGrandTotal">$0.00</span>
-                    </div>
-                </div>
-
-                <div class="d-flex justify-content-end gap-2 mt-4">
-                    <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">
-                        Close
-                    </button>
-                    <button type="button" class="btn btn-dark rounded-pill px-4" id="btnDownloadInvoice">
-                        Download Invoice
-                    </button>
-                </div>
-
             </div>
         </div>
     </div>
-</div>
+</section>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<script th:src="@{/js/shop/my-orders.js}"></script>
+<th:block layout:fragment="pageScripts">
+    <script th:src="@{/js/shop/my-orders.js}"></script>
+</th:block>
+
 </body>
 </html>
