@@ -8,24 +8,6 @@ import org.springframework.web.client.RestClient;
 
 import java.util.Map;
 
-/**
- * Service for verifying KHQR payment by MD5 using Bakong API.
- *
- * API:
- * POST /v1/check_transaction_by_md5
- * Body:
- * {
- *   "md5": "xxxxx"
- * }
- *
- * Response:
- * {
- *   "responseCode": 0,
- *   "data": {...}
- * }
- *
- * If responseCode == 0 AND data != null → payment success
- */
 @Service
 public class PaymentVerifyService {
 
@@ -35,35 +17,36 @@ public class PaymentVerifyService {
             @Value("${bakong.api.baseUrl:https://api-bakong.nbc.gov.kh}") String baseUrl,
             @Value("${bakong.api.token:}") String token
     ) {
-
         this.restClient = RestClient.builder()
                 .baseUrl(baseUrl)
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                 .defaultHeader(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE)
                 .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer " + token)
                 .build();
+
+        System.out.println("=== BAKONG VERIFY CONFIG ===");
+        System.out.println("Base URL = " + baseUrl);
+        System.out.println("Token exists = " + (token != null && !token.isBlank()));
     }
 
-    /**
-     * Verify payment by md5 hash
-     *
-     * @param md5 transaction md5
-     * @return true if paid, false otherwise
-     */
     @SuppressWarnings("unchecked")
     public boolean isPaid(String md5) {
 
         if (md5 == null || md5.isBlank()) {
+            System.out.println("Bakong verify: md5 is blank");
             return false;
         }
 
         try {
+            System.out.println("Bakong verify checking md5 = " + md5.trim());
 
             Map<String, Object> response = restClient.post()
                     .uri("/v1/check_transaction_by_md5")
                     .body(Map.of("md5", md5.trim()))
                     .retrieve()
                     .body(Map.class);
+
+            System.out.println("Bakong verify raw response = " + response);
 
             if (response == null) {
                 return false;
@@ -77,13 +60,17 @@ public class PaymentVerifyService {
             if (responseCode instanceof Number number) {
                 success = number.intValue() == 0;
             } else if (responseCode != null) {
-                success = "0".equals(String.valueOf(responseCode));
+                success = "0".equals(String.valueOf(responseCode).trim());
             }
+
+            System.out.println("Bakong verify success = " + success);
+            System.out.println("Bakong verify data = " + data);
 
             return success && data != null;
 
         } catch (Exception ex) {
-            // log error in real production
+            System.out.println("Bakong verify failed: " + ex.getMessage());
+            ex.printStackTrace();
             return false;
         }
     }

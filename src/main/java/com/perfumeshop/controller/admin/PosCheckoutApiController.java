@@ -11,6 +11,8 @@ import com.perfumeshop.service.BakongQrService;
 import com.perfumeshop.service.InvoiceService;
 import com.perfumeshop.service.OrderService;
 import com.perfumeshop.service.ProductService;
+import com.perfumeshop.service.TelegramMessageBuilder;
+import com.perfumeshop.service.TelegramService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
@@ -28,17 +30,21 @@ public class PosCheckoutApiController {
     private final ProductService productService;
     private final BakongQrService bakongQrService;
     private final InvoiceService invoiceService;
+    private final TelegramService telegramService;
+    private final TelegramMessageBuilder telegramMessageBuilder;
 
-    public PosCheckoutApiController(
-            OrderService orderService,
-            ProductService productService,
-            BakongQrService bakongQrService,
-            InvoiceService invoiceService
-    ) {
+    public PosCheckoutApiController(OrderService orderService,
+                                    ProductService productService,
+                                    BakongQrService bakongQrService,
+                                    InvoiceService invoiceService,
+                                    TelegramService telegramService,
+                                    TelegramMessageBuilder telegramMessageBuilder) {
         this.orderService = orderService;
         this.productService = productService;
         this.bakongQrService = bakongQrService;
         this.invoiceService = invoiceService;
+        this.telegramService = telegramService;
+        this.telegramMessageBuilder = telegramMessageBuilder;
     }
 
     @PostMapping("/checkout")
@@ -63,8 +69,8 @@ public class PosCheckoutApiController {
             pm = PaymentMethod.CASH;
         }
 
-        BigDecimal originalSubtotal = BigDecimal.ZERO;   // តម្លៃដើមសរុប
-        BigDecimal productDiscount = BigDecimal.ZERO;    // discount ពី product
+        BigDecimal originalSubtotal = BigDecimal.ZERO;
+        BigDecimal productDiscount = BigDecimal.ZERO;
         List<OrderItem> items = new ArrayList<>();
 
         for (PosCheckoutRequest.Item it : req.getItems()) {
@@ -103,17 +109,10 @@ public class PosCheckoutApiController {
             OrderItem oi = new OrderItem();
             oi.setProduct(p);
             oi.setQty(qty);
-
-            // តម្លៃក្រោយបញ្ចុះ ក្នុង 1 unit
             oi.setUnitPrice(finalUnitPrice.setScale(2, RoundingMode.HALF_UP));
-
-            // line total ក្រោយបញ្ចុះ
             oi.setLineTotal(finalLineTotal.setScale(2, RoundingMode.HALF_UP));
-
-            // optional fields បើ entity របស់អ្នកបានបន្ថែមរួច
             oi.setOriginalPrice(originalPrice.setScale(2, RoundingMode.HALF_UP));
             oi.setDiscountAmount(discountAmount.setScale(2, RoundingMode.HALF_UP));
-
             items.add(oi);
         }
 
@@ -138,8 +137,6 @@ public class PosCheckoutApiController {
         BigDecimal total = originalSubtotal.subtract(totalDiscount);
 
         originalSubtotal = originalSubtotal.setScale(2, RoundingMode.HALF_UP);
-        productDiscount = productDiscount.setScale(2, RoundingMode.HALF_UP);
-        extraDiscount = extraDiscount.setScale(2, RoundingMode.HALF_UP);
         totalDiscount = totalDiscount.setScale(2, RoundingMode.HALF_UP);
         total = total.setScale(2, RoundingMode.HALF_UP);
 
@@ -148,11 +145,9 @@ public class PosCheckoutApiController {
         order.setCustomerName(customerName);
         order.setPhone(req.getPhone());
         order.setAddress(req.getAddress());
-
-        // ✅ important
-        order.setSubtotal(originalSubtotal); // តម្លៃដើម
-        order.setDiscount(totalDiscount);    // product discount + extra discount
-        order.setTotal(total);               // grand total
+        order.setSubtotal(originalSubtotal);
+        order.setDiscount(totalDiscount);
+        order.setTotal(total);
         order.setPaymentMethod(pm);
 
         for (OrderItem oi : items) {
@@ -160,9 +155,7 @@ public class PosCheckoutApiController {
         }
         order.setItems(items);
 
-        int totalItems = items.stream()
-                .mapToInt(OrderItem::getQty)
-                .sum();
+        int totalItems = items.stream().mapToInt(OrderItem::getQty).sum();
         order.setTotalItems(totalItems);
 
         if (pm == PaymentMethod.CASH) {
@@ -181,6 +174,11 @@ public class PosCheckoutApiController {
 
             order.setStatus(OrderStatus.PAID);
             order = orderService.save(order);
+
+            telegramService.sendMessage(
+                    telegramMessageBuilder.buildPaidOrderMessage(order)
+            );
+
             return ResponseEntity.ok(new PosCheckoutResponse(order.getId(), "/admin/orders"));
         }
 
@@ -188,10 +186,13 @@ public class PosCheckoutApiController {
         order = orderService.save(order);
 
         BakongQrService.KhqrResult qr = bakongQrService.generate(order.getTotal(), order.getInvoice());
-
         order.setKhqrString(qr.khqrString());
         order.setMd5(qr.md5());
         order = orderService.save(order);
+
+        telegramService.sendMessage(
+                telegramMessageBuilder.buildNewOrderMessage(order)
+        );
 
         return ResponseEntity.ok(
                 new PosCheckoutResponse(

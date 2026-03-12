@@ -24,19 +24,25 @@ public class ShopOrderService {
     private final InvoiceService invoiceService;
     private final CustomerService customerService;
     private final BakongQrService bakongQrService;
+    private final TelegramService telegramService;
+    private final TelegramMessageBuilder telegramMessageBuilder;
 
     public ShopOrderService(ShopCartService cartService,
                             ProductService productService,
                             OrderService orderService,
                             InvoiceService invoiceService,
                             CustomerService customerService,
-                            BakongQrService bakongQrService) {
+                            BakongQrService bakongQrService,
+                            TelegramService telegramService,
+                            TelegramMessageBuilder telegramMessageBuilder) {
         this.cartService = cartService;
         this.productService = productService;
         this.orderService = orderService;
         this.invoiceService = invoiceService;
         this.customerService = customerService;
         this.bakongQrService = bakongQrService;
+        this.telegramService = telegramService;
+        this.telegramMessageBuilder = telegramMessageBuilder;
     }
 
     @Transactional
@@ -79,9 +85,9 @@ public class ShopOrderService {
         order.setPaymentMethod(paymentMethod);
 
         List<OrderItem> orderItems = new ArrayList<>();
-        BigDecimal subtotal = BigDecimal.ZERO; // original total
-        BigDecimal orderDiscount = BigDecimal.ZERO; // total discount
-        BigDecimal grandTotal = BigDecimal.ZERO; // payable
+        BigDecimal subtotal = BigDecimal.ZERO;
+        BigDecimal orderDiscount = BigDecimal.ZERO;
+        BigDecimal grandTotal = BigDecimal.ZERO;
 
         for (var ci : cartItems) {
             Product product = productService.findOrThrow(ci.getProductId());
@@ -158,6 +164,11 @@ public class ShopOrderService {
 
             order.setStatus(OrderStatus.PAID);
             Order saved = orderService.save(order);
+
+            telegramService.sendMessage(
+                    telegramMessageBuilder.buildNewOrderMessage(saved)
+            );
+
             cartService.clear(session);
             return saved;
         }
@@ -170,6 +181,11 @@ public class ShopOrderService {
         saved.setMd5(qr.md5());
 
         saved = orderService.save(saved);
+
+        telegramService.sendMessage(
+                telegramMessageBuilder.buildNewOrderMessage(saved)
+        );
+
         return saved;
     }
 }
