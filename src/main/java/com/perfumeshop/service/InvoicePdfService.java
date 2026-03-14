@@ -81,10 +81,10 @@ public class InvoicePdfService {
             brandCell.addElement(brandName);
 
             brandCell.addElement(new Paragraph("Premium Perfume Collection", mutedFont));
-            Paragraph address = new Paragraph("Street 271, Phnom Penh, Cambodia", mutedFont);
+            Paragraph address = new Paragraph("Street 135, Battambang, Cambodia", mutedFont);
             address.setSpacingAfter(2f);
             brandCell.addElement(address);
-            brandCell.addElement(new Paragraph("Tel: +855 12 345 678", mutedFont));
+            brandCell.addElement(new Paragraph("Tel: +855 12 135 135", mutedFont));
             brandCell.addElement(new Paragraph("Email: support@fragrancehaven.com", mutedFont));
 
             // Right: Invoice info
@@ -232,11 +232,6 @@ public class InvoicePdfService {
             footerText.setAlignment(Element.ALIGN_CENTER);
             footerText.setSpacingAfter(4f);
             document.add(footerText);
-
-            Paragraph footerKhmer = new Paragraph("សូមអរគុណសម្រាប់ការទិញទំនិញ!", khmerNormal);
-            footerKhmer.setAlignment(Element.ALIGN_CENTER);
-            footerKhmer.setSpacingAfter(10f);
-            document.add(footerKhmer);
 
             Paragraph footerNote = new Paragraph("Questions? Contact us at support@fragrancehaven.com", mutedFont);
             footerNote.setAlignment(Element.ALIGN_CENTER);

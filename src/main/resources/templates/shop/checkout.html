@@ -2,7 +2,7 @@
 <html lang="en"
       xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-      layout:decorate="~{shop/fragments/layout}">
+      layout:decorate="~{shop/layout-shop/layout}">
 <head>
     <title>Checkout - Perfume Shop</title>
     <link rel="stylesheet" th:href="@{/css/shop/checkout.css}">
@@ -63,7 +63,7 @@
                         <div class="mb-4">
                             <label class="form-label">Payment Method</label>
                             <select class="form-select" th:field="*{paymentMethod}">
-                                <option value="CASH">Cash</option>
+                                <option value="CASH">Cash On Delivery</option>
                                 <option value="KHQR">KHQR (ABA / Bakong)</option>
                             </select>
                         </div>

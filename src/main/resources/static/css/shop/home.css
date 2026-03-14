@@ -1,4 +1,3 @@
-/*shop/home.css*/
 body {
     font-family: 'Poppins', sans-serif;
     background-color: #faf7f2;
@@ -68,33 +67,94 @@ h1, h2, h3, h4, h5, h6, .display-6 {
     z-index: 5;
 }
 
-.carousel-item {
-    height: 450px;
-    background: linear-gradient(145deg, #cfb9a1, #a48b73);
-    color: white;
-    border-radius: 1.5rem;
+.hero-carousel-wrapper {
+    position: relative;
+}
+
+.hero-carousel-wrapper .carousel-inner {
+    border-radius: 24px;
     overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
 }
 
-.carousel-item img {
-    object-fit: cover;
-    height: 100%;
+.hero-carousel-wrapper .carousel-item {
+    position: relative;
+    height: 500px;
+    background: #f8f3ee;
+}
+
+.hero-carousel-wrapper .carousel-item img {
     width: 100%;
-    opacity: 0.65;
+    height: 100%;
+    display: block;
+    object-fit: cover;
 }
 
-.carousel-caption {
-    background: rgba(0, 0, 0, 0.2);
-    backdrop-filter: blur(3px);
-    border-radius: 2rem;
-    padding: 1.5rem 2.5rem;
-    bottom: 20%;
+.hero-carousel-wrapper .carousel-item::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+            to right,
+            rgba(0, 0, 0, 0.35),
+            rgba(0, 0, 0, 0.15),
+            rgba(0, 0, 0, 0.05)
+    );
+    z-index: 1;
 }
 
-.carousel-caption h3 {
-    font-size: 2.5rem;
+.hero-carousel-wrapper .carousel-caption {
+    z-index: 2;
+    bottom: 50%;
+    transform: translateY(50%);
+    left: 8%;
+    right: 8%;
+    text-align: center;
+    background: rgba(70, 52, 37, 0.28);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-radius: 28px;
+    padding: 35px 20px;
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.hero-carousel-wrapper .carousel-caption h3 {
+    font-size: 3rem;
     font-weight: 700;
-    text-shadow: 2px 2px 8px #2e2e2e;
+    color: #fff;
+    margin-bottom: 12px;
+    text-shadow: 0 3px 10px rgba(0, 0, 0, 0.25);
+}
+
+.hero-carousel-wrapper .carousel-caption p {
+    color: #fff;
+    font-size: 1.2rem;
+    margin-bottom: 20px;
+}
+
+.hero-carousel-wrapper .carousel-control-prev,
+.hero-carousel-wrapper .carousel-control-next {
+    width: 8%;
+    z-index: 3;
+}
+
+.hero-carousel-wrapper .carousel-control-prev-icon,
+.hero-carousel-wrapper .carousel-control-next-icon {
+    width: 3rem;
+    height: 3rem;
+    background-size: 100% 100%;
+    filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.3));
+}
+
+.hero-carousel-wrapper .carousel-indicators {
+    z-index: 4;
+}
+
+.hero-carousel-wrapper .carousel-indicators button {
+    width: 30px;
+    height: 4px;
+    border-radius: 20px;
 }
 
 .modal-content {
@@ -140,12 +200,63 @@ h1, h2, h3, h4, h5, h6, .display-6 {
     word-break: break-word;
 }
 
-@media (max-width: 768px) {
-    .carousel-item {
-        height: 300px;
+@media (max-width: 992px) {
+    .hero-carousel-wrapper .carousel-item {
+        height: 420px;
     }
 
-    .carousel-caption h3 {
-        font-size: 1.6rem;
+    .hero-carousel-wrapper .carousel-caption h3 {
+        font-size: 2.2rem;
+    }
+
+    .hero-carousel-wrapper .carousel-caption p {
+        font-size: 1rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .hero-carousel-wrapper .carousel-item {
+        height: 320px;
+    }
+
+    .hero-carousel-wrapper .carousel-caption {
+        padding: 22px 16px;
+        left: 5%;
+        right: 5%;
+    }
+
+    .hero-carousel-wrapper .carousel-caption h3 {
+        font-size: 1.5rem;
+        margin-bottom: 8px;
+    }
+
+    .hero-carousel-wrapper .carousel-caption p {
+        font-size: 0.95rem;
+        margin-bottom: 14px;
+    }
+
+    .hero-carousel-wrapper .carousel-caption .btn {
+        font-size: 0.95rem;
+        padding: 10px 22px !important;
+    }
+}
+
+@media (max-width: 576px) {
+    .hero-carousel-wrapper .carousel-item {
+        height: 250px;
+    }
+
+    .hero-carousel-wrapper .carousel-caption {
+        padding: 16px 12px;
+        border-radius: 18px;
+    }
+
+    .hero-carousel-wrapper .carousel-caption h3 {
+        font-size: 1.1rem;
+    }
+
+    .hero-carousel-wrapper .carousel-caption p {
+        font-size: 0.8rem;
+        margin-bottom: 10px;
     }
 }
